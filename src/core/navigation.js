@@ -1,5 +1,6 @@
 import { isVisible, visibleText } from './pageClassifier.js';
 import { cleanText } from './fields/labels.js';
+import { detectAdapter } from './adapters/index.js';
 
 // Workflow-only identity: a selected value in aria-label is not the question.
 // Leave the shared single-page scanner's label policy unchanged.
@@ -25,6 +26,7 @@ export function questionIdentity(field) {
 }
 
 export function observePage(fields, doc = document) {
+  const adapterMarker = detectAdapter(doc.defaultView?.location || (typeof location !== 'undefined' ? location : { hostname: '' }), doc).stepMarker(doc);
   const markers = Array.from(doc.querySelectorAll('[aria-current=step]')).filter(isVisible);
   const scope = fields[0]?.element.closest('main,[role=main]') || doc.querySelector('main,[role=main]') || doc.body;
   const headings = Array.from(scope.querySelectorAll('h1,h2,h3,[role=heading]')).filter(node =>
@@ -35,7 +37,7 @@ export function observePage(fields, doc = document) {
   const heading = leading.find(node => node.tagName !== 'H1') || leading[0];
   return {
     url: doc.location.href,
-    marker: markers.length === 1 ? visibleText(markers[0]) : '',
+    marker: adapterMarker || (markers.length === 1 ? visibleText(markers[0]) : ''),
     heading: heading ? visibleText(heading) : '',
     fields: fields.map(f => ({ id: f.id, question: questionIdentity(f), disabled: Boolean(f.element.disabled) })),
   };
@@ -58,11 +60,17 @@ export function findContinue(doc = document) {
   return inspectContinue(doc).control;
 }
 
+export function findSubmit(doc = document) {
+  return inspectSubmit(doc).control;
+}
+
 export function inspectContinue(doc = document) {
   const matches = Array.from(doc.querySelectorAll('button,input[type=submit],input[type=button],a[href],[role=button]')).filter(isVisible).filter(el => {
     const label = visibleText(el) || el.value || el.getAttribute('aria-label') || '';
     return /^(?:next(?: step)?|continue|save (?:and|&) continue|review(?: application)?|proceed)$/i.test(label.trim());
   });
+  const adapterControl = detectAdapter(doc.defaultView?.location || (typeof location !== 'undefined' ? location : { hostname: '' }), doc).continueControl(doc);
+  if (adapterControl && isVisible(adapterControl) && !matches.includes(adapterControl)) matches.push(adapterControl);
   const candidates = matches.filter(el => {
     // Step destinations are not forward actions. Phenom exposes these as a
     // toolbar with stepnum markers; ordinary action toolbars remain eligible.
@@ -77,6 +85,21 @@ export function inspectContinue(doc = document) {
     reason = `Multiple forward buttons found: ${labels.join(', ')}${candidates.length > 5 ? ', …' : ''}. Continue manually.`;
   } else if (isDisabled(control)) reason = 'The page’s Continue button is disabled. Wait for the page or check required fields.';
   return { control, reason };
+}
+
+export function inspectSubmit(doc = document) {
+  const matches = Array.from(doc.querySelectorAll('button,input[type=submit],input[type=button],a[href],[role=button]')).filter(isVisible).filter(el => {
+    const label = (visibleText(el) || el.value || el.getAttribute('aria-label') || '').trim();
+    return /^(?:submit(?: my | your | the )?application|submit(?: application)?|apply now|send application|final submit)$/i.test(label);
+  }).filter(el => !el.closest('[role=tablist]'));
+  const control = matches.length === 1 ? matches[0] : null;
+  let reason = '';
+  if (!matches.length) reason = 'No unambiguous Submit control. Submit manually.';
+  else if (matches.length > 1) {
+    const labels = matches.slice(0, 5).map(el => (visibleText(el) || el.value || el.getAttribute('aria-label')).trim());
+    reason = `Multiple Submit controls found: ${labels.join(', ')}${matches.length > 5 ? ', …' : ''}. Submit manually.`;
+  } else if (isDisabled(control)) reason = 'The page’s Submit button is disabled.';
+  return { control, reason, count: matches.length };
 }
 export function pageSignature(fields, doc = document) {
   const page = observePage(fields, doc);

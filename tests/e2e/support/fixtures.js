@@ -13,6 +13,13 @@ const extensionPath = path.join(repoRoot, 'dist', 'chrome');
  *  iframe behaviour can be tested without real domains. */
 export const ATS_HOST = 'ats.jobcopilot.test';
 export const EMBED_HOST = 'embed.jobcopilot.test';
+export const WORKDAY_HOST = 'acme.myworkdayjobs.com';
+export const GREENHOUSE_HOST = 'boards.greenhouse.io';
+export const LEVER_HOST = 'jobs.lever.co';
+// Chrome HSTS-preloads ashbyhq.com, so HTTP fixture mapping to that host fails
+// with ERR_SSL_PROTOCOL_ERROR. The fixture still matches the Ashby adapter via
+// distinctive DOM ([data-ashby-root], .ashby-select-input).
+export const ASHBY_HOST = 'ashby.jobcopilot.test';
 
 export const test = base.extend({
   jc: async ({}, use, testInfo) => {
@@ -33,7 +40,7 @@ export const test = base.extend({
       args: [
         `--disable-extensions-except=${extensionPath}`,
         `--load-extension=${extensionPath}`,
-        `--host-resolver-rules=MAP ${ATS_HOST} 127.0.0.1:${fixtures.port},MAP ${EMBED_HOST} 127.0.0.1:${fixtures.port},MAP openrouter.ai 127.0.0.1:${openrouter.port}`,
+        `--host-resolver-rules=MAP ${ATS_HOST} 127.0.0.1:${fixtures.port},MAP ${EMBED_HOST} 127.0.0.1:${fixtures.port},MAP ${WORKDAY_HOST} 127.0.0.1:${fixtures.port},MAP ${GREENHOUSE_HOST} 127.0.0.1:${fixtures.port},MAP ${LEVER_HOST} 127.0.0.1:${fixtures.port},MAP ${ASHBY_HOST} 127.0.0.1:${fixtures.port},MAP openrouter.ai 127.0.0.1:${openrouter.port}`,
         `--ignore-certificate-errors-spki-list=${openrouter.spki}`,
         '--no-first-run',
       ],
@@ -55,7 +62,7 @@ export const test = base.extend({
       popupUrl: () => `chrome-extension://${extensionId}/popup/index.html`,
 
       /** Writes directly through the background worker, bypassing the UI. */
-      async seed({ apiKey = 'sk-or-v1-e2e-test-key', settings, profile } = {}) {
+      async seed({ apiKey = 'sk-or-v1-e2e-test-key', settings, profile, resume } = {}) {
         await worker.evaluate(async ({ apiKey, settings, profile }) => {
           if (apiKey) await chrome.storage.local.set({ 'jc:secrets': { apiKey } });
           if (settings) {
@@ -67,6 +74,33 @@ export const test = base.extend({
             await chrome.storage.local.set({ 'jc:profile': { ...cur, ...profile } });
           }
         }, { apiKey, settings, profile });
+        if (resume) await helpers.seedResume(resume);
+      },
+
+      async seedResume(file = { name: 'Amro-Resume.pdf', type: 'application/pdf', contents: '%PDF-1.4 fake resume' }) {
+        await worker.evaluate(async (file) => {
+          const buffer = new TextEncoder().encode(file.contents).buffer;
+          await new Promise((resolve, reject) => {
+            const req = indexedDB.open('job-copilot', 1);
+            req.onupgradeneeded = () => {
+              if (!req.result.objectStoreNames.contains('files')) req.result.createObjectStore('files');
+            };
+            req.onsuccess = () => {
+              const db = req.result;
+              const tx = db.transaction('files', 'readwrite');
+              tx.objectStore('files').put({
+                name: file.name,
+                type: file.type,
+                buffer,
+                size: buffer.byteLength,
+                storedAt: new Date().toISOString(),
+              }, 'resume');
+              tx.oncomplete = () => { db.close(); resolve(); };
+              tx.onerror = () => reject(tx.error);
+            };
+            req.onerror = () => reject(req.error);
+          });
+        }, file);
       },
 
       async readStorage(key) {

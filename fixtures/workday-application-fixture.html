@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workday — My Information</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; background: #f5f5f5; }
+    main { max-width: 720px; margin: 0 auto; background: #fff; padding: 24px; }
+    [data-automation-id="progressBar"] { display: flex; gap: 16px; margin-bottom: 24px; }
+    [data-automation-id="progressBar"] span { padding: 4px 8px; }
+    [aria-current="step"] { font-weight: 700; border-bottom: 2px solid #005cb9; }
+    .field { margin: 16px 0; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    input, button { font: inherit; }
+    .menu { border: 1px solid #ccc; display: none; }
+    [data-automation-id="promptOption"] { padding: 6px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <div data-automation-id="progressBar">
+      <span aria-current="step">My Information</span>
+      <span>My Experience</span>
+      <span>Review</span>
+    </div>
+    <h1>My Information</h1>
+    <div class="field">
+      <label for="legalName">Legal Name</label>
+      <input id="legalName" data-automation-id="legalName" required>
+    </div>
+    <div class="field">
+      <label for="country">Country</label>
+      <input id="country" data-automation-id="countryDropdown" aria-haspopup="listbox" autocomplete="off" value="">
+      <div class="menu" data-automation-id="countryMenu" role="listbox">
+        <div data-automation-id="promptOption">Canada</div>
+        <div data-automation-id="promptOption">United States</div>
+      </div>
+    </div>
+    <button type="button" data-automation-id="bottom-navigation-next-button" disabled>Continue</button>
+  </main>
+  <script>
+    const input = document.getElementById('country');
+    const menu = document.querySelector('[data-automation-id="countryMenu"]');
+    const continueBtn = document.querySelector('[data-automation-id="bottom-navigation-next-button"]');
+    let committed = '';
+    let draft = '';
+    const open = () => { menu.style.display = 'block'; menu.classList.add('open'); };
+    const close = () => { menu.style.display = 'none'; menu.classList.remove('open'); };
+    input.addEventListener('focus', open);
+    input.addEventListener('click', open);
+    menu.querySelectorAll('[data-automation-id="promptOption"]').forEach((option) => {
+      option.addEventListener('mousedown', (event) => event.preventDefault());
+      option.addEventListener('click', () => {
+        draft = option.textContent.trim();
+        input.value = draft;
+        committed = draft;
+        close();
+      });
+    });
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        input.value = '';
+        committed = '';
+        draft = '';
+        close();
+      }
+    });
+    document.body.addEventListener('mousedown', (event) => {
+      if (!menu.contains(event.target) && event.target !== input) close();
+    });
+    setTimeout(() => { continueBtn.disabled = false; }, 400);
+  </script>
+</body>
+</html>

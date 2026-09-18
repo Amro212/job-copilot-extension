@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Greenhouse Application</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; }
+    main { max-width: 720px; margin: 0 auto; }
+    .field { margin: 16px 0; position: relative; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    .pac-container { border: 1px solid #ddd; display: none; }
+    .pac-item { padding: 6px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Apply for this job</h1>
+    <form id="application_form">
+      <div class="field">
+        <label for="first_name">First Name</label>
+        <input id="first_name" name="first_name" required>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required>
+      </div>
+      <div class="field">
+        <label for="job_application_location">Current location</label>
+        <input id="job_application_location" name="job_application[location]" autocomplete="off">
+        <div class="pac-container">
+          <div class="pac-item">Toronto, ON, Canada</div>
+          <div class="pac-item">Toronto, OH, USA</div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="why">Why do you want to work here?</label>
+        <textarea id="why" name="why"></textarea>
+      </div>
+      <button type="submit">Submit application</button>
+    </form>
+  </main>
+  <script>
+    const input = document.getElementById('job_application_location');
+    const menu = document.querySelector('.pac-container');
+    const open = () => { menu.style.display = 'block'; menu.classList.add('open'); };
+    const close = () => { menu.style.display = 'none'; menu.classList.remove('open'); };
+    input.addEventListener('focus', open);
+    input.addEventListener('input', open);
+    menu.querySelectorAll('.pac-item').forEach((item) => {
+      item.addEventListener('mousedown', (event) => event.preventDefault());
+      item.addEventListener('click', () => {
+        input.value = item.textContent.trim();
+        close();
+      });
+    });
+  </script>
+</body>
+</html>

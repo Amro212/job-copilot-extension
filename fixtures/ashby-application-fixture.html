@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ashby Application</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; }
+    main { max-width: 720px; margin: 0 auto; }
+    .field { margin: 16px 0; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    .ashby-select-menu { display: none; border: 1px solid #ddd; }
+    .ashby-select-option { padding: 6px 10px; cursor: pointer; }
+    #extra-section { display: none; }
+  </style>
+</head>
+<body data-ashby-root="true">
+  <main class="ashby-application-form">
+    <h1>Apply</h1>
+    <div class="field">
+      <label for="fullName">Full name</label>
+      <input id="fullName" name="fullName" required>
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required>
+    </div>
+    <fieldset>
+      <legend>Are you authorized to work in Canada?</legend>
+      <label><input type="radio" name="work_auth" value="Yes"> Yes</label>
+      <label><input type="radio" name="work_auth" value="No"> No</label>
+    </fieldset>
+    <div class="field ashby-select">
+      <label for="source">How did you hear about this job?</label>
+      <input id="source" class="ashby-select-input" data-ashby-field="source" autocomplete="off" value="">
+      <div class="ashby-select-menu">
+        <div class="ashby-select-option">LinkedIn</div>
+        <div class="ashby-select-option">Company website</div>
+      </div>
+    </div>
+    <div class="field" id="extra-section" hidden>
+      <label for="referral">Referral name</label>
+      <input id="referral" name="referral" hidden>
+    </div>
+    <button type="submit">Submit application</button>
+  </main>
+  <script>
+    const source = document.querySelector('.ashby-select-input');
+    const menu = document.querySelector('.ashby-select-menu');
+    const open = () => { menu.style.display = 'block'; menu.classList.add('open'); };
+    const close = () => { menu.style.display = 'none'; menu.classList.remove('open'); };
+    source.addEventListener('focus', open);
+    source.addEventListener('click', open);
+    menu.querySelectorAll('.ashby-select-option').forEach((option) => {
+      option.addEventListener('mousedown', (event) => event.preventDefault());
+      option.addEventListener('click', () => {
+        source.value = option.textContent.trim();
+        close();
+      });
+    });
+    document.querySelectorAll('input[name="work_auth"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        const extra = document.getElementById('extra-section');
+        const referral = document.getElementById('referral');
+        const show = radio.value === 'Yes' && radio.checked;
+        extra.hidden = !show;
+        referral.hidden = !show;
+      });
+    });
+  </script>
+</body>
+</html>

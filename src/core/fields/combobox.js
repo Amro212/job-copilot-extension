@@ -1,5 +1,6 @@
 import { extractLabel } from './labels.js';
 import { isResidenceLabel, locationMatches } from '../location.js';
+import { detectAdapter } from '../adapters/index.js';
 
 // Shared ownership and committed-state rules for scanning, harvesting and filling.
 export const COMBO = '[role="combobox"], button[aria-haspopup="listbox"], input[aria-autocomplete="list"], input[aria-autocomplete="both"]';
@@ -14,6 +15,25 @@ export function isLeverLocation(element) {
   return element.matches('input.location-input[name="location"]') &&
     Boolean(element.parentElement?.querySelector('input[type="hidden"][name="selectedLocation"]')) &&
     Boolean(element.parentElement?.querySelector('.dropdown-container .dropdown-results'));
+}
+
+/** Greenhouse Places-style location: a plain input whose suggestions live in `.pac-container`. */
+export function isPlacesLocation(element) {
+  if (!element?.matches?.('input:not([type="hidden"])')) return false;
+  const parent = element.parentElement;
+  if (!parent) return false;
+  if (parent.querySelector(':scope > .pac-container')) return true;
+  return Boolean(element.nextElementSibling?.classList?.contains('pac-container'));
+}
+
+export function isCustomCombobox(element) {
+  if (!element) return false;
+  if (isLeverLocation(element) || isPlacesLocation(element)) return true;
+  try {
+    return Boolean(detectAdapter().isCombobox(element));
+  } catch {
+    return false;
+  }
 }
 
 export function recordLocationActivation(element, label) {
@@ -34,7 +54,9 @@ export const optionKey = value => String(value ?? '').normalize('NFKC').replace(
 export const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function resolveComboboxParts(element) {
-  if (isLeverLocation(element)) return { container: element.parentElement, input: element, controlBox: element, toggleBtn: null };
+  if (isLeverLocation(element) || isPlacesLocation(element)) {
+    return { container: element.parentElement, input: element, controlBox: element, toggleBtn: null };
+  }
   let container = element;
   // Walk past an input carrying role=combobox, but never cross into another field.
   for (let parent = element.parentElement; parent && !parent.matches('body, html, form, main'); parent = parent.parentElement) {
@@ -51,7 +73,15 @@ export function resolveComboboxParts(element) {
 }
 
 export function getComboboxMenus(element) {
+  const adapterMenus = detectAdapter().comboboxMenus(element);
+  if (adapterMenus) return adapterMenus;
   if (isLeverLocation(element)) return Array.from(element.parentElement.querySelectorAll('.dropdown-container'));
+  if (isPlacesLocation(element)) {
+    const parent = element.parentElement;
+    const local = parent ? Array.from(parent.querySelectorAll(':scope > .pac-container')) : [];
+    if (local.length) return local;
+    return element.nextElementSibling?.classList?.contains('pac-container') ? [element.nextElementSibling] : [];
+  }
   const { container, input } = resolveComboboxParts(element);
   const ids = new Set([element, input].filter(Boolean).flatMap(node =>
     `${node.getAttribute('aria-controls') || ''} ${node.getAttribute('aria-owns') || ''}`.trim().split(/\s+/).filter(Boolean)));
@@ -64,7 +94,9 @@ export function getComboboxMenus(element) {
 export function discoverComboboxOptions(element) {
   const options = [...new Set(getComboboxMenus(element).flatMap(menu => {
     if (menu.hidden || menu.getAttribute('aria-hidden') === 'true' || menu.style.display === 'none') return [];
-    return Array.from(menu.querySelectorAll(isLeverLocation(element) ? '.dropdown-results > .dropdown-location' : OPTION)).filter(option =>
+    const optionSelector = detectAdapter().comboboxOptionSelector()
+      || (isLeverLocation(element) ? '.dropdown-results > .dropdown-location' : isPlacesLocation(element) ? '.pac-item' : OPTION);
+    return Array.from(menu.querySelectorAll(optionSelector)).filter(option =>
       option.textContent?.trim() && !option.hidden && option.style.display !== 'none' &&
       option.ownerDocument.defaultView.getComputedStyle(option).visibility !== 'hidden' &&
       !option.hasAttribute('disabled') && option.getAttribute('aria-disabled') !== 'true');
@@ -93,6 +125,15 @@ export function findExactOption(options, target) {
 
 export function readComboboxSelection(element) {
   if (!element?.isConnected) return [];
+  if (isPlacesLocation(element)) {
+    const value = String(element.value || '').trim();
+    return value ? [value] : [];
+  }
+  if (detectAdapter().quirks.selectionInInput || detectAdapter().quirks.comboboxEscapeRollback) {
+    const { input } = resolveComboboxParts(element);
+    const value = String((input || element).value || '').trim();
+    if (value) return [value];
+  }
   if (isLeverLocation(element)) {
     // Lever can leave selectedLocation empty even after a real option click.
     // Require an observed activation plus exact persisted display and closed menu.
@@ -139,6 +180,12 @@ export function closeCombobox(element) {
   const { input } = resolveComboboxParts(element);
   const target = input || element;
   target.blur?.();
+  // Workday listboxes treat Escape as "cancel the pick". Never send it.
+  if (detectAdapter().quirks.comboboxEscapeRollback) {
+    try {
+      element.ownerDocument.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }));
+    } catch {}
+  }
 }
 
 export function clickFieldControl(element) {
@@ -185,7 +232,7 @@ export async function waitForComboboxOptions(element, timeoutMs, locationQuery) 
     });
     // A pre-existing list may belong to a previous request. Require relevance
     // to every query term; never accept the first nonempty list blindly.
-    const location = isLeverLocation(element) || isResidenceLabel(extractLabel(element));
+    const location = isLeverLocation(element) || isPlacesLocation(element) || isResidenceLabel(extractLabel(element));
     const options = discoverComboboxOptions(element).filter(option => {
       const text = optionKey(option.textContent);
       return location && query ? locationMatches(text, locationQuery || query) : words.every(word => text.includes(word));

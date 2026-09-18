@@ -1,6 +1,7 @@
 /**
  * Resolves human-readable labels and descriptions for form controls
  */
+import { detectAdapter } from '../adapters/index.js';
 
 export function cleanText(text) {
   if (!text) return '';
@@ -88,11 +89,16 @@ export function extractLabel(element) {
     const siblings = Array.from(parent.children);
     const index = siblings.indexOf(element);
     if (index > 0) {
+      const adapter = detectAdapter();
       for (let i = index - 1; i >= 0; i--) {
         const sib = siblings[i];
         if (sib.matches('label, .label, .form-label, .field-label, h3, h4, h5, p, span, strong')) {
           const text = cleanText(sib.textContent);
-          if (text && text.length < 150) return text;
+          if (!text || text.length >= 150) continue;
+          // Lever (and similar) put ALL-CAPS section titles in the same parent
+          // as the control. Those are grouping headers, not the question.
+          if (adapter.isSectionHeading(text, sib)) continue;
+          return text;
         }
       }
     }
@@ -100,9 +106,11 @@ export function extractLabel(element) {
     const grandParent = parent.parentElement;
     if (grandParent) {
       const heading = grandParent.querySelector('.label, .form-label, .field-label, label, legend');
-      if (heading && heading.textContent) {
+      const controls = grandParent.querySelectorAll('input:not([type="hidden"]), textarea, select, [role="combobox"]');
+      if (heading && heading.textContent && controls.length <= 1) {
         const text = cleanText(heading.textContent);
-        if (text && text.length < 150) return text;
+        const adapter = detectAdapter();
+        if (text && text.length < 150 && !adapter.isSectionHeading(text, heading)) return text;
       }
     }
   }

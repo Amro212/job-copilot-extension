@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lever Application</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; }
+    main { max-width: 720px; margin: 0 auto; }
+    h3 { letter-spacing: 0.04em; }
+    .application-question { margin: 16px 0; }
+    label { display: block; }
+    .dropdown-container { display: none; border: 1px solid #ddd; }
+    .dropdown-container.open { display: block; }
+    .dropdown-location { padding: 6px 10px; cursor: pointer; }
+    .dropdown-loading-results { display: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Software Engineer</h1>
+    <div class="application-question">
+      <h3>PERSONAL INFORMATION</h3>
+      <label>
+        <span class="application-label">Full name</span>
+        <input id="name" name="name" required>
+      </label>
+    </div>
+    <div class="application-question">
+      <h3>LOCATION</h3>
+      <input class="location-input" name="location" placeholder="Start typing a location">
+      <input type="hidden" name="selectedLocation" value="">
+      <div class="dropdown-container">
+        <div class="dropdown-loading-results" hidden>Loading</div>
+        <div class="dropdown-results">
+          <div class="dropdown-location">Toronto, ON, CAN</div>
+          <div class="dropdown-location">Toronto, OH, USA</div>
+        </div>
+      </div>
+    </div>
+    <div class="application-question">
+      <h3>LINKEDIN</h3>
+      <label>
+        <span class="application-label">LinkedIn URL</span>
+        <input id="linkedin" name="urls[LinkedIn]" type="url">
+      </label>
+    </div>
+    <div class="application-question">
+      <h3>SALARY EXPECTATIONS OPEN RESPONSE</h3>
+      <label>
+        <span class="application-label">Additional information</span>
+        <textarea id="comments" name="comments"></textarea>
+      </label>
+    </div>
+    <button type="submit">Submit application</button>
+  </main>
+  <script>
+    const input = document.querySelector('input.location-input');
+    const hidden = document.querySelector('input[name="selectedLocation"]');
+    const menu = document.querySelector('.dropdown-container');
+    input.addEventListener('focus', () => { menu.style.display = 'block'; menu.classList.add('open'); });
+    input.addEventListener('input', () => { menu.style.display = 'block'; menu.classList.add('open'); });
+    menu.querySelectorAll('.dropdown-location').forEach((option) => {
+      option.addEventListener('mousedown', (event) => event.preventDefault());
+      option.addEventListener('click', () => {
+        input.value = option.textContent.trim();
+        hidden.value = option.textContent.trim();
+        menu.style.display = 'none';
+        menu.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
