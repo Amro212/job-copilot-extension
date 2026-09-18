@@ -2,8 +2,9 @@ import { FIELD_TYPES } from '../constants.js';
 import { extractOptionLabel, extractLabel } from './labels.js';
 import { isResidenceLabel } from '../location.js';
 import { logger } from '../debug.js';
-import { isLeverLocation, recordLocationActivation } from './combobox.js';
+import { isLeverLocation, isPlacesLocation, recordLocationActivation } from './combobox.js';
 import { optionKey, findExactOption, optionData, resolveComboboxParts, readComboboxSelection, discoverComboboxOptions, openCombobox, closeCombobox, setComboboxSearch, waitForComboboxOptions, waitForComboboxSelection, clickFieldControl } from './combobox.js';
+import { platform } from '../platform.js';
 
 function setNativeInputValue(element, value) {
   try {
@@ -254,7 +255,7 @@ export async function fillCombobox(element, targetValue, knownOptions) {
       return await waitForComboboxSelection(element, target);
     }
     await openCombobox(element);
-    const location = isLeverLocation(element) || known && isResidenceLabel(extractLabel(element));
+    const location = isLeverLocation(element) || isPlacesLocation(element) || known && isResidenceLabel(extractLabel(element));
     ownsSearch = setComboboxSearch(input, location ? target.split(',')[0].trim() : '');
     let options = await waitForComboboxOptions(element, undefined, location ? target : undefined);
     if (!ownsSearch()) return false;
@@ -310,6 +311,36 @@ export function fillContentEditable(element, value) {
   return true;
 }
 
+export async function fillFileInput(element) {
+  if (!element || (element.getAttribute('type') || '').toLowerCase() !== 'file') return false;
+  if (!platform.capabilities.fileUpload) {
+    logger.warn('Fill[file]: host cannot attach files');
+    return false;
+  }
+  const stored = await platform.documents.get();
+  if (!stored?.buffer || !stored.name) {
+    logger.warn('Fill[file]: no stored resume');
+    return false;
+  }
+  const file = new File([stored.buffer], stored.name, { type: stored.type || 'application/octet-stream' });
+  try {
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    element.files = transfer.files;
+  } catch {
+    try {
+      Object.defineProperty(element, 'files', { configurable: true, value: [file] });
+    } catch (err) {
+      logger.warn(`Fill[file]: ${err.message}`);
+      return false;
+    }
+  }
+  try { element.focus(); } catch {}
+  dispatchEventSequence(element, ['input', 'change']);
+  const attached = element.files?.[0];
+  return Boolean(attached && attached.name === stored.name);
+}
+
 export async function fillField(field, targetValue) {
   if (!field || !field.element) return false;
   logger.info(`Field action: id=${field.id || '(none)'}, type=${field.type}, tag=${field.element.tagName}, path=${window.location.pathname}`);
@@ -332,6 +363,9 @@ export async function fillField(field, targetValue) {
 
     case FIELD_TYPES.CONTENTEDITABLE:
       return fillContentEditable(field.element, targetValue);
+
+    case FIELD_TYPES.FILE:
+      return fillFileInput(field.element);
 
     case FIELD_TYPES.TEXT:
     case FIELD_TYPES.EMAIL:

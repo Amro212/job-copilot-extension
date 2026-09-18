@@ -129,6 +129,17 @@ export function createGmHost() {
     // No navigation API: a constant marker keeps the engine on DOM comparison.
     navigationMarker: () => ({ id: 0, url: '', frameId: 0, kind: '', at: 0 }),
     navigationOnChange: () => () => {},
+    documentsMeta: async () => memoryStore.has('jc:resume-meta') ? memoryStore.get('jc:resume-meta') : null,
+    documentsGet: async () => memoryStore.get('jc:resume') || null,
+    documentsPut: async (doc) => {
+      memoryStore.set('jc:resume', doc);
+      memoryStore.set('jc:resume-meta', { name: doc.name, type: doc.type, size: doc.buffer?.byteLength || 0 });
+      return { ok: true };
+    },
+    documentsDelete: async () => {
+      memoryStore.delete('jc:resume');
+      memoryStore.delete('jc:resume-meta');
+    },
     openOptions: () => {},
     menuRegister: (label, handler) => {
       if (typeof GM_registerMenuCommand === 'function') {

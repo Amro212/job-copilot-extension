@@ -70,5 +70,11 @@ export const platform = {
     marker: () => host.navigationMarker(),
     onChange: (listener) => host.navigationOnChange(listener),
   },
+  documents: {
+    meta: () => host.documentsMeta(),
+    get: () => host.documentsGet(),
+    put: (doc) => host.documentsPut(doc),
+    delete: () => host.documentsDelete(),
+  },
   openOptions: () => host.openOptions(),
 };

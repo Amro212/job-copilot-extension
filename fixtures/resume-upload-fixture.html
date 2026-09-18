@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resume upload fixture</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; }
+    main { max-width: 640px; margin: 0 auto; }
+    .field { margin: 16px 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Apply</h1>
+    <div class="field">
+      <label for="fullName">Full name</label>
+      <input id="fullName" name="fullName" required>
+    </div>
+    <div class="field">
+      <label for="resume">Resume</label>
+      <input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx" required>
+      <div id="resume-filename"></div>
+    </div>
+    <button type="submit">Submit application</button>
+  </main>
+  <script>
+    const input = document.getElementById('resume');
+    const out = document.getElementById('resume-filename');
+    input.addEventListener('change', () => {
+      out.textContent = input.files?.[0]?.name || '';
+    });
+  </script>
+</body>
+</html>

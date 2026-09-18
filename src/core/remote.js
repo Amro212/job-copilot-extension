@@ -137,3 +137,16 @@ export async function collectRemoteValidation() {
   }
   return errors;
 }
+
+export async function applyRemoteResumeUploads() {
+  const frames = await listRemoteFrames();
+  const results = [];
+  for (const frame of frames) {
+    const result = await platform.frames.command(frame.frameId, { action: 'uploadResume' });
+    if (!ok(result)) continue;
+    for (const entry of result.results || []) {
+      results.push({ ...entry, fieldId: remoteFieldId(frame.frameId, entry.fieldId) });
+    }
+  }
+  return results;
+}

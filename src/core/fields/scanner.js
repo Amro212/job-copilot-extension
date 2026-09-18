@@ -3,13 +3,14 @@ import { extractLabel, extractGroupLabel, extractOptionLabel, extractDescription
 import { logger } from '../debug.js';
 import { getProfile } from '../storage.js';
 import { isResidenceLabel, locationMatches } from '../location.js';
-import { isLeverLocation } from './combobox.js';
+import { isLeverLocation, isCustomCombobox } from './combobox.js';
 import { COMBO, discoverComboboxOptions, optionData, readComboboxSelection, resolveComboboxParts, openCombobox, closeCombobox, setComboboxSearch, waitForComboboxOptions } from './combobox.js';
 
 let fieldCounter = 0;
 
 function isVisible(el) {
   if (!el || !(el instanceof HTMLElement)) return false;
+  if (el.hidden || el.closest('[hidden]')) return false;
   if (el.offsetWidth === 0 && el.offsetHeight === 0 && el.getClientRects().length === 0) {
     if (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') {
       return true;
@@ -82,8 +83,31 @@ export function scanFormFields(root = document) {
     const typeAttr = (el.getAttribute('type') || '').toLowerCase();
 
     // Skip non-fillable inputs
-    const isCombobox = el.matches(COMBO) || isLeverLocation(el);
-    if (typeAttr === 'hidden' || typeAttr === 'submit' || (typeAttr === 'button' && !isCombobox) || typeAttr === 'reset' || typeAttr === 'image' || typeAttr === 'password' || typeAttr === 'file') {
+    const isCombobox = el.matches(COMBO) || isCustomCombobox(el);
+    if (typeAttr === 'hidden' || typeAttr === 'submit' || (typeAttr === 'button' && !isCombobox) || typeAttr === 'reset' || typeAttr === 'image' || typeAttr === 'password') {
+      continue;
+    }
+
+    // Resume upload is a first-class field. Attach the stored file later.
+    if (typeAttr === 'file') {
+      processedElements.add(el);
+      const label = extractLabel(el);
+      const description = extractDescription(el);
+      const currentName = el.files?.[0]?.name || '';
+      detectedFields.push({
+        id: el.id || el.name || `jc_field_${++fieldCounter}`,
+        name: el.name || '',
+        selector: buildFieldSelector(el),
+        type: FIELD_TYPES.FILE,
+        element: el,
+        label,
+        description,
+        required: isRequired(el, label),
+        currentValue: currentName,
+        options: [],
+        constraints: { accept: el.getAttribute('accept') || '' },
+        isNarrative: false,
+      });
       continue;
     }
 
@@ -315,7 +339,8 @@ export async function harvestComboboxOptions(fields, searchQueries = new Map()) 
       const query = searchQueries.get(field.id) || (isResidenceLabel(field.label) ? profileLocation : '') || '';
       // Search by city so provider formatting/abbreviations do not suppress
       // suggestions; retain every supplied region/country for final matching.
-      const search = isLeverLocation(element) || isResidenceLabel(field.label) ? query.split(',')[0].trim() : query;
+      const locationField = isLeverLocation(element) || isCustomCombobox(element) && isResidenceLabel(field.label) || isResidenceLabel(field.label);
+      const search = locationField ? query.split(',')[0].trim() : query;
       ownsSearch = setComboboxSearch(input, search);
       field.options = (await waitForComboboxOptions(element, undefined, isResidenceLabel(field.label) ? query : undefined)).map(optionData);
       if (query && isResidenceLabel(field.label)) field.options = field.options.filter(option => locationMatches(option.label, query));

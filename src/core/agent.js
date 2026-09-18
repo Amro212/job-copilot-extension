@@ -39,7 +39,7 @@ export function createFieldAgent() {
     const scanned = scanFormFields(document);
     cache = new Map(scanned.map((field) => [field.id, field]));
 
-    const targets = scanned.filter((field) => overwriteExisting || unfilled(field));
+    const targets = scanned.filter((field) => field.type !== 'file' && (overwriteExisting || unfilled(field)));
     if (!targets.length) return { fields: [], pageType: page.type };
 
     await harvestComboboxOptions(targets);
@@ -120,7 +120,25 @@ export function createFieldAgent() {
     return { results };
   }
 
-  function validation() {
+  async function uploadResume() {
+    const fields = scanFormFields(document).filter((field) => field.type === 'file');
+    const results = [];
+    for (const field of fields) {
+      cache.set(field.id, field);
+      const didFill = await fillField(field, '');
+      const verification = didFill ? await verifyField(field, '') : { verified: false, actualValue: '', error: 'No stored resume' };
+      results.push({
+        fieldId: field.id,
+        status: verification.verified ? FILL_STATUS.VERIFIED : FILL_STATUS.FAILED,
+        value: verification.actualValue || '',
+        error: verification.error,
+        label: field.label,
+      });
+    }
+    return { results };
+  }
+
+  async function validation() {
     const fields = cache.size ? [...cache.values()] : scanFormFields(document);
     return {
       errors: inspectValidation(fields).map((error) => ({ ...error, frameUrl: window.location.href })),
@@ -132,6 +150,7 @@ export function createFieldAgent() {
       case 'scan': return scan(command);
       case 'searchOptions': return searchOptions(command);
       case 'fill': return fill(command);
+      case 'uploadResume': return uploadResume();
       case 'validation': return validation();
       // An embedded frame captures its own document; the parent cannot read it.
       case 'captureFixture': return captureFixture(document, { label: command.label || '' });

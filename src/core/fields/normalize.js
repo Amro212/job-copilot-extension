@@ -4,6 +4,7 @@
 
 export function normalizeFieldsForAI(detectedFields, options = {}) {
   const { overwriteExisting = false } = options;
+  void overwriteExisting;
 
   return detectedFields.map((field) => {
     const isFilled = Boolean(
@@ -38,5 +39,5 @@ export function normalizeFieldsForAI(detectedFields, options = {}) {
     }
 
     return normalized;
-  });
+  }).filter((field) => field.type !== 'file');
 }

@@ -121,6 +121,22 @@
 
     <section>
       <div>
+        <h2>Resume</h2>
+        <p class="hint">One file, stored in the extension. Autofill attaches it to resume upload controls and checks the filename afterwards.</p>
+      </div>
+      <div class="row">
+        <input id="resume-file" type="file" accept=".pdf,.doc,.docx,application/pdf" />
+      </div>
+      <p class="hint" id="resume-status">No resume stored.</p>
+      <div class="actions">
+        <button type="button" id="save-resume">Store resume</button>
+        <button class="secondary" type="button" id="clear-resume">Remove resume</button>
+        <span class="feedback" id="resume-feedback"></span>
+      </div>
+    </section>
+
+    <section>
+      <div>
         <h2>Backup and migration</h2>
         <p class="hint">Import a JSON export from the Tampermonkey userscript, or back up what is stored here. Exports never include the API key.</p>
       </div>

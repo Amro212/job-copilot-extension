@@ -77,6 +77,17 @@ export async function verifyField(field, expectedValue) {
       return await verifyCombobox(field.element, expectedValue);
     }
 
+    case FIELD_TYPES.FILE: {
+      const actualVal = field.element.files?.[0]?.name || '';
+      const expectedName = String(expectedValue || '').trim();
+      const verified = Boolean(actualVal) && (!expectedName || actualVal.toLowerCase() === expectedName.toLowerCase());
+      return {
+        verified,
+        actualValue: actualVal,
+        error: verified ? undefined : actualVal ? `Attached "${actualVal}" did not match "${expectedValue}"` : 'No file attached',
+      };
+    }
+
     case FIELD_TYPES.TEXT:
     case FIELD_TYPES.TEXTAREA:
     case FIELD_TYPES.EMAIL:

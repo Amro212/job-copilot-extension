@@ -129,6 +129,15 @@ export function createExtensionHost() {
       .catch(() => []),
     frameCommand: (frameId, command) => sendMessage({ type: MSG.FRAME_COMMAND, frameId, command })
       .catch((err) => ({ error: err?.message || 'Frame command failed' })),
+    documentsMeta: () => sendMessage({ type: MSG.DOC_META }).then((res) => res?.meta || null).catch(() => null),
+    documentsGet: () => sendMessage({ type: MSG.DOC_GET }).then((res) => (res?.error ? null : res)).catch(() => null),
+    documentsPut: (doc) => sendMessage({
+      type: MSG.DOC_PUT,
+      name: doc.name,
+      mimeType: doc.mimeType || doc.type,
+      buffer: doc.buffer,
+    }),
+    documentsDelete: () => sendMessage({ type: MSG.DOC_DELETE }),
     openOptions: () => {
       sendMessage({ type: MSG.OPEN_OPTIONS }).catch(() => {});
     },
