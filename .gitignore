@@ -1,0 +1,10 @@
+node_modules/
+dist/
+# Tracked so Tampermonkey @updateURL keeps working
+!dist/job-copilot.user.js
+.build-cache.json
+test-results/
+playwright-report/
+.playwright/
+*.zip
+*.xpi

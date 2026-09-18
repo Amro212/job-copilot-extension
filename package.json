@@ -1,0 +1,32 @@
+{
+  "name": "job-copilot",
+  "version": "0.4.0",
+  "description": "Job Copilot — AI job application autofill for Chrome, Firefox, and Tampermonkey",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js",
+    "test:e2e": "playwright test",
+    "build": "node tools/build.js",
+    "build:userscript": "node tools/build.js --target=userscript",
+    "build:extension": "node tools/build.js --target=extension",
+    "dev": "node tools/build.js --watch",
+    "package": "node tools/package.js",
+    "bump:patch": "node tools/build.js --bump=patch",
+    "bump:minor": "node tools/build.js --bump=minor",
+    "bump:major": "node tools/build.js --bump=major"
+  },
+  "keywords": [
+    "chrome-extension",
+    "firefox-extension",
+    "userscript",
+    "job-copilot",
+    "autofill"
+  ],
+  "author": "Job Copilot Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "^30.0.1"
+  }
+}

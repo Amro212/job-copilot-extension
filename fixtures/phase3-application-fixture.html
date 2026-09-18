@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Phase 3 Application Workflow Fixture</title>
+  <style>
+    body { font: 16px/1.5 system-ui; max-width: 760px; margin: 48px auto; padding: 0 24px; color: #172033; background: #f5f7fb; }
+    main { background: white; padding: 32px; border-radius: 16px; border: 1px solid #dbe2ed; }
+    label { display: block; margin-top: 18px; font-weight: 600; }
+    input, textarea { display: block; width: 94%; padding: 10px; font: inherit; border: 1px solid #8896aa; border-radius: 6px; }
+    button, a.action { display: inline-block; padding: 10px 18px; margin-top: 18px; background: #194bcc; color: white; border: 0; border-radius: 7px; font: inherit; cursor: pointer; }
+    nav { margin-bottom: 18px; } nav a { margin-right: 14px; }
+    [role=alert] { color: #a12121; } [hidden] { display: none !important; }
+    small { color: #566477; }
+  </style>
+</head>
+<body>
+  <nav aria-label="Fixture scenarios">
+    <a href="?scenario=validation">Validation flow</a>
+    <a href="?scenario=captcha">CAPTCHA flow</a>
+    <a href="?scenario=assessment">Assessment flow</a>
+    <a href="?scenario=stuck">Stuck navigation</a>
+  </nav>
+  <p><small>Development fixture. Uses your installed userscript. Capture the listing, click Apply now, then Start Application in Job Copilot.</small></p>
+  <main></main>
+  <script>
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const scenario = params.get('scenario') || 'validation';
+      const main = document.querySelector('main');
+      function show(step) {
+        const url = new URL(location.href);
+        url.searchParams.set('scenario', scenario);
+        url.searchParams.set('step', step);
+        history.replaceState({}, '', url);
+        if (step === 'listing') {
+          main.innerHTML = '<h1>Software Engineer</h1><h2>Example Fixture Company</h2><p>Location: Toronto, Canada</p><h2>Job description</h2><p>Build accessible web applications and reliable form workflows. Share experience grounded in your real profile.</p><a class="action">Apply now</a>';
+          const apply = new URL(url); apply.searchParams.set('step', '1');
+          main.querySelector('a').href = apply.href;
+          const metadata = document.createElement('script');
+          metadata.type = 'application/ld+json';
+          metadata.textContent = JSON.stringify({ '@type': 'JobPosting', title: 'Software Engineer', hiringOrganization: { name: 'Example Fixture Company' }, identifier: { value: 'phase3-42' }, jobLocation: { address: { addressLocality: 'Toronto', addressCountry: 'Canada' } }, description: 'Build accessible web applications and reliable form workflows.' });
+          main.append(metadata);
+          return;
+        }
+        if (step === '1') {
+          main.innerHTML = '<h1>Application · Contact</h1><form><label for="fullName">Full name</label><input id="fullName" autocomplete="name" required><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required><button type="button">Save and Continue</button></form>';
+          main.querySelector('button').onclick = () => {
+            if (main.querySelector('form').checkValidity()) show(scenario === 'captcha' ? 'captcha' : scenario === 'assessment' ? 'assessment' : '2');
+          };
+        } else if (step === 'captcha') {
+          main.innerHTML = '<h1>Application · Verification</h1><div data-captcha role="alert">Please complete the CAPTCHA. Fake development state.</div><button type="button">Remove fake challenge</button>';
+          main.querySelector('button').onclick = () => show('2');
+        } else if (step === 'assessment') {
+          main.innerHTML = '<h1>Skills assessment</h1><p>This fake boundary must stay untouched.</p><label for="assessmentAnswer">Assessment response</label><input id="assessmentAnswer" required><button type="button">Continue</button>';
+          main.querySelector('button').onclick = () => show('2');
+        } else if (step === '2') {
+          main.innerHTML = '<h1>Application · Experience</h1><form><label for="experience">Describe relevant experience</label><textarea id="experience" required></textarea><p id="experience-error" role="alert" hidden></p><button type="button">Review</button></form>';
+          let rejected = false;
+          const field = main.querySelector('textarea');
+          const error = main.querySelector('[role=alert]');
+          field.oninput = () => { field.removeAttribute('aria-invalid'); error.hidden = true; };
+          main.querySelector('button').onclick = () => {
+            if (scenario === 'stuck') return;
+            if (!main.querySelector('form').checkValidity()) return;
+            if (!rejected || field.value.trim().length < 40) {
+              rejected = true;
+              field.setAttribute('aria-invalid', 'true');
+              field.setAttribute('aria-describedby', error.id);
+              error.hidden = false;
+              error.textContent = 'Use at least 40 characters describing relevant experience, grounded in your actual profile. The first answer is deliberately rejected.';
+            } else show('review');
+          };
+        } else if (step === 'review') {
+          main.innerHTML = '<h1>Review application</h1><p>Workflow must stop here. This fixture submits only when you click manually.</p><button type="button">Submit application</button>';
+          main.querySelector('button').onclick = () => show('confirmation');
+        } else {
+          main.innerHTML = '<h1>Application submitted</h1><p>Fixture confirmation. No real application was sent.</p>';
+        }
+      }
+      show(params.get('step') || 'listing');
+    })();
+  </script>
+</body>
+</html>

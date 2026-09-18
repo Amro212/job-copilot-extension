@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 2 — Generic AI Autofill Acceptance Fixture</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 30px;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    .fixture-container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    h1 { font-size: 22px; margin-top: 0; margin-bottom: 8px; color: #1e293b; }
+    p.sub { color: #64748b; font-size: 14px; margin-top: 0; margin-bottom: 24px; }
+    
+    .section {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #ffffff;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-row {
+      display: flex;
+      gap: 16px;
+    }
+    .form-row .form-group {
+      flex: 1;
+    }
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .required { color: #ef4444; }
+    .help-text {
+      font-size: 12px;
+      color: #64748b;
+    }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .radio-item, .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .notice-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      color: #1e40af;
+      margin-bottom: 16px;
+    }
+
+    .react-state-display {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="fixture-container">
+    <h1>Software Engineer Application — Phase 2 Acceptance Form</h1>
+    <p class="sub">This deterministic fixture exercises all 7 Hard Gates in <code>PHASE_2_GENERIC_AUTOFILL.md</code>.</p>
+
+    <div class="notice-box">
+      <strong>Acceptance Gate Coverage:</strong>
+      <ul>
+        <li><strong>Gate 1 (Detection)</strong>: Scans text, email, tel, select, radio, checkbox, and narrative textareas.</li>
+        <li><strong>Gate 2 (AI Payload)</strong>: 1 primary request mapping applicant profile to normalized fields.</li>
+        <li><strong>Gate 3 (Fill Reliability)</strong>: Native prototype setters trigger framework listeners (see React simulation below).</li>
+        <li><strong>Gate 4 (Verification)</strong>: Includes intentional rejection field (<code>#reject_test_field</code>) to test failure detection.</li>
+        <li><strong>Gate 5 (Existing Values)</strong>: Pre-filled portfolio URL tests overwrite toggle setting.</li>
+        <li><strong>Gate 6 (Rewrite)</strong>: Narrative textarea tests inline badge and custom feedback prompt rewrite.</li>
+      </ul>
+    </div>
+
+    <form id="job-application-form">
+      <!-- Section 1: Contact Information -->
+      <div class="section">
+        <div class="section-title">1. Candidate Contact Information</div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="first_name">Full Legal Name <span class="required">*</span></label>
+            <input type="text" id="first_name" name="fullName" required placeholder="e.g. Alex Morgan" />
+          </div>
+          <div class="form-group">
+            <label for="user_email">Email Address <span class="required">*</span></label>
+            <input type="email" id="user_email" name="email" required placeholder="alex@example.com" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="user_phone">Phone Number <span class="required">*</span></label>
+            <input type="tel" id="user_phone" name="phone" required placeholder="+1 (555) 000-0000" />
+          </div>
+          <div class="form-group">
+            <label for="user_location">Current Location / City <span class="required">*</span></label>
+            <input type="text" id="user_location" name="location" required placeholder="e.g. Austin, TX" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="linkedin_url">LinkedIn Profile URL</label>
+            <input type="url" id="linkedin_url" name="linkedin" placeholder="https://linkedin.com/in/..." />
+          </div>
+          <div class="form-group">
+            <label for="github_url">GitHub Profile URL</label>
+            <input type="url" id="github_url" name="github" placeholder="https://github.com/..." />
+          </div>
+        </div>
+
+        <!-- Pre-filled field for Gate 5 testing -->
+        <div class="form-group">
+          <label for="portfolio_url">Personal Website / Portfolio (Pre-filled for Gate 5)</label>
+          <input type="url" id="portfolio_url" name="portfolio" value="https://pre-existing-portfolio.example.com" />
+          <span class="help-text">Tests if "Overwrite Existing Values" is respected when OFF (skipped) vs ON (replaced).</span>
+        </div>
+      </div>
+
+      <!-- Section 2: Work Authorization & Structured Preferences -->
+      <div class="section">
+        <div class="section-title">2. Work Authorization & Preferences</div>
+
+        <!-- Simulated React-Select Combobox (Greenhouse / ATS style) -->
+        <div class="form-group select">
+          <label id="country_label" for="country_combobox">Country / Primary Residence <span class="required">*</span></label>
+          <div class="select-shell" id="country_select_container" style="position: relative;">
+            <div class="select__control" id="country_control" style="display: flex; align-items: center; justify-content: space-between; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; background: #fff; cursor: pointer;">
+              <div class="select__value-container" style="display: flex; align-items: center; flex: 1;">
+                <div class="select__placeholder" id="country_placeholder" style="color: #94a3b8; font-size: 14px;">Select...</div>
+                <div class="select__single-value" id="country_single_value" style="display: none; font-weight: 500; font-size: 14px; color: #1e293b;"></div>
+                <input class="select__input" id="country_combobox" name="country" role="combobox" aria-labelledby="country_label" aria-controls="country_options" aria-expanded="false" type="text" autocomplete="off" style="border: none; outline: none; background: transparent; width: 100%; min-width: 2px; font-size: 14px;" />
+              </div>
+              <div class="select__indicators">
+                <button type="button" id="country_toggle_btn" aria-label="Toggle flyout" style="border: none; background: none; cursor: pointer; color: #64748b; font-size: 12px;">▼</button>
+              </div>
+            </div>
+            <div id="country_options" role="listbox" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; max-height: 160px; overflow-y: auto;">
+              <div role="option" data-value="United States" style="padding: 8px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;">United States</div>
+              <div role="option" data-value="Canada" style="padding: 8px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;">Canada</div>
+              <div role="option" data-value="United Kingdom" style="padding: 8px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;">United Kingdom</div>
+              <div role="option" data-value="Germany" style="padding: 8px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;">Germany</div>
+              <div role="option" data-value="Australia" style="padding: 8px 12px; cursor: pointer; font-size: 14px;">Australia</div>
+            </div>
+          </div>
+          <span class="help-text">Tests custom react-select / ARIA combobox search, dropdown option clicking, and single-value state persistence.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="experience_level">Years of Relevant Experience <span class="required">*</span></label>
+          <select id="experience_level" name="experienceLevel" required>
+            <option value="">-- Please Select --</option>
+            <option value="entry">0 - 2 years (Junior / Entry)</option>
+            <option value="mid">3 - 5 years (Mid-level)</option>
+            <option value="senior">6 - 9 years (Senior)</option>
+            <option value="lead">10+ years (Staff / Principal)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Are you legally authorized to work in the United States? <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input type="radio" name="work_auth_us" value="yes" required />
+              Yes, I am authorized to work in the US
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="work_auth_us" value="no" />
+              No, I am not authorized
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Will you now or in the future require visa sponsorship? <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input type="radio" name="sponsorship_req" value="no" required />
+              No, I will not require sponsorship
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="sponsorship_req" value="yes" />
+              Yes, I will require sponsorship
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Primary Engineering Strengths (Select all that apply):</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" name="skills_frontend" value="frontend" />
+              Frontend Engineering (JavaScript / TypeScript / React)
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="skills_backend" value="backend" />
+              Backend Architecture & Distributed Systems
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="skills_ai" value="ai_ml" />
+              AI / LLM Integrations & Tooling
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Open-Ended / Narrative Questions (Gate 6 Rewrite testing) -->
+      <div class="section">
+        <div class="section-title">3. Narrative & Experience Questions (Gate 6 Rewrite Test)</div>
+
+        <div class="form-group">
+          <label for="why_company">Why are you interested in joining our team? <span class="required">*</span></label>
+          <textarea id="why_company" name="whyCompany" required placeholder="Describe what excites you about this role and how your background aligns..."></textarea>
+          <span class="help-text">Test inline "✨ Rewrite with AI" pill on focus or in-panel rewrite button.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="challenging_project">Describe a technically challenging project you led and its outcome: <span class="required">*</span></label>
+          <textarea id="challenging_project" name="challengingProject" required placeholder="Detail the problem, your architectural solution, and measurable results..."></textarea>
+        </div>
+      </div>
+
+      <!-- Section 4: Framework Reactivity & Gate 4 Rejection Test -->
+      <div class="section">
+        <div class="section-title">4. Framework Reactivity & Rejection Verification</div>
+
+        <!-- Simulated React state tracker -->
+        <div class="form-group">
+          <label for="react_sim_input">React-Controlled State Tracker Input</label>
+          <input type="text" id="react_sim_input" placeholder="Type or autofill here..." />
+          <div class="react-state-display" id="react_state_output">React Internal State: ""</div>
+        </div>
+
+        <!-- Gate 4 Rejection Field -->
+        <div class="form-group" style="background: #fef2f2; border: 1px dashed #f87171; padding: 12px; border-radius: 6px;">
+          <label for="reject_test_field" style="color: #991b1b;">
+            Gate 4 Rejection Test Field (Simulates strict validator rejection)
+          </label>
+          <input type="text" id="reject_test_field" data-reject-fill="true" placeholder="This field will reject programmatic fills" />
+          <span class="help-text" style="color: #b91c1c;">
+            Copilot must detect this failure, visually highlight it red, and record 1 failed field in the panel.
+          </span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Simulated React-like state tracking
+    const reactInput = document.getElementById('react_sim_input');
+    const reactOutput = document.getElementById('react_state_output');
+    
+    reactInput.addEventListener('input', (e) => {
+      reactOutput.textContent = `React Internal State: "${e.target.value}"`;
+    });
+    reactInput.addEventListener('change', (e) => {
+      reactOutput.textContent = `React Internal State (committed): "${e.target.value}"`;
+    });
+
+    // Simulated React-Select combobox behavior
+    const countryControl = document.getElementById('country_control');
+    const countryInput = document.getElementById('country_combobox');
+    const countryOptions = document.getElementById('country_options');
+    const countryPlaceholder = document.getElementById('country_placeholder');
+    const countrySingleVal = document.getElementById('country_single_value');
+    const countryToggleBtn = document.getElementById('country_toggle_btn');
+
+    function openCountryDropdown() {
+      countryOptions.style.display = 'block';
+      countryInput.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeCountryDropdown() {
+      countryOptions.style.display = 'none';
+      countryInput.setAttribute('aria-expanded', 'false');
+    }
+
+    countryControl.addEventListener('click', () => {
+      openCountryDropdown();
+      countryInput.focus();
+    });
+
+    countryToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (countryOptions.style.display === 'block') {
+        closeCountryDropdown();
+      } else {
+        openCountryDropdown();
+        countryInput.focus();
+      }
+    });
+
+    countryInput.addEventListener('input', (e) => {
+      openCountryDropdown();
+      const q = e.target.value.toLowerCase().trim();
+      const opts = countryOptions.querySelectorAll('[role="option"]');
+      opts.forEach((opt) => {
+        const txt = opt.textContent.toLowerCase();
+        opt.style.display = (!q || txt.includes(q)) ? 'block' : 'none';
+      });
+    });
+
+    countryOptions.querySelectorAll('[role="option"]').forEach((opt) => {
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const selectedText = opt.textContent.trim();
+        countrySingleVal.textContent = selectedText;
+        countrySingleVal.style.display = 'block';
+        countryPlaceholder.style.display = 'none';
+        countryInput.value = '';
+        countryInput.setAttribute('aria-valuetext', selectedText);
+        closeCountryDropdown();
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('country_select_container').contains(e.target)) {
+        closeCountryDropdown();
+      }
+    });
+  </script>
+</body>
+</html>
