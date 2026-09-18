@@ -19,8 +19,9 @@ Log every user-reported bug and every change made in a conversation turn in
 - `npm test` must pass before any change is considered done.
 - `npm run test:e2e` must pass for changes that touch scanning, filling,
   navigation, upload, or the panel. Real browser, real extension load.
-- Every live ATS bug gets a captured fixture (`npm run capture` output) plus an
-  E2E spec so it can never silently regress.
+- Every live ATS bug gets a captured fixture plus an E2E spec so it can never
+  silently regress. Capture one with the panel's Debug tab -> "Save page fixture",
+  then move the downloaded files into `fixtures/`.
 
 ## 3. Architecture rules
 

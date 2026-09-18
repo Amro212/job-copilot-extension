@@ -114,6 +114,19 @@ export async function applyRemoteAnswers(answers, onProgress) {
   return results;
 }
 
+/** Sanitized fixture snapshots from each embedded frame, for the capture tool. */
+export async function captureRemoteFixtures(label = '') {
+  const frames = await listRemoteFrames();
+  const captures = [];
+  for (const frame of frames) {
+    const result = await platform.frames.command(frame.frameId, { action: 'captureFixture', label });
+    if (ok(result) && result.html) {
+      captures.push({ frameId: frame.frameId, url: frame.url, html: result.html, meta: result.meta });
+    }
+  }
+  return captures;
+}
+
 /** Aggregated validation errors from embedded frames, for workflow repair. */
 export async function collectRemoteValidation() {
   const frames = await listRemoteFrames();

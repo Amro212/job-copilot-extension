@@ -5,6 +5,47 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-18 — Stage 5: fixture capture tool
+
+The Playwright harness itself landed in Stage 2 because Stage 2's gate could not be
+verified without it. This stage adds the capture half.
+
+### Files created
+
+- `src/core/capture.js` — sanitizing DOM snapshotter.
+- `tests/unit/capture.test.js` (6 tests), `tests/e2e/capture.spec.js` (2 tests)
+
+### Files modified
+
+- `src/core/agent.js` + `src/core/remote.js` — a `captureFixture` agent action, so
+  an embedded frame snapshots its own document. The parent cannot read it.
+- `src/core/ui.js` — Debug tab button that downloads the page plus one file per
+  embedded frame, with the host file's `iframe src` rewritten to the sibling file.
+- `AGENTS.md`, `package.json` — corrected: capture is a panel action, not a CLI.
+
+### Sanitization
+
+Captures come from real applications, so the snapshot removes input values,
+textarea and contenteditable contents, `checked` and `selected` state, scripts,
+inline `on*` handlers, remote image sources, and the copilot panel itself. Text and
+attribute values are scrubbed of the stored profile's own values plus email, phone
+and government-id patterns. Redaction needles shorter than four characters are
+ignored, so a profile value like "ON" cannot mangle "ON Semiconductor". Same-origin
+CSS is inlined because the scanner's visibility checks depend on layout.
+
+### Verification
+
+- `npm test`: 154 passed.
+- `npm run test:e2e`: 23 passed. The capture specs fill the embedded cross-origin
+  form with realistic applicant data, capture, and assert none of it appears in
+  either output file; they also prove the embedded frame contributed its own
+  document. The second spec is a round trip: capture
+  `phase2-form-fixture.html`, serve the result back, and confirm the panel still
+  reports the same 18 detected fields, so a capture is lossless for the field
+  engine.
+
+---
+
 ## Turn: 2026-09-18 — Stage 4: authoritative navigation lifecycle
 
 Tab binding already moved to `chrome.storage.session` in Stage 1-2 via

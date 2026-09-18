@@ -27,7 +27,8 @@ import {
   initInlineRewriteBadge,
 } from './fields/highlight.js';
 import { startFormObserver, pauseFormObserver, resumeFormObserver } from './observer.js';
-import { collectRemoteFields, applyRemoteAnswers, searchRemoteOptions, listRemoteFrames, isRemoteFieldId } from './remote.js';
+import { collectRemoteFields, applyRemoteAnswers, searchRemoteOptions, listRemoteFrames, captureRemoteFixtures, isRemoteFieldId } from './remote.js';
+import { captureFixture, fixtureFileName } from './capture.js';
 import { createApplicationEngine } from './application.js';
 import { classifyPage } from './pageClassifier.js';
 import { rememberAnswer } from './memory.js';
@@ -1186,6 +1187,46 @@ async function executeAutofillFlow() {
   }
 }
 
+function downloadText(fileName, text, type = 'text/html') {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.style.display = 'none';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+/**
+ * Saves this page, plus each embedded frame, as sanitized fixture files. Frames
+ * capture themselves because their documents are unreachable from here.
+ */
+async function saveFixtureSnapshot() {
+  const feedback = shadowRootRef?.querySelector('#jc-capture-feedback');
+  const report = (text) => { if (feedback) feedback.textContent = text; };
+
+  try {
+    report('Capturing...');
+    const frameCaptures = await captureRemoteFixtures();
+    const frameFiles = frameCaptures.map((capture, index) => fixtureFileName(capture.url || window.location.href, `frame${index + 1}`));
+
+    const { html, meta } = captureFixture(document, { frameFiles });
+    const mainFile = fixtureFileName(window.location.href);
+    downloadText(mainFile, html);
+    frameCaptures.forEach((capture, index) => downloadText(frameFiles[index], capture.html));
+
+    const total = 1 + frameCaptures.length;
+    report(`Saved ${total} file${total === 1 ? '' : 's'}: ${meta.fieldCount} fields here${frameCaptures.length ? `, ${frameCaptures.length} embedded frame${frameCaptures.length === 1 ? '' : 's'}` : ''}. Move them into fixtures/.`);
+    logger.info(`Captured fixture for ${meta.host} (${meta.fieldCount} fields, ${frameCaptures.length} frames)`);
+  } catch (err) {
+    logger.error('Fixture capture failed:', err);
+    report(`Capture failed: ${err.message}`);
+  }
+}
+
 function openRewriteModal(field) {
   activeRewriteField = field;
   rewriteFeedbackInput = '';
@@ -1738,6 +1779,18 @@ function renderDebugTab() {
     </div>
 
     <div class="jc-card">
+      <div class="jc-row">
+        <span class="jc-card-title">Regression Fixture</span>
+        <button class="jc-btn jc-btn-secondary" id="jc-capture-fixture" style="padding: 4px 8px; font-size: 10px;">Save page fixture</button>
+      </div>
+      <div style="font-size: 11px; color: #64748b;">
+        Downloads a sanitized copy of this page, including embedded frames, for the
+        regression suite. Your answers, scripts, and inline handlers are removed.
+      </div>
+      <div style="font-size: 11px; color: #94a3b8;" id="jc-capture-feedback"></div>
+    </div>
+
+    <div class="jc-card">
       ${lastPageChange ? `<div class="jc-row"><span class="jc-card-title">Last Workflow Change</span></div>
       <pre style="font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere;">${escapeHtml(JSON.stringify(lastPageChange, null, 2))}</pre>` : ''}
       <div class="jc-row">
@@ -2058,6 +2111,11 @@ function attachEventHandlers() {
         setTimeout(() => { feedback.style.display = 'none'; }, 2000);
       }
     };
+  }
+
+  const captureFixtureBtn = shadowRootRef.querySelector('#jc-capture-fixture');
+  if (captureFixtureBtn) {
+    captureFixtureBtn.onclick = () => void saveFixtureSnapshot();
   }
 
   // Debug: Clear logs

@@ -4,6 +4,7 @@ import { fillField } from './fields/fillers.js';
 import { verifyField } from './fields/verify.js';
 import { scrollToField, highlightActiveField, highlightVerifiedField, highlightFailedField } from './fields/highlight.js';
 import { inspectValidation } from './validation.js';
+import { captureFixture } from './capture.js';
 import { classifyPage } from './pageClassifier.js';
 import { FILL_STATUS } from './constants.js';
 import { logger } from './debug.js';
@@ -132,6 +133,8 @@ export function createFieldAgent() {
       case 'searchOptions': return searchOptions(command);
       case 'fill': return fill(command);
       case 'validation': return validation();
+      // An embedded frame captures its own document; the parent cannot read it.
+      case 'captureFixture': return captureFixture(document, { label: command.label || '' });
       case 'ping': return { ok: true, url: window.location.href, fieldCount: scanFormFields(document).length };
       default: return { error: `Unknown agent action "${command?.action}"` };
     }
