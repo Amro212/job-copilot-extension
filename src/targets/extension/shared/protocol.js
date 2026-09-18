@@ -28,6 +28,7 @@ export const MSG = {
 
   // Cross-frame field agents
   FRAME_ANNOUNCE: 'jc:frame-announce',
+  FRAMES_CHANGED: 'jc:frames-changed',
   FRAME_LIST: 'jc:frame-list',
   FRAME_COMMAND: 'jc:frame-command',
   FRAME_RESULT: 'jc:frame-result',

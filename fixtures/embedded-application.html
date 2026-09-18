@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Application — Senior Software Engineer</title>
+  <style>
+    body { margin: 0; font: 15px/1.6 system-ui, sans-serif; color: #1e293b; background: #fff; }
+    form { max-width: 640px; margin: 0 auto; padding: 28px 20px 64px; display: flex; flex-direction: column; gap: 18px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-weight: 600; font-size: 13px; }
+    .required { color: #dc2626; }
+    input, select, textarea {
+      font: inherit; padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 6px;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    fieldset { border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; }
+    legend { font-weight: 600; font-size: 13px; }
+    .choice { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+    .select-shell { position: relative; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; }
+    .select-menu {
+      position: absolute; left: 0; right: 0; top: 100%; z-index: 10; margin-top: 2px;
+      background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; max-height: 220px; overflow: auto;
+    }
+    .select-menu [role=option] { padding: 7px 10px; cursor: pointer; }
+    .select-menu [role=option]:hover { background: #eff6ff; }
+    .select-value { font-size: 14px; }
+    button { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 6px; border: 1px solid #2563eb; background: #2563eb; color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <form id="application" novalidate>
+    <h2 style="margin:0">Submit your application</h2>
+
+    <div class="field">
+      <label for="name">Full name <span class="required">*</span></label>
+      <input id="name" name="name" type="text" required />
+    </div>
+
+    <div class="field">
+      <label for="email">Email <span class="required">*</span></label>
+      <input id="email" name="email" type="email" required />
+    </div>
+
+    <div class="field">
+      <label for="phone">Phone</label>
+      <input id="phone" name="phone" type="tel" />
+    </div>
+
+    <div class="field">
+      <label for="linkedin">LinkedIn profile</label>
+      <input id="linkedin" name="linkedin" type="url" />
+    </div>
+
+    <!-- ARIA combobox whose options load asynchronously, as ATS location pickers do. -->
+    <div class="field">
+      <label id="loc-label" for="location">Current location <span class="required">*</span></label>
+      <div class="select-shell">
+        <span class="select-value" id="loc-display"></span>
+        <input
+          id="location"
+          role="combobox"
+          aria-labelledby="loc-label"
+          aria-controls="loc-menu"
+          aria-expanded="false"
+          autocomplete="off"
+          style="border:none;outline:none;width:100%" />
+      </div>
+    </div>
+
+    <!-- Paginated combobox that is not a residence field, so its answer can only be
+         found by searching with a term grounded in the applicant's context. -->
+    <div class="field">
+      <label id="school-label" for="school">University or college</label>
+      <div class="select-shell">
+        <span class="select-value" id="school-display"></span>
+        <input
+          id="school"
+          role="combobox"
+          aria-labelledby="school-label"
+          aria-controls="school-menu"
+          aria-expanded="false"
+          autocomplete="off"
+          style="border:none;outline:none;width:100%" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="experience">Years of experience <span class="required">*</span></label>
+      <select id="experience" name="experience" required>
+        <option value="">-- Please select --</option>
+        <option value="0-1">Less than 1 year</option>
+        <option value="1-3">1 to 3 years</option>
+        <option value="3-5">3 to 5 years</option>
+        <option value="5-8">5 to 8 years</option>
+        <option value="8+">More than 8 years</option>
+      </select>
+    </div>
+
+    <fieldset>
+      <legend>Are you legally authorized to work in Canada? <span class="required">*</span></legend>
+      <label class="choice"><input type="radio" name="work_auth" value="yes" required /> Yes</label>
+      <label class="choice"><input type="radio" name="work_auth" value="no" /> No</label>
+    </fieldset>
+
+    <div class="field">
+      <label for="why">Why do you want to join Example Corp? <span class="required">*</span></label>
+      <textarea id="why" name="why" required></textarea>
+    </div>
+
+    <label class="choice">
+      <input type="checkbox" id="privacy" name="privacy" required />
+      I agree to the privacy policy <span class="required">*</span>
+    </label>
+
+    <button type="submit" id="submit">Submit application</button>
+  </form>
+
+  <script>
+    // Location options arrive after a delay and filter on the typed query, which is
+    // the behaviour the combobox harvesting and search passes exist for.
+    const ALL_LOCATIONS = [
+      'Toronto, Ontario, Canada',
+      'Vancouver, British Columbia, Canada',
+      'Montreal, Quebec, Canada',
+      'Ottawa, Ontario, Canada',
+      'Calgary, Alberta, Canada',
+      'New York, New York, United States',
+      'Austin, Texas, United States',
+      'London, England, United Kingdom',
+    ];
+
+    const input = document.getElementById('location');
+    const display = document.getElementById('loc-display');
+    const shell = input.closest('.select-shell');
+    let menu = null;
+    let timer = null;
+
+    function close() {
+      clearTimeout(timer);
+      menu?.remove();
+      menu = null;
+      input.setAttribute('aria-expanded', 'false');
+    }
+
+    function commit(label) {
+      display.textContent = label;
+      input.value = '';
+      close();
+    }
+
+    function open() {
+      close();
+      input.setAttribute('aria-expanded', 'true');
+      menu = document.createElement('div');
+      menu.id = 'loc-menu';
+      menu.className = 'select-menu';
+      menu.setAttribute('role', 'listbox');
+      menu.textContent = 'Loading...';
+      shell.append(menu);
+
+      timer = setTimeout(() => {
+        if (!menu) return;
+        const query = input.value.trim().toLowerCase();
+        // Without a query only the first few options are available, so an answer
+        // outside that page requires a search.
+        const pool = query
+          ? ALL_LOCATIONS.filter((option) => option.toLowerCase().includes(query))
+          : ALL_LOCATIONS.slice(0, 3);
+        menu.replaceChildren();
+        if (!pool.length) {
+          menu.textContent = 'No options';
+          return;
+        }
+        for (const label of pool) {
+          const option = document.createElement('div');
+          option.setAttribute('role', 'option');
+          option.textContent = label;
+          option.addEventListener('click', () => commit(label));
+          menu.append(option);
+        }
+      }, 180);
+    }
+
+    input.addEventListener('mousedown', open);
+    input.addEventListener('focus', open);
+    input.addEventListener('input', open);
+    document.addEventListener('click', (event) => {
+      if (!shell.contains(event.target)) close();
+    });
+
+    // Second combobox: a long list where an unsearched menu only offers the first
+    // page, so the wanted school is unreachable without a query.
+    const ALL_SCHOOLS = [
+      'Acadia University',
+      'Algonquin College',
+      'Brock University',
+      'Carleton University',
+      'Dalhousie University',
+      'McGill University',
+      'McMaster University',
+      'Queen\u2019s University',
+      'University of Toronto',
+      'University of Waterloo',
+      'Western University',
+      'York University',
+    ];
+
+    const schoolInput = document.getElementById('school');
+    const schoolDisplay = document.getElementById('school-display');
+    const schoolShell = schoolInput.closest('.select-shell');
+    let schoolMenu = null;
+    let schoolTimer = null;
+
+    function closeSchool() {
+      clearTimeout(schoolTimer);
+      schoolMenu?.remove();
+      schoolMenu = null;
+      schoolInput.setAttribute('aria-expanded', 'false');
+    }
+
+    function openSchool() {
+      closeSchool();
+      schoolInput.setAttribute('aria-expanded', 'true');
+      schoolMenu = document.createElement('div');
+      schoolMenu.id = 'school-menu';
+      schoolMenu.className = 'select-menu';
+      schoolMenu.setAttribute('role', 'listbox');
+      schoolMenu.textContent = 'Loading...';
+      schoolShell.append(schoolMenu);
+
+      schoolTimer = setTimeout(() => {
+        if (!schoolMenu) return;
+        const query = schoolInput.value.trim().toLowerCase();
+        const pool = query
+          ? ALL_SCHOOLS.filter((option) => option.toLowerCase().includes(query))
+          : ALL_SCHOOLS.slice(0, 4);
+        schoolMenu.replaceChildren();
+        if (!pool.length) {
+          schoolMenu.textContent = 'No options';
+          return;
+        }
+        for (const label of pool) {
+          const option = document.createElement('div');
+          option.setAttribute('role', 'option');
+          option.textContent = label;
+          option.addEventListener('click', () => {
+            schoolDisplay.textContent = label;
+            schoolInput.value = '';
+            closeSchool();
+          });
+          schoolMenu.append(option);
+        }
+      }, 180);
+    }
+
+    schoolInput.addEventListener('mousedown', openSchool);
+    schoolInput.addEventListener('focus', openSchool);
+    schoolInput.addEventListener('input', openSchool);
+    document.addEventListener('click', (event) => {
+      if (!schoolShell.contains(event.target)) closeSchool();
+    });
+
+    document.getElementById('application').addEventListener('submit', (event) => {
+      event.preventDefault();
+      document.body.dataset.submitted = 'true';
+    });
+  </script>
+</body>
+</html>

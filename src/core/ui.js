@@ -27,6 +27,7 @@ import {
   initInlineRewriteBadge,
 } from './fields/highlight.js';
 import { startFormObserver, pauseFormObserver, resumeFormObserver } from './observer.js';
+import { collectRemoteFields, applyRemoteAnswers, searchRemoteOptions, listRemoteFrames, isRemoteFieldId } from './remote.js';
 import { createApplicationEngine } from './application.js';
 import { classifyPage } from './pageClassifier.js';
 import { rememberAnswer } from './memory.js';
@@ -87,6 +88,8 @@ let isAiTesting = false;
 let isAutofilling = false;
 let autofillProgress = { current: 0, total: 0, statusText: '' };
 let detectedFieldsCache = [];
+let remoteFieldCount = 0;
+let remoteFrameCount = 0;
 let fieldResultsCache = new Map(); // fieldId -> { status, value, error, inferred }
 
 // Rewrite modal state
@@ -881,10 +884,50 @@ function refreshDetectedFields() {
   } catch (err) {
     logger.error('Error scanning fields:', err);
   }
+  refreshRemoteFieldCount();
+}
+
+/**
+ * Embedded-frame counts arrive asynchronously. The host calls this again whenever
+ * a frame announces, because an embed-only page produces almost no mutations in
+ * this document to react to.
+ */
+export function refreshRemoteFieldCount() {
+  if (!platform.capabilities.crossFrame) return;
+  listRemoteFrames()
+    .then((frames) => {
+      const total = frames.reduce((sum, frame) => sum + frame.fieldCount, 0);
+      if (total === remoteFieldCount && frames.length === remoteFrameCount) return;
+      remoteFieldCount = total;
+      remoteFrameCount = frames.length;
+      updatePanelDOM();
+    })
+    .catch(() => {});
 }
 
 let autofillGeneration = 0;
 let cancelAutofillDelay = null;
+
+/**
+ * Second AI pass for comboboxes inside embedded frames whose options only appear
+ * after a search, mirroring resolveComboboxSearchAnswers for the local document.
+ */
+async function resolveRemoteSearchAnswers(response) {
+  const pending = response.answers.filter((answer) => isRemoteFieldId(answer.fieldId) && answer.searchQuery);
+  if (!pending.length) return response;
+
+  const discovered = await searchRemoteOptions(null, pending);
+  if (!discovered.length) return response;
+
+  try {
+    const resolved = await generateAutofillAnswers(discovered, { allowSearch: false });
+    const byId = new Map(resolved.answers.map((answer) => [answer.fieldId, answer]));
+    return { ...response, answers: response.answers.map((answer) => byId.get(answer.fieldId) || answer) };
+  } catch (err) {
+    logger.warn(`Embedded combobox search resolution failed: ${err.message}`);
+    return response;
+  }
+}
 
 function autofillSleep(ms) {
   return new Promise((resolve) => {
@@ -947,7 +990,15 @@ async function executeAutofillFlow() {
       return !val || val === 'false' || val === '0' || String(val).trim().length === 0;
     });
 
-    if (targetFields.length === 0) {
+    // An embedded application (a Greenhouse or Ashby iframe, for example) leaves
+    // this document with zero fields while the real form sits one origin away.
+    autofillProgress.statusText = 'Checking embedded frames...';
+    updatePanelDOM();
+    const remoteGroups = await collectRemoteFields({ overwriteExisting: overwrite });
+    if (token !== autofillGeneration) return;
+    const remoteFields = remoteGroups.flatMap((group) => group.fields);
+
+    if (targetFields.length === 0 && remoteFields.length === 0) {
       autofillProgress.statusText = detectedFieldsCache.length === 0
         ? 'No form fields detected on this page.'
         : 'All fields are already filled. Enable "Overwrite Existing Values" in Settings to overwrite.';
@@ -959,7 +1010,7 @@ async function executeAutofillFlow() {
 
     if (token !== autofillGeneration) return;
 
-    autofillProgress.total = targetFields.length;
+    autofillProgress.total = targetFields.length + remoteFields.length;
     autofillProgress.statusText = 'Harvesting combobox options...';
     updatePanelDOM();
 
@@ -970,7 +1021,12 @@ async function executeAutofillFlow() {
     autofillProgress.statusText = `Generating answers with AI (${settings.model})...`;
     updatePanelDOM();
 
-    const normalized = normalizeFieldsForAI(targetFields, { overwriteExisting: overwrite });
+    // Embedded frames contribute to the same request, so a page split across
+    // origins still costs one primary AI call.
+    const normalized = [
+      ...normalizeFieldsForAI(targetFields, { overwriteExisting: overwrite }),
+      ...remoteFields,
+    ];
     let aiResponse = await generateAutofillAnswers(normalized);
     if (token !== autofillGeneration) return;
     if (window.location.href !== runUrl) throw new Error('Page changed during autofill. Inspect the current step before retrying.');
@@ -980,10 +1036,12 @@ async function executeAutofillFlow() {
       updatePanelDOM();
       aiResponse = await resolveComboboxSearchAnswers(targetFields, aiResponse);
       if (token !== autofillGeneration) return;
+      aiResponse = await resolveRemoteSearchAnswers(aiResponse);
+      if (token !== autofillGeneration) return;
     }
     const answersMap = new Map(aiResponse.answers.map((a) => [a.fieldId, a]));
 
-    logger.info(`Starting progressive fill of ${targetFields.length} fields...`);
+    logger.info(`Starting progressive fill of ${targetFields.length} local and ${remoteFields.length} embedded fields...`);
 
     let filledCount = 0;
     let failedCount = 0;
@@ -1085,8 +1143,35 @@ async function executeAutofillFlow() {
     }
 
     if (token !== autofillGeneration) return;
+
+    if (remoteFields.length) {
+      const remoteAnswers = aiResponse.answers.filter((answer) => isRemoteFieldId(answer.fieldId));
+      autofillProgress.statusText = `Filling ${remoteAnswers.length} fields in embedded frames...`;
+      updatePanelDOM();
+
+      const remoteResults = await applyRemoteAnswers(remoteAnswers, (frameId, count) => {
+        autofillProgress.statusText = `Filling ${count} fields in embedded frame ${frameId}...`;
+        updatePanelDOM();
+      });
+      if (token !== autofillGeneration) return;
+
+      for (const result of remoteResults) {
+        fieldResultsCache.set(result.fieldId, {
+          status: result.status,
+          value: result.value || '',
+          error: result.error,
+          inferred: result.inferred,
+          label: result.label,
+          remote: true,
+        });
+        if (result.status === FILL_STATUS.VERIFIED || result.status === FILL_STATUS.INFERRED) filledCount++;
+        else if (result.status === FILL_STATUS.FAILED) failedCount++;
+      }
+      autofillProgress.current = autofillProgress.total;
+    }
+
     autofillProgress.statusText = `Autofill completed! (${filledCount} filled, ${failedCount} failed)`;
-    logger.info(`Autofill finished: ${filledCount} verified, ${failedCount} failed out of ${targetFields.length} fields.`);
+    logger.info(`Autofill finished: ${filledCount} verified, ${failedCount} failed out of ${targetFields.length + remoteFields.length} fields.`);
   } catch (err) {
     if (token !== autofillGeneration) return;
     logger.error('Autofill execution failed:', err);
@@ -1299,8 +1384,13 @@ function renderHomeTab() {
     <div class="jc-card">
       <div class="jc-row">
         <span class="jc-card-title">Page Form Fields</span>
-        <span class="jc-badge jc-badge-blue">${fieldCount} detected</span>
+        <span class="jc-badge jc-badge-blue">${fieldCount + remoteFieldCount} detected</span>
       </div>
+      ${remoteFieldCount ? `
+      <div style="font-size: 11px; color: #94a3b8;">
+        ${fieldCount} here, ${remoteFieldCount} in ${remoteFrameCount} embedded frame${remoteFrameCount === 1 ? '' : 's'}.
+      </div>
+      ` : ''}
       <div class="jc-row" style="margin-top: 4px; gap: 8px;">
         <button class="jc-btn jc-btn-large" id="jc-autofill-btn" style="flex: 1;" ${isAutofilling ? 'disabled' : ''}>
           ${isAutofilling ? '⚡ Filling Fields...' : '⚡ Autofill This Page'}

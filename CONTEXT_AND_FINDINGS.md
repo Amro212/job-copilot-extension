@@ -5,6 +5,72 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-18 — Stage 3: cross-origin frames become fillable
+
+Closes the long-standing "Greenhouse embed scans 0 fields" limitation, which was
+unfixable under Tampermonkey because `main.js` had to bail out of subframes.
+
+### Files created
+
+- `src/core/agent.js` — per-frame field agent: scan, searchOptions, fill,
+  validation. Runs the same pipeline as the panel but decides nothing.
+- `src/core/remote.js` — top-frame orchestration and frame-qualified field ids.
+- `fixtures/embedded-host.html` + `fixtures/embedded-application.html` — a page
+  with zero controls embedding a form from a second origin.
+- `tests/unit/remote.test.js` (9 tests), `tests/e2e/cross-frame.spec.js` (5 tests)
+
+### Files modified
+
+- `src/core/platform.js`, `src/core/hosts/gm.js` — added `platform.frames`. The
+  userscript host returns an empty list, since it cannot address another origin.
+- `src/core/ui.js` — the autofill flow now gathers embedded fields before the AI
+  call, merges them into the **same** primary request, fills local fields as
+  before, then dispatches the remaining answers to their owning frames. Added
+  `resolveRemoteSearchAnswers` for embedded comboboxes and a badge breakdown
+  showing where the fields actually live.
+- `src/targets/extension/content/agent.js` — announces field counts and executes
+  routed commands, with a heartbeat so a long-lived frame never expires.
+- `src/targets/extension/background/frames.js` — serialized registry writes.
+
+### Design note: one AI request, many origins
+
+A cross-origin frame cannot be touched from the parent document, so the agent in
+that frame does the scanning and actuation. Only normalized field data and answers
+cross the boundary, which keeps the page to a single primary AI request instead of
+one per frame. Field ids are namespaced as `jcf<frameId>::<localId>` because two
+frames routinely generate the same local id.
+
+### Findings during verification
+
+1. **Frame registry race (real bug, fixed).** Every frame announces at
+   `document_idle`, and read-modify-write against `chrome.storage` is not atomic.
+   The top frame and the embedded frame both read an empty list and both wrote a
+   single-entry array, so whichever wrote last erased the other. The panel
+   therefore saw only itself and reported 0 fields. Fixed with a per-tab promise
+   queue in `frames.js`. Confirmed by instrumenting the registry: before the fix
+   it held only `frameId: 0`; after, both frames appear and the panel reads
+   "10 detected, 0 here, 10 in 1 embedded frame".
+2. **Embed-only pages produce no mutations to react to.** The panel refreshed its
+   remote count only when the top document mutated, which on an embed host is
+   almost never. Added a `FRAMES_CHANGED` notification from the background to
+   frame 0 whenever a subframe's count actually changes.
+3. **Residence comboboxes never needed the remote search pass.**
+   `harvestComboboxOptions` already pre-searches residence-labelled fields with
+   the stored profile location, so a location outside the first page of options
+   resolves inside the primary request. The remote search path is exercised by a
+   non-residence paginated combobox instead, which is the realistic case.
+
+### Verification
+
+- `npm test`: 143 passed (134 existing plus 9 new).
+- `npm run test:e2e`: 17 passed. The cross-frame specs confirm the host document
+  has literally zero controls, the panel still reports and fills the 10 embedded
+  ones, embedded fields travel in the single primary request, a paginated
+  embedded combobox resolves in exactly one follow-up request, and the embedded
+  frame never mounts a second panel.
+
+---
+
 ## Turn: 2026-09-18 — Stage 2: extension shell reaches parity in Chrome
 
 ### Files created

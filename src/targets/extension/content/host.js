@@ -104,6 +104,11 @@ export function createExtensionHost() {
     tabBoundId: () => sendMessage({ type: MSG.TAB_BOUND_ID })
       .then((res) => res?.sessionId || null)
       .catch(() => null),
+    framesList: () => sendMessage({ type: MSG.FRAME_LIST })
+      .then((res) => res?.frames || [])
+      .catch(() => []),
+    frameCommand: (frameId, command) => sendMessage({ type: MSG.FRAME_COMMAND, frameId, command })
+      .catch((err) => ({ error: err?.message || 'Frame command failed' })),
     openOptions: () => {
       sendMessage({ type: MSG.OPEN_OPTIONS }).catch(() => {});
     },

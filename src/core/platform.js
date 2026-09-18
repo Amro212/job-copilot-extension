@@ -52,5 +52,13 @@ export const platform = {
   menu: {
     register: (label, handler) => host.menuRegister(label, handler),
   },
+  /**
+   * Cross-origin iframes cannot be reached through the DOM, so each frame runs
+   * its own agent and the top frame addresses them by id.
+   */
+  frames: {
+    list: () => host.framesList(),
+    command: (frameId, command) => host.frameCommand(frameId, command),
+  },
   openOptions: () => host.openOptions(),
 };

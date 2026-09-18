@@ -55,7 +55,17 @@ const handlers = {
   },
 
   [MSG.FRAME_ANNOUNCE]: async (payload, sender) => {
-    await registerFrame(sender, payload);
+    const changed = await registerFrame(sender, payload);
+    // The panel lives in the top frame and cannot see subframes, so tell it when
+    // an embedded frame appears or its field count moves.
+    if (changed && !payload.isTop && typeof sender?.tab?.id === 'number') {
+      api.tabs.sendMessage(
+        sender.tab.id,
+        { type: MSG.FRAMES_CHANGED },
+        { frameId: 0 },
+        () => void api.runtime.lastError,
+      );
+    }
     return { ok: true };
   },
 

@@ -123,6 +123,9 @@ export function createGmHost() {
         });
       });
     },
+    // A userscript has no way to address another origin's frame.
+    framesList: () => Promise.resolve([]),
+    frameCommand: () => Promise.resolve({ error: 'Cross-frame commands need the extension host' }),
     openOptions: () => {},
     menuRegister: (label, handler) => {
       if (typeof GM_registerMenuCommand === 'function') {

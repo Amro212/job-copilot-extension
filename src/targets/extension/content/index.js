@@ -1,6 +1,6 @@
 import { setPlatform, platform } from '../../../core/platform.js';
 import { bootstrap } from '../../../core/main.js';
-import { toggleUIVisibility } from '../../../core/ui.js';
+import { toggleUIVisibility, refreshRemoteFieldCount } from '../../../core/ui.js';
 import { createExtensionHost } from './host.js';
 import { startAgent } from './agent.js';
 import { api } from '../shared/browser.js';
@@ -17,9 +17,15 @@ async function start() {
 
   if (isTopFrame) {
     api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      if (message?.type !== MSG.TOGGLE_PANEL) return;
-      toggleUIVisibility();
-      sendResponse({ ok: true });
+      if (message?.type === MSG.TOGGLE_PANEL) {
+        toggleUIVisibility();
+        sendResponse({ ok: true });
+        return;
+      }
+      if (message?.type === MSG.FRAMES_CHANGED) {
+        refreshRemoteFieldCount();
+        sendResponse({ ok: true });
+      }
     });
     bootstrap();
   }

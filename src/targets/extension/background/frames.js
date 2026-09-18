@@ -11,44 +11,68 @@ const session = () => api.storage.session || api.storage.local;
 
 const STALE_MS = 60000;
 
+/**
+ * Every frame in a tab announces at roughly the same moment, and
+ * read-modify-write against chrome.storage is not atomic, so concurrent
+ * announces would overwrite each other and the panel would only ever learn
+ * about whichever frame happened to write last.
+ */
+const queues = new Map();
+
+function serialize(tabId, task) {
+  const previous = queues.get(tabId) || Promise.resolve();
+  const run = previous.then(task, task);
+  const tail = run.catch(() => {});
+  queues.set(tabId, tail);
+  tail.then(() => {
+    if (queues.get(tabId) === tail) queues.delete(tabId);
+  });
+  return run;
+}
+
 async function read(tabId) {
   const stored = await session().get(key(tabId));
   return stored?.[key(tabId)] || [];
 }
 
-async function write(tabId, frames) {
-  await session().set({ [key(tabId)]: frames });
-}
-
-export async function registerFrame(sender, { url, fieldCount, isTop }) {
+/** Returns true when the panel's view of this tab's frames actually changed. */
+export function registerFrame(sender, { url, fieldCount, isTop }) {
   const tabId = sender?.tab?.id;
   const frameId = sender?.frameId;
-  if (typeof tabId !== 'number' || typeof frameId !== 'number') return;
+  if (typeof tabId !== 'number' || typeof frameId !== 'number') return Promise.resolve(false);
 
-  const frames = await read(tabId);
-  const entry = { frameId, url, fieldCount, isTop: Boolean(isTop), updatedAt: Date.now() };
-  await write(tabId, [entry, ...frames.filter((f) => f.frameId !== frameId)]);
+  return serialize(tabId, async () => {
+    const frames = await read(tabId);
+    const previous = frames.find((frame) => frame.frameId === frameId);
+    const entry = { frameId, url, fieldCount, isTop: Boolean(isTop), updatedAt: Date.now() };
+    await session().set({ [key(tabId)]: [entry, ...frames.filter((frame) => frame.frameId !== frameId)] });
+
+    // Heartbeats repeat unchanged data; only a real change is worth notifying.
+    return !previous || previous.fieldCount !== fieldCount || previous.url !== url;
+  });
 }
 
 export async function listFrames(tabId) {
   if (typeof tabId !== 'number') return [];
   const cutoff = Date.now() - STALE_MS;
-  const frames = (await read(tabId)).filter((f) => f.updatedAt >= cutoff);
+  const frames = (await read(tabId)).filter((frame) => frame.updatedAt >= cutoff);
   return frames.sort((a, b) => b.fieldCount - a.fieldCount);
 }
 
-export async function dropFrame(tabId, frameId) {
-  if (typeof tabId !== 'number') return;
-  if (frameId === 0) {
+export function dropFrame(tabId, frameId) {
+  if (typeof tabId !== 'number') return Promise.resolve();
+  return serialize(tabId, async () => {
     // Top-frame navigation invalidates every subframe in the tab.
-    await session().remove(key(tabId));
-    return;
-  }
-  const frames = await read(tabId);
-  await write(tabId, frames.filter((f) => f.frameId !== frameId));
+    if (frameId === 0) {
+      await session().remove(key(tabId));
+      return;
+    }
+    const frames = await read(tabId);
+    await session().set({ [key(tabId)]: frames.filter((frame) => frame.frameId !== frameId) });
+  });
 }
 
-export async function dropTab(tabId) {
-  if (typeof tabId !== 'number') return;
-  await session().remove(key(tabId));
+export function dropTab(tabId) {
+  if (typeof tabId !== 'number') return Promise.resolve();
+  return serialize(tabId, () => session().remove(key(tabId)));
 }
