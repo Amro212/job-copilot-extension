@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Job Copilot Options</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 32px 24px 64px;
+      font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0f172a; color: #e2e8f0;
+    }
+    main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+    h1 { font-size: 20px; margin: 0; }
+    h2 { font-size: 15px; margin: 0 0 4px; }
+    .version { font-size: 12px; color: #64748b; font-weight: 400; }
+    section {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 10px; padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .hint { font-size: 12px; color: #94a3b8; margin: 0; }
+    .group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
+    input, select, textarea {
+      font: inherit; width: 100%; padding: 8px 10px;
+      background: #0f172a; color: #e2e8f0;
+      border: 1px solid #334155; border-radius: 6px;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid #3b82f6; outline-offset: -1px; }
+    textarea { min-height: 120px; resize: vertical; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    button {
+      font: inherit; font-weight: 600; cursor: pointer;
+      padding: 8px 14px; border-radius: 6px;
+      background: #2563eb; color: #fff; border: 1px solid #2563eb;
+    }
+    button.secondary { background: #334155; border-color: #475569; color: #e2e8f0; }
+    button:hover { filter: brightness(1.1); }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+    .badge.ok { background: rgba(34,197,94,.2); color: #86efac; }
+    .badge.warn { background: rgba(245,158,11,.2); color: #fcd34d; }
+    .badge.err { background: rgba(239,68,68,.2); color: #fca5a5; }
+    .feedback { font-size: 12px; color: #86efac; min-height: 16px; }
+    .feedback.error { color: #fca5a5; }
+    fieldset { border: 1px solid #334155; border-radius: 8px; padding: 14px; margin: 0; }
+    legend { font-size: 12px; font-weight: 700; padding: 0 6px; color: #cbd5e1; }
+    .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Job Copilot <span class="version" id="version"></span></h1>
+
+    <section>
+      <div>
+        <h2>OpenRouter API key</h2>
+        <p class="hint">Stored by the extension. It is never sent to the page, the content script, or any log.</p>
+      </div>
+      <div class="group">
+        <label for="api-key">API key</label>
+        <div class="row">
+          <input id="api-key" type="password" autocomplete="off" placeholder="sk-or-v1-..." />
+          <span class="badge warn" id="key-status">No key</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="save-key">Save key</button>
+        <button class="secondary" id="test-key">Test connection</button>
+        <button class="secondary" id="clear-key">Remove key</button>
+        <span class="feedback" id="key-feedback"></span>
+      </div>
+    </section>
+
+    <section>
+      <div>
+        <h2>Model</h2>
+        <p class="hint">Used for the primary autofill request, repairs, and rewrites.</p>
+      </div>
+      <div class="group">
+        <label for="model">OpenRouter model</label>
+        <select id="model"></select>
+        <input id="model-custom" type="text" placeholder="Custom model id" hidden />
+      </div>
+      <div class="actions">
+        <button id="save-model">Save model</button>
+        <span class="feedback" id="model-feedback"></span>
+      </div>
+    </section>
+
+    <section>
+      <div>
+        <h2>Profile</h2>
+        <p class="hint">Explicit answers here take priority over anything inferred from your resume context.</p>
+      </div>
+      <form id="profile-form">
+        <fieldset>
+          <legend>Identity and links</legend>
+          <div class="grid" id="identity-fields"></div>
+        </fieldset>
+        <div id="profile-sections" style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;"></div>
+        <fieldset style="margin-top: 14px;">
+          <legend>Context</legend>
+          <div class="group">
+            <label for="resumeContext">Resume highlights</label>
+            <textarea id="resumeContext" name="resumeContext"></textarea>
+          </div>
+          <div class="group" style="margin-top: 10px;">
+            <label for="applicantNotes">Applicant notes and rules</label>
+            <textarea id="applicantNotes" name="applicantNotes"></textarea>
+          </div>
+        </fieldset>
+        <div class="actions" style="margin-top: 14px;">
+          <button type="submit">Save profile</button>
+          <span class="feedback" id="profile-feedback"></span>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <div>
+        <h2>Backup and migration</h2>
+        <p class="hint">Import a JSON export from the Tampermonkey userscript, or back up what is stored here. Exports never include the API key.</p>
+      </div>
+      <div class="actions">
+        <button class="secondary" id="export-data">Export JSON</button>
+        <button class="secondary" id="import-data">Import JSON</button>
+        <input id="import-file" type="file" accept="application/json,.json" hidden />
+        <span class="feedback" id="migration-feedback"></span>
+      </div>
+    </section>
+  </main>
+  <script src="index.js"></script>
+</body>
+</html>

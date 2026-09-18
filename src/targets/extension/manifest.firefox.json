@@ -1,0 +1,11 @@
+{
+  "background": {
+    "scripts": ["background/index.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "job-copilot@local",
+      "strict_min_version": "115.0"
+    }
+  }
+}

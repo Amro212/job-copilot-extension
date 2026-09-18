@@ -5,6 +5,73 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-18 — Stage 2: extension shell reaches parity in Chrome
+
+### Files created
+
+- `src/targets/extension/manifest.base.json` + `manifest.chrome.json` + `manifest.firefox.json`
+- `src/targets/extension/shared/protocol.js`, `shared/browser.js`, `shared/migration.js`
+- `src/targets/extension/background/index.js`, `storage.js`, `ai.js`, `tabs.js`, `frames.js`
+- `src/targets/extension/content/index.js`, `content/host.js`, `content/agent.js`
+- `src/targets/extension/options/index.html` + `index.js`
+- `src/targets/extension/popup/index.html` + `index.js`
+- `playwright.config.js`, `tests/e2e/support/servers.js`, `tests/e2e/support/fixtures.js`
+- `tests/e2e/shell.spec.js`, `tests/e2e/autofill.spec.js`
+
+### Design notes
+
+- **Hydrated cache**: the content host requests one snapshot of every non-secret
+  `jc:*` key before the panel mounts, then answers core's synchronous reads from
+  memory. Writes update the cache immediately and reach the background
+  asynchronously, so read-after-write inside the fill loop still works.
+- **Key isolation**: the snapshot carries `hasApiKey` instead of the key. The
+  background attaches `Authorization` and refuses any URL outside
+  `https://openrouter.ai/`. The panel's key field is replaced by a link to the
+  options page, which is a privileged context.
+- **Broadcast discipline**: only `jc:settings`, `jc:profile`, `jc:memory` and
+  `jc:documents` are pushed to other contexts, and never back to the originating
+  tab. An early version broadcast every storage change, which would have sent a
+  message to every open tab on every debug log line, since the logger writes
+  `jc:debug` on each entry.
+- **No worker state**: MV3 terminates the worker when idle, so tab bindings and
+  the frame registry live in `chrome.storage.session`.
+
+### Findings during verification
+
+1. **Headless Chromium cannot load extensions.** Playwright's default headless
+   shell silently hangs at `waitForEvent('serviceworker')`. Fixed by launching
+   with `channel: 'chromium'`, which uses the full browser in new headless mode.
+2. **`--ignore-certificate-errors` is no longer sufficient.** The background
+   worker's `fetch` to the mocked OpenRouter failed with "Failed to fetch" until
+   the launcher pinned the mock certificate with
+   `--ignore-certificate-errors-spki-list`.
+3. **`selfsigned` v5 returns a promise**, unlike v1-v2. Silent `{}` result
+   otherwise.
+4. **Popup active-tab resolution**: `tabs.query({active: true})` returns the
+   popup itself when the popup is opened as a tab. The popup now skips
+   extension-origin tabs and falls back to the most recently used page, which is
+   also more robust when the options page is focused.
+
+### Verification
+
+- `npm test`: 134 passed.
+- `npm run test:e2e`: 11 passed. Covers panel mount and hydration, missing-key
+  state, a leak check asserting the key never appears in page HTML, shadow DOM, or
+  page storage, options page persistence, cross-context profile broadcast, popup
+  counts, full 18-field autofill on `phase2-form-fixture.html` with exactly one
+  primary AI request, overwrite protection, HTTP 402 error surfacing, and the
+  no-key short circuit that avoids any network call.
+
+The single "1 failed" field in the autofill run is the fixture's
+`data-reject-fill` control, which exists to prove failures are reported.
+
+### Status
+
+Chrome parity reached. Next: cross-frame agents so fields inside cross-origin
+iframes are reachable.
+
+---
+
 ## Turn: 2026-09-18 — Stage 0 and Stage 1: repo split and platform seam
 
 ### Files created
