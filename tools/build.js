@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { zipDirectory } from './zip.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '..');
@@ -171,11 +172,17 @@ function writeExtensionStaticFiles(pkg, browser) {
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 
-  for (const page of ['options', 'popup']) {
+  for (const page of ['options', 'popup', 'first-run']) {
     const html = path.join(extDir, page, 'index.html');
     if (fs.existsSync(html)) {
       fs.mkdirSync(path.join(outDir, page), { recursive: true });
       fs.copyFileSync(html, path.join(outDir, page, 'index.html'));
+    }
+    const js = path.join(extDir, page, 'index.js');
+    // first-run is a tiny page script, not an esbuild entry.
+    if (page === 'first-run' && fs.existsSync(js)) {
+      fs.mkdirSync(path.join(outDir, page), { recursive: true });
+      fs.copyFileSync(js, path.join(outDir, page, 'index.js'));
     }
   }
 
@@ -217,6 +224,13 @@ async function run() {
     } else {
       await esbuild.build(job.options);
       job.after?.();
+      if (job.label.startsWith('extension:')) {
+        const browser = job.label.split(':')[1];
+        const outDir = path.join(distDir, browser);
+        const zipName = browser === 'firefox' ? 'job-copilot-firefox.xpi' : 'job-copilot-chrome.zip';
+        zipDirectory(outDir, path.join(distDir, zipName));
+        console.log(`[build] packed ${zipName}`);
+      }
       console.log(`[build] ${job.label} built at v${pkg.version}`);
     }
   }

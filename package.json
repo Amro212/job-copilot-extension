@@ -1,6 +1,6 @@
 {
   "name": "job-copilot",
-  "version": "0.4.8",
+  "version": "0.4.12",
   "description": "Job Copilot — AI job application autofill for Chrome, Firefox, and Tampermonkey",
   "type": "module",
   "scripts": {

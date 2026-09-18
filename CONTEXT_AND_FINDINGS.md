@@ -5,6 +5,100 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-18 — Stages 7–10: adapters, resume upload, Auto Submit, Firefox packaging
+
+Earlier aborted shell runs for Stage 2–4 (extension shell E2E, navigation lifecycle) returned empty output and Windows exit `4294967295` (process killed). Those gates had already passed in this repo; work resumed at Stage 7.
+
+### Stage 7 — ATS adapters
+
+Adapter registry in `src/core/adapters/` detects Workday, Greenhouse, Lever, or Ashby, then supplies selector overrides and quirk flags. Unrecognized pages keep the generic engine.
+
+- **Workday**: progress-bar step identity, Continue via `data-automation-id`, longer wait while Continue stays disabled after save, never send Escape (it rolls the dropdown back).
+- **Greenhouse**: Places-style `.pac-container` location inputs without combobox ARIA.
+- **Lever**: skip ALL-CAPS section headings (`LOCATION`, `PERSONAL INFORMATION`) in `extractLabel`; `.dropdown-location` without ARIA (already in combobox.js, now adapter-owned).
+- **Ashby**: `.ashby-select-input` custom selects; dynamic sections still go through the generic late-field path.
+
+Fixtures: `fixtures/workday-application-fixture.html`, `greenhouse-application-fixture.html`, `lever-application-fixture.html`, `ashby-application-fixture.html`. Specs: `tests/unit/adapters.test.js`, `tests/e2e/adapters.spec.js`.
+
+### Stage 8 — Resume upload
+
+File inputs are scanned (`FIELD_TYPES.FILE`). The background worker stores one resume in IndexedDB. Fill builds a `File` from the stored `ArrayBuffer`, assigns `input.files` via `DataTransfer`, dispatches `change`, and verifies the filename. Options page stores/removes the file. Userscript host keeps `fileUpload: false`.
+
+### Stage 9 — Opt-in Auto Submit
+
+Settings checkbox is enabled, default OFF. Fires only when the page is `application` or `review`, validation is clean, every required field is filled, no fill result failed, no distinct Continue control remains, and exactly one Submit control exists. Bounded to one attempt per step. Panel shows a cancellable countdown (`Pause` aborts).
+
+### Stage 10 — Firefox packaging
+
+Firefox overlay keeps `background.scripts` (event page) plus `gecko.id`. First-run page calls `permissions.request` for `<all_urls>` and OpenRouter. `tools/zip.js` emits `dist/job-copilot-chrome.zip` and `dist/job-copilot-firefox.xpi`.
+
+### Files created
+
+- `src/core/adapters/*`, `src/targets/extension/background/documents.js`, `src/targets/extension/first-run/*`, `tools/zip.js`
+- fixtures and tests listed above, plus `tests/unit/upload.test.js`, `tests/unit/packaging.test.js`, `tests/e2e/upload.spec.js`, `tests/e2e/auto-submit.spec.js`
+
+### Verification (2026-09-18)
+
+- Unit: 179 pass, 0 fail (`npm test`).
+- Build: userscript + `dist/job-copilot-chrome.zip` + `dist/job-copilot-firefox.xpi` at v0.4.12.
+- E2E: 36 pass, 0 fail (`npx playwright test`).
+
+Fixes during this verification:
+- Restored `fileURLToPath` import in `tools/build.js`; repaired missing `validation()` in `src/core/agent.js`; renamed resume MIME to `mimeType` so it does not collide with message `type`.
+- Ashby E2E host is `ashby.jobcopilot.test` (Chrome HSTS-preloads `ashbyhq.com`). Adapter still matches via DOM.
+- Ashby menu lookup uses `.ashby-select`, not `[data-ashby-field]` on the input itself. `quirks.selectionInInput` treats the closed input value as the committed selection.
+
+---
+
+## Turn: 2026-09-18 — Stage 6: data migration and dual-install guard
+
+Users can move profile, settings, memory, and job data from Tampermonkey to the
+extension via a portable JSON backup. The API key never crosses that boundary.
+
+### Files created
+
+- `src/core/migration.js` — `exportPayload`, `importPayload`, `collectPortableData`.
+- `tests/unit/migration.test.js` (4 tests), `tests/unit/panel-host.test.js` (4 tests),
+  `tests/e2e/migration.spec.js` (5 tests)
+
+### Files modified
+
+- `src/core/ui.js` — Settings tab **Export backup JSON**, `exportUserBackup()`,
+  `claimPanelHost()` / `unmountUI()` dual-install guard (extension wins).
+- `src/core/main.js` — Tampermonkey menu command **Export Job Copilot backup**.
+- `src/targets/extension/options/index.js` — import path now points at core migration.
+- `tests/unit/panel.test.js` — export omits secrets; userscript yields when
+  `data-jc-host="extension"` is already present.
+
+### Files removed
+
+- `src/targets/extension/shared/migration.js` — logic lives in core for both targets.
+
+### Dual-install policy
+
+One `#job-copilot-root`, tagged with `data-jc-host`. If both hosts are active,
+the extension keeps the panel; the userscript logs and does not mount. If the
+extension loads after a userscript stub, it replaces the stub and the displaced
+host tears down its engine and form observer via a disconnect watcher.
+
+### Secret boundary
+
+Portable keys: `jc:profile`, `jc:settings`, `jc:memory`, `jc:job`. Imports scrub
+legacy `apiKey` / `openRouterApiKey` from settings objects. Options import UI
+reminds the user to re-enter the OpenRouter key.
+
+### Verification
+
+- `npm test`: 164 passed.
+- `npm run test:e2e`: 28 passed. Migration specs cover options export/import,
+  garbage rejection, and dual-install with both load orders.
+
+### Status
+
+Stage 6 complete. Next: Stage 7 ATS adapters (Workday, Greenhouse, Lever, Ashby).
+
+---
+
 ## Turn: 2026-09-18 — Stage 5: fixture capture tool
 
 The Playwright harness itself landed in Stage 2 because Stage 2's gate could not be

@@ -1,10 +1,11 @@
-import { api } from '../shared/browser.js';
+import { api, isFirefox } from '../shared/browser.js';
 import { MSG, BROADCAST_KEYS } from '../shared/protocol.js';
 import { buildSnapshot, applySet, applyDelete, writeSecret, clearSecret, hasApiKey } from './storage.js';
 import { proxyAiRequest } from './ai.js';
 import { bindTabSession, getTabSession, watchTabLifecycle } from './tabs.js';
 import { registerFrame, listFrames, dropFrame, dropTab } from './frames.js';
 import { recordNavigation, readNavigation, clearNavigation } from './navigation.js';
+import { putDocument, getDocument, documentMeta, deleteDocument } from './documents.js';
 
 /**
  * MV3 workers are terminated when idle, so this file holds no durable state.
@@ -78,6 +79,11 @@ const handlers = {
   [MSG.FRAME_COMMAND]: async (payload, sender) => forwardToFrame(payload?.tabId ?? sender?.tab?.id, payload),
 
   [MSG.NAV_STATE]: async (payload, sender) => readNavigation(payload?.tabId ?? sender?.tab?.id),
+
+  [MSG.DOC_META]: async () => ({ meta: await documentMeta() }),
+  [MSG.DOC_GET]: () => getDocument(),
+  [MSG.DOC_PUT]: ({ name, type, mimeType, buffer }) => putDocument({ name, type: mimeType || type, buffer }),
+  [MSG.DOC_DELETE]: () => deleteDocument(),
 };
 
 function deliver(payload, excludeTabId) {
@@ -173,3 +179,22 @@ async function announceNavigation(kind, { tabId, frameId, url }) {
 api.webNavigation?.onCommitted.addListener((details) => void announceNavigation('committed', details));
 api.webNavigation?.onHistoryStateUpdated.addListener((details) => void announceNavigation('history', details));
 api.webNavigation?.onReferenceFragmentUpdated.addListener((details) => void announceNavigation('fragment', details));
+
+/**
+ * Firefox MV3 treats host_permissions as opt-in. A first-run page asks for them
+ * so the content script and OpenRouter proxy are not silently inert.
+ */
+api.runtime.onInstalled.addListener((details) => {
+  if (details.reason !== 'install' && details.reason !== 'update') return;
+  const origins = ['<all_urls>'];
+  const openFirstRun = () => {
+    api.tabs.create({ url: api.runtime.getURL('first-run/index.html') }, () => void api.runtime.lastError);
+  };
+  if (isFirefox && api.permissions?.contains) {
+    Promise.resolve(api.permissions.contains({ origins }))
+      .then((granted) => { if (!granted) openFirstRun(); })
+      .catch(openFirstRun);
+    return;
+  }
+  if (isFirefox) openFirstRun();
+});

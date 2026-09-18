@@ -8,3 +8,4 @@ playwright-report/
 .playwright/
 *.zip
 *.xpi
+.cursor/plans/*

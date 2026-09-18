@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Job Copilot — Grant site access</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; padding: 48px 24px;
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0f172a; color: #e2e8f0;
+    }
+    main { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+    h1 { font-size: 22px; margin: 0; }
+    p { color: #cbd5e1; }
+    button {
+      font: inherit; font-weight: 600; cursor: pointer;
+      padding: 10px 16px; border-radius: 8px; width: fit-content;
+      background: #2563eb; color: #fff; border: 1px solid #2563eb;
+    }
+    .ok { color: #86efac; }
+    .err { color: #fca5a5; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Allow Job Copilot on job sites</h1>
+    <p>
+      Firefox keeps host access off until you grant it. Job Copilot needs this to
+      scan application forms and to call OpenRouter from the background worker.
+    </p>
+    <button id="grant">Grant access</button>
+    <p id="status"></p>
+  </main>
+  <script src="index.js"></script>
+</body>
+</html>
