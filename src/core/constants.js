@@ -63,6 +63,7 @@ export const FIELD_TYPES = {
   CHECKBOX: 'checkbox',
   COMBOBOX: 'combobox',
   CONTENTEDITABLE: 'contenteditable',
+  FILE: 'file',
 };
 
 export const FILL_STATUS = {

@@ -629,14 +629,54 @@ test('pause during AI request prevents delayed writes and navigation', async () 
   assert.equal(engine.session.status, 'paused');
   engine.destroy();
 });
-test('review stays manual even with Auto Submit enabled in old settings', async () => {
-  saveSettings({ autoContinue: true, autoSubmit: true });
+test('review stays manual when Auto Submit is off', async () => {
+  saveSettings({ autoContinue: true, autoSubmit: false });
   render('<h1>Review application</h1><button>Submit application</button>');
   let clicks = 0;
   document.querySelector('button').onclick = () => clicks++;
-  const engine = createApplicationEngine();
+  const engine = createApplicationEngine({ settleMs: 0, transitionMs: 0, submitCountdownMs: 0 });
   await engine.start(job());
   assert.equal(engine.session.status, 'review');
+  assert.equal(clicks, 0);
+  engine.destroy();
+});
+
+test('Auto Submit clicks a single unambiguous submit after a zero countdown', async () => {
+  saveSettings({ autoContinue: true, autoSubmit: true });
+  render('<h1>Review application</h1><button id="submit">Submit application</button>');
+  let clicks = 0;
+  document.querySelector('#submit').onclick = () => {
+    clicks++;
+    render('<h1>Application submitted</h1><p>Thank you for applying.</p>');
+  };
+  const engine = createApplicationEngine({ settleMs: 0, transitionMs: 0, submitCountdownMs: 0 });
+  await engine.start(job());
+  assert.equal(clicks, 1);
+  assert.equal(engine.session.status, 'confirmation');
+  engine.destroy();
+});
+
+test('Auto Submit is cancelled by Pause during the countdown', async () => {
+  saveSettings({ autoContinue: true, autoSubmit: true });
+  render('<h1>Review application</h1><button id="submit">Submit application</button>');
+  let clicks = 0;
+  document.querySelector('#submit').onclick = () => clicks++;
+  const engine = createApplicationEngine({ settleMs: 0, transitionMs: 0, submitCountdownMs: 2000 });
+  const pending = engine.start(job());
+  await new Promise(resolve => setTimeout(resolve, 50));
+  engine.pause();
+  await pending;
+  assert.equal(clicks, 0);
+  engine.destroy();
+});
+
+test('Auto Submit does not fire when two submit controls exist', async () => {
+  saveSettings({ autoContinue: true, autoSubmit: true });
+  render('<h1>Review application</h1><button>Submit application</button><button>Submit</button>');
+  let clicks = 0;
+  document.querySelectorAll('button').forEach(el => { el.onclick = () => clicks++; });
+  const engine = createApplicationEngine({ settleMs: 0, transitionMs: 0, submitCountdownMs: 0 });
+  await engine.start(job());
   assert.equal(clicks, 0);
   engine.destroy();
 });

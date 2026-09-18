@@ -2,7 +2,7 @@ import { captureJob, safeUrl } from './jobs.js';
 import { createSession, restoreSession, saveSession, bindTab } from './sessions.js';
 import { classifyPage, isVisible } from './pageClassifier.js';
 import { inspectValidation } from './validation.js';
-import { findContinue, inspectContinue, pageSignature, isDisabled, observePage, comparePages, workflowLabel, questionIdentity } from './navigation.js';
+import { findContinue, inspectContinue, inspectSubmit, pageSignature, isDisabled, observePage, comparePages, workflowLabel, questionIdentity } from './navigation.js';
 import { rememberAnswer, recallAnswer } from './memory.js';
 import { getSettings } from './storage.js';
 import { scanFormFields as scanAllFields, harvestComboboxOptions } from './fields/scanner.js';
@@ -12,15 +12,17 @@ import { verifyField } from './fields/verify.js';
 import { generateAutofillAnswers } from './ai.js';
 import { resolveComboboxSearchAnswers } from './autofill.js';
 import { platform } from './platform.js';
+import { detectAdapter } from './adapters/index.js';
 import { logger } from './debug.js';
+import { applyRemoteResumeUploads } from './remote.js';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-const scanPageFields = () => scanAllFields().filter(f => isVisible(f.element) && f.element.type !== 'file' && !f.element.closest('[role=listbox],.select__menu')).map(f => ({ ...f, label: workflowLabel(f) }));
+const scanPageFields = () => scanAllFields().filter(f => isVisible(f.element) && !f.element.closest('[role=listbox],.select__menu')).map(f => ({ ...f, label: workflowLabel(f) }));
 const scanFormFields = () => scanPageFields().filter(f => !f.element.disabled && !f.element.readOnly);
-const empty = field => field.type === 'checkbox' ? !field.element.checked : !String(field.currentValue ?? '').trim();
-const runnable = new Set(['running', 'captcha', 'waiting']);
+const empty = field => field.type === 'checkbox' ? !field.element.checked : field.type === 'file' ? !(field.element.files && field.element.files.length) : !String(field.currentValue ?? '').trim();
+const runnable = new Set(['running', 'captcha', 'waiting', 'submitting']);
 
-export function createApplicationEngine({ answer = generateAutofillAnswers, onChange = () => {}, settleMs = 180, transitionMs = 1200, navigationTimeoutMs = transitionMs === 0 ? 0 : 10000 } = {}) {
+export function createApplicationEngine({ answer = generateAutofillAnswers, onChange = () => {}, settleMs = 180, transitionMs = 1200, navigationTimeoutMs = transitionMs === 0 ? 0 : 10000, submitCountdownMs = 5000 } = {}) {
   let session = null, busy = false, generation = 0, timer = null, observer = null, interval = null, cancelDelay = null, unsubscribeNavigation = null;
   const delay = ms => new Promise(resolve => {
     let t = null;
@@ -121,7 +123,8 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
     if (session.status === value && session.reason === reason) return;
     session.status = value;
     session.reason = reason;
-    if (!runnable.has(value)) session.active = false;
+    const stayActive = runnable.has(value) || (value === 'review' && getSettings().autoSubmit);
+    if (!stayActive) session.active = false;
     saveSession(session);
     emit();
   }
@@ -140,7 +143,8 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
    * be included by the time this function starts.
    */
   async function waitForNavigation(signature, token, afterClick, navBaseline = platform.navigation.marker().id) {
-    const deadline = Date.now() + navigationTimeoutMs;
+    const extra = (!afterClick && navigationTimeoutMs !== 0) ? (detectAdapter().quirks.continueReadyTimeoutMs || 0) : 0;
+    const deadline = Date.now() + Math.max(navigationTimeoutMs, extra);
     let lastSignature = '', stableSince = Date.now();
     const stableMs = Math.min(transitionMs, 200);
     status('running', afterClick ? 'Waiting for the next page to finish loading.' : 'Waiting for the page Continue button to become ready.');
@@ -182,6 +186,89 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
   function pauseDisabledButton() {
     status('paused', `The page's Continue button stayed disabled after waiting ${navigationTimeoutMs / 1000}s. Auto Continue is still on; inspect the page before resuming.`);
   }
+  async function applyResumeUploads(fields, token, signature) {
+    const files = fields.filter(f => f.type === 'file');
+    if (!files.length) return true;
+    if (!platform.capabilities.fileUpload) return true;
+    const meta = await platform.documents.meta();
+    for (const original of files) {
+      if (!await settleFields(signature, token, 'before field action', original.id)) return false;
+      const field = scanFormFields().find(f => f.id === original.id && f.type === 'file');
+      if (!field) continue;
+      if (!empty(field) && !getSettings().overwriteExisting) continue;
+      field.element.scrollIntoView?.({ block: 'center', behavior: 'instant' });
+      const filled = await fillField(field, meta?.name);
+      await delay(settleMs);
+      if (!await settleFields(signature, token, 'field action', field.id)) return false;
+      const live = scanFormFields().find(f => f.id === field.id);
+      const verified = filled && live ? await verifyField(live, meta?.name) : { verified: false };
+      results.set(field.id, {
+        status: verified.verified ? 'verified' : 'failed',
+        value: verified.actualValue || '',
+        inferred: false,
+        error: verified.verified ? '' : (verified.error || 'Resume was not attached.'),
+      });
+      emit();
+    }
+    try {
+      const remote = await applyRemoteResumeUploads();
+      for (const entry of remote) results.set(entry.fieldId, entry);
+    } catch {}
+    return true;
+  }
+
+  function canAutoSubmit(fields) {
+    if (!getSettings().autoSubmit) return false;
+    const page = classifyPage();
+    if (!['application', 'review'].includes(page.type)) return false;
+    const continueControl = findContinue();
+    const submit = inspectSubmit();
+    if (!submit.control || isDisabled(submit.control) || submit.count !== 1) return false;
+    if (continueControl && continueControl !== submit.control && !isDisabled(continueControl)) return false;
+    if (inspectValidation(fields).length) return false;
+    if (fields.some(f => f.required && empty(f))) return false;
+    if ([...results.values()].some(result => result.status === 'failed')) return false;
+    return true;
+  }
+
+  async function attemptAutoSubmit(token, step) {
+    const fields = scanFormFields();
+    if (!canAutoSubmit(fields)) return false;
+    if ((step?.submits || 0) >= 1 || (session.submits || 0) >= 1) {
+      status('paused', 'Auto Submit already attempted this step. Submit manually.');
+      return true;
+    }
+    const seconds = Math.max(0, Math.ceil(submitCountdownMs / 1000));
+    for (let left = seconds; left > 0; left--) {
+      if (token !== generation || !session?.active) return true;
+      status('submitting', `Submitting in ${left}s. Click Pause to cancel.`);
+      await delay(1000);
+    }
+    if (token !== generation || !session?.active) return true;
+    const submit = inspectSubmit();
+    if (!submit.control || isDisabled(submit.control) || !canAutoSubmit(scanFormFields())) {
+      status('paused', submit.reason || 'Submit is no longer safe. Submit manually.');
+      return true;
+    }
+    if (step) step.submits = (step.submits || 0) + 1;
+    session.submits = (session.submits || 0) + 1;
+    status('submitting', 'Submitting application.');
+    logger.info(`Auto Submit: ${submit.control.textContent?.trim() || submit.control.value || 'Submit'}`);
+    submit.control.click();
+    const deadline = Date.now() + Math.max(navigationTimeoutMs, 2500);
+    do {
+      if (token !== generation) return true;
+      const next = classifyPage();
+      if (next.type === 'confirmation') {
+        if (step) completeStep();
+        status('confirmation', next.reason);
+        return true;
+      }
+      await delay(Math.min(100, Math.max(1, deadline - Date.now())));
+    } while (Date.now() < deadline);
+    status('paused', 'Submit did not reach a confirmation page. Check the result, then continue manually.');
+    return true;
+  }
   async function applyAnswers(fields, answers, token, signature) {
     const byId = new Map(answers.map(a => [a.fieldId, a]));
     for (const original of fields) {
@@ -196,6 +283,7 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
         return false;
       }
       if (!field) continue; // A conditional question can disappear on this step.
+      if (field.type === 'file') continue;
       field.options = original.options;
       field.element.scrollIntoView?.({ block: 'center', behavior: 'instant' });
       const filled = await fillField(field, entry.value);
@@ -250,13 +338,34 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
     return guard(token);
   }
   async function tick() {
-    if (busy || !session?.active || !runnable.has(session.status)) return;
+    if (busy || !session?.active) return;
+    if (session.status === 'review' && getSettings().autoSubmit) {
+      if (!compatibleSession()) return;
+      busy = true;
+      const token = generation;
+      try {
+        await attemptAutoSubmit(token, session.steps[session.currentStep]);
+      } catch (error) {
+        if (token === generation && session) status('paused', `Workflow stopped: ${error.message}`);
+      } finally {
+        busy = false;
+        if (session?.status === 'review') session.active = false;
+        emit();
+      }
+      return;
+    }
+    if (!runnable.has(session.status)) return;
     if (!compatibleSession()) return;
     busy = true;
     const token = generation;
     try {
       for (let pass = 0; pass < 40; pass++) {
-        if (!guard(token)) return;
+        if (!guard(token)) {
+          if (token === generation && session.status === 'review' && getSettings().autoSubmit) {
+            await attemptAutoSubmit(token, session.steps[session.currentStep]);
+          }
+          return;
+        }
         if (!getSettings().autofillEnabled) { status('paused', 'AI Autofill is disabled in Settings.'); return; }
         const page = classifyPage();
         if (page.type !== 'application') { status('paused', page.reason); return; }
@@ -288,7 +397,8 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
             if (step.questions[field.id] && step.questions[field.id] !== question) delete step.answers[field.id];
             step.questions[field.id] = question;
           }
-          const targets = fields.filter(f => getSettings().overwriteExisting || empty(f));
+          if (!await applyResumeUploads(fields, token, signature)) return;
+          const targets = fields.filter(f => f.type !== 'file' && (getSettings().overwriteExisting || empty(f)));
           const missing = [];
           for (const field of targets) {
             const cached = recallAnswer(session, field);
@@ -306,10 +416,11 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
           }
           step.primary = true;
           saveSession(session);
-          if (!await applyAnswers(targets, Object.values(step.answers), token, signature)) return;
+          if (targets.length && !await applyAnswers(targets, Object.values(step.answers), token, signature)) return;
         } else {
           // Recover persisted answers after a full document reload without another primary request.
-          const missing = fields.filter(empty);
+          if (!await applyResumeUploads(fields.filter(f => f.type === 'file' && empty(f)), token, signature)) return;
+          const missing = fields.filter(f => f.type !== 'file' && empty(f));
           if (missing.length && !await applyAnswers(missing, Object.values(step.answers), token, signature)) return;
         }
         if (!checkPage(signature, token, 'fill completion')) return;
@@ -319,7 +430,8 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
           if (step.lateRequests >= 2) { status('paused', 'Dynamic field limit reached (2/2). Inspect the page before resuming.'); return; }
           step.lateRequests++;
           saveSession(session);
-          const targets = late.filter(f => getSettings().overwriteExisting || empty(f));
+          const targets = late.filter(f => f.type !== 'file' && (getSettings().overwriteExisting || empty(f)));
+          if (!await applyResumeUploads(late.filter(f => f.type === 'file'), token, signature)) return;
           if (targets.length) {
             const answers = await request(targets, { allowSearch: false }, token, signature);
             if (!guard(token)) return;
@@ -339,16 +451,24 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
           if (await repair(errors, step, token, signature)) continue;
           return;
         }
+        if (await attemptAutoSubmit(token, step)) return;
         if (!getSettings().autoContinue) { status('paused', 'Page filled. Auto Continue is off.'); return; }
         control = findContinue();
         if (control && isDisabled(control)) {
           const readiness = await waitForNavigation(signature, token, false);
-          if (readiness === 'stopped') return;
+          if (readiness === 'stopped') {
+            if (token === generation && session.status === 'review' && getSettings().autoSubmit) await attemptAutoSubmit(token, step);
+            return;
+          }
           if (readiness === 'changed' || readiness === 'validation') continue;
           if (readiness === 'timeout') { pauseDisabledButton(); return; }
           control = findContinue();
         }
-        if (!control || isDisabled(control)) { status('paused', inspectContinue().reason); return; }
+        if (!control || isDisabled(control)) {
+          if (await attemptAutoSubmit(token, step)) return;
+          status('paused', inspectContinue().reason);
+          return;
+        }
         if (!await settleFields(signature, token, 'before navigation')) return;
         control = findContinue();
         if (!control || isDisabled(control)) { status('paused', `Continue changed while preparing navigation. ${inspectContinue().reason}`); return; }
@@ -365,7 +485,10 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
         const navBaseline = platform.navigation.marker().id;
         control.click();
         const transition = await waitForNavigation(signature, token, true, navBaseline);
-        if (transition === 'stopped') return;
+        if (transition === 'stopped') {
+          if (token === generation && session.status === 'review' && getSettings().autoSubmit) await attemptAutoSubmit(token, session.steps[session.currentStep]);
+          return;
+        }
         if (transition === 'changed') continue;
         session.pendingStep = '';
         session.pendingUrl = '';
