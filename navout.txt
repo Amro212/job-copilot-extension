@@ -1,0 +1,21 @@
+[JobCopilot:INFO] Field action: id=field-a, type=text, tag=INPUT, path=/apply 
+[JobCopilot:INFO] Navigation action: Next, path=/apply 
+[JobCopilot:INFO] Navigation committed in frame 0: https://example.com/apply?step=2 
+[JobCopilot:INFO] Navigation wait: after click, timeout=400ms 
+[JobCopilot:INFO] Field action: id=field-a, type=text, tag=INPUT, path=/apply 
+[JobCopilot:INFO] Navigation action: Next, path=/apply 
+[JobCopilot:INFO] Navigation wait: after click, timeout=400ms 
+[JobCopilot:WARN] Navigation wait timed out: buttonDisabled=false, path=/apply 
+[JobCopilot:INFO] Field action: id=field-a, type=text, tag=INPUT, path=/apply 
+✖ a committed navigation advances the step even when the next page looks identical (1097.6688ms)
+[JobCopilot:INFO] Navigation action: Next, path=/apply 
+[JobCopilot:INFO] Navigation wait: after click, timeout=200ms 
+[JobCopilot:WARN] Navigation wait timed out: buttonDisabled=false, path=/apply 
+[JobCopilot:INFO] Field action: id=field-b, type=text, tag=INPUT, path=/apply 
+✔ without a navigation event an unchanged page still reports that Continue did nothing (697.2651ms)
+[JobCopilot:INFO] Navigation action: Next, path=/apply 
+[JobCopilot:INFO] Navigation wait: after click, timeout=100ms 
+[JobCopilot:WARN] Navigation wait timed out: buttonDisabled=false, path=/apply 
+[JobCopilot:INFO] Navigation history in frame 0: https://example.com/apply?step=3 
+✖ a navigation recorded after the Continue click completes the pending step on reload (393.2594ms)
+✖ navigation events wake the engine without waiting for the polling interval (521.9449ms)

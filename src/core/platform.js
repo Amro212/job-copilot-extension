@@ -60,5 +60,15 @@ export const platform = {
     list: () => host.framesList(),
     command: (frameId, command) => host.frameCommand(frameId, command),
   },
+  /**
+   * Authoritative navigation evidence. `marker().id` increases on every real
+   * navigation in this tab, including single-page history changes, so the engine
+   * does not have to infer a step change from DOM diffs alone. Hosts without this
+   * signal return a constant marker and the engine falls back to DOM comparison.
+   */
+  navigation: {
+    marker: () => host.navigationMarker(),
+    onChange: (listener) => host.navigationOnChange(listener),
+  },
   openOptions: () => host.openOptions(),
 };

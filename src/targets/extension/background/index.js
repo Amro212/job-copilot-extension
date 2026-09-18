@@ -4,6 +4,7 @@ import { buildSnapshot, applySet, applyDelete, writeSecret, clearSecret, hasApiK
 import { proxyAiRequest } from './ai.js';
 import { bindTabSession, getTabSession, watchTabLifecycle } from './tabs.js';
 import { registerFrame, listFrames, dropFrame, dropTab } from './frames.js';
+import { recordNavigation, readNavigation, clearNavigation } from './navigation.js';
 
 /**
  * MV3 workers are terminated when idle, so this file holds no durable state.
@@ -75,6 +76,8 @@ const handlers = {
   }),
 
   [MSG.FRAME_COMMAND]: async (payload, sender) => forwardToFrame(payload?.tabId ?? sender?.tab?.id, payload),
+
+  [MSG.NAV_STATE]: async (payload, sender) => readNavigation(payload?.tabId ?? sender?.tab?.id),
 };
 
 function deliver(payload, excludeTabId) {
@@ -145,7 +148,28 @@ api.commands?.onCommand.addListener((command) => {
 });
 
 watchTabLifecycle();
-api.tabs.onRemoved.addListener((tabId) => { dropTab(tabId).catch(() => {}); });
-api.webNavigation?.onCommitted.addListener(({ tabId, frameId }) => {
-  dropFrame(tabId, frameId).catch(() => {});
+api.tabs.onRemoved.addListener((tabId) => {
+  dropTab(tabId).catch(() => {});
+  clearNavigation(tabId).catch(() => {});
 });
+
+/**
+ * Real navigation evidence for the application engine. `onCommitted` covers full
+ * document loads; the history and fragment events cover the single-page step
+ * changes that multi-step ATS flows use, where no document reload happens.
+ */
+async function announceNavigation(kind, { tabId, frameId, url }) {
+  if (kind === 'committed') await dropFrame(tabId, frameId).catch(() => {});
+  const record = await recordNavigation(tabId, { url, frameId, kind }).catch(() => null);
+  if (!record) return;
+  api.tabs.sendMessage(
+    tabId,
+    { type: MSG.NAV_COMMITTED, navigation: record },
+    { frameId: 0 },
+    () => void api.runtime.lastError,
+  );
+}
+
+api.webNavigation?.onCommitted.addListener((details) => void announceNavigation('committed', details));
+api.webNavigation?.onHistoryStateUpdated.addListener((details) => void announceNavigation('history', details));
+api.webNavigation?.onReferenceFragmentUpdated.addListener((details) => void announceNavigation('fragment', details));

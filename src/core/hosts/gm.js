@@ -126,6 +126,9 @@ export function createGmHost() {
     // A userscript has no way to address another origin's frame.
     framesList: () => Promise.resolve([]),
     frameCommand: () => Promise.resolve({ error: 'Cross-frame commands need the extension host' }),
+    // No navigation API: a constant marker keeps the engine on DOM comparison.
+    navigationMarker: () => ({ id: 0, url: '', frameId: 0, kind: '', at: 0 }),
+    navigationOnChange: () => () => {},
     openOptions: () => {},
     menuRegister: (label, handler) => {
       if (typeof GM_registerMenuCommand === 'function') {

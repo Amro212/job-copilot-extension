@@ -41,6 +41,7 @@ export const MSG = {
 
   // Navigation lifecycle
   NAV_COMMITTED: 'jc:nav-committed',
+  NAV_STATE: 'jc:nav-state',
 };
 
 /** Keys the background refuses to hand to any page context. */

@@ -11,6 +11,7 @@ import { fillField } from './fields/fillers.js';
 import { verifyField } from './fields/verify.js';
 import { generateAutofillAnswers } from './ai.js';
 import { resolveComboboxSearchAnswers } from './autofill.js';
+import { platform } from './platform.js';
 import { logger } from './debug.js';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -20,7 +21,7 @@ const empty = field => field.type === 'checkbox' ? !field.element.checked : !Str
 const runnable = new Set(['running', 'captcha', 'waiting']);
 
 export function createApplicationEngine({ answer = generateAutofillAnswers, onChange = () => {}, settleMs = 180, transitionMs = 1200, navigationTimeoutMs = transitionMs === 0 ? 0 : 10000 } = {}) {
-  let session = null, busy = false, generation = 0, timer = null, observer = null, interval = null, cancelDelay = null;
+  let session = null, busy = false, generation = 0, timer = null, observer = null, interval = null, cancelDelay = null, unsubscribeNavigation = null;
   const delay = ms => new Promise(resolve => {
     let t = null;
     cancelDelay = () => { clearTimeout(t); cancelDelay = null; resolve(); };
@@ -133,7 +134,12 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
     }
     return true;
   }
-  async function waitForNavigation(signature, token, afterClick) {
+  /**
+   * `navBaseline` must be sampled before the Continue click, because a same-document
+   * navigation can commit synchronously during click() and would otherwise already
+   * be included by the time this function starts.
+   */
+  async function waitForNavigation(signature, token, afterClick, navBaseline = platform.navigation.marker().id) {
     const deadline = Date.now() + navigationTimeoutMs;
     let lastSignature = '', stableSince = Date.now();
     const stableMs = Math.min(transitionMs, 200);
@@ -148,17 +154,21 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
       const current = observePage(scanPageFields());
       const state = JSON.stringify(current);
       if (state !== lastSignature) { lastSignature = state; stableSince = Date.now(); }
+      const marker = platform.navigation.marker();
+      const navigated = marker.id !== navBaseline;
       const change = comparePages(signature, current, afterClick);
       const busy = Array.from(document.querySelectorAll('[aria-busy="true"]')).some(isVisible);
       const control = findContinue();
       if (!busy && Date.now() - stableSince >= stableMs) {
-        if (change === 'changed' && fields.length) {
-          logger.info(`Navigation wait: next step ready, ${fields.length} fields`);
+        // A committed navigation is proof the step advanced, even when the new
+        // page's structure resembles the old one closely enough to read as "same".
+        if ((change === 'changed' || (afterClick && navigated)) && fields.length) {
+          logger.info(`Navigation wait: next step ready, ${fields.length} fields${navigated ? `, navigation ${marker.kind} -> ${marker.url}` : ''}`);
           if (afterClick) completeStep();
           session.currentStep = '';
           return 'changed';
         }
-        if (change === 'same') {
+        if (change === 'same' && !navigated) {
           if (inspectValidation(fields).length) return 'validation';
           if (!afterClick && control && !isDisabled(control)) return 'ready';
         }
@@ -352,8 +362,9 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
         status('running', 'Continuing; waiting for the next step.');
         bindTab(session);
         logger.info(`Navigation action: ${control.textContent?.trim() || control.value || 'Continue'}, path=${window.location.pathname}`);
+        const navBaseline = platform.navigation.marker().id;
         control.click();
-        const transition = await waitForNavigation(signature, token, true);
+        const transition = await waitForNavigation(signature, token, true, navBaseline);
         if (transition === 'stopped') return;
         if (transition === 'changed') continue;
         session.pendingStep = '';
@@ -379,7 +390,11 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
       if (session && compatibleSession() && session.active && session.pendingStep === session.currentStep && Date.now() - session.pendingAt < 120000) {
         const previous = session.steps[session.currentStep];
         const page = classifyPage();
-        if (previous && (['review', 'confirmation'].includes(page.type) || comparePages(previous.observation, observePage(scanPageFields()), true) === 'changed')) {
+        // A navigation recorded after the Continue click proves the step advanced,
+        // even if this document's structure still resembles the previous step.
+        const navigation = platform.navigation.marker();
+        const navigatedSincePending = navigation.at > 0 && navigation.at >= (session.pendingAt || 0);
+        if (previous && (['review', 'confirmation'].includes(page.type) || navigatedSincePending || comparePages(previous.observation, observePage(scanPageFields()), true) === 'changed')) {
           completeStep();
           if (page.type === 'application') session.currentStep = '';
         }
@@ -390,6 +405,12 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
         if (mutations.some(m => !m.target.closest?.('#job-copilot-root,#job-copilot-inline-rewrite'))) schedule();
       });
       observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+      // A single-page step change may mutate little; the navigation event is the
+      // reliable trigger. The interval stays as a safety net.
+      unsubscribeNavigation = platform.navigation.onChange(marker => {
+        logger.info(`Navigation ${marker.kind} in frame ${marker.frameId}: ${marker.url}`);
+        schedule();
+      });
       interval = setInterval(() => void tick(), 1500);
       await tick();
     },
@@ -416,6 +437,6 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
       if (session) status('paused', 'Paused by user.');
     },
     tick,
-    destroy() { generation++; clearTimeout(timer); cancelDelay?.(); clearInterval(interval); observer?.disconnect(); },
+    destroy() { generation++; clearTimeout(timer); cancelDelay?.(); clearInterval(interval); observer?.disconnect(); unsubscribeNavigation?.(); },
   };
 }

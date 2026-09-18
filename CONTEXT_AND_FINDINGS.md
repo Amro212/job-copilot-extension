@@ -5,6 +5,73 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-18 — Stage 4: authoritative navigation lifecycle
+
+Tab binding already moved to `chrome.storage.session` in Stage 1-2 via
+`platform.tab`. This stage replaces *inferred* step changes with real evidence.
+
+### Files created
+
+- `src/targets/extension/background/navigation.js` — per-tab navigation counter in
+  session storage, so a freshly loaded document inherits its predecessor's count.
+- `tests/unit/navigation-lifecycle.test.js` (5 tests)
+- `tests/e2e/multi-step.spec.js` (4 tests)
+
+### Files modified
+
+- `src/core/platform.js`, `hosts/gm.js`, `content/host.js` — added
+  `platform.navigation.marker()` and `.onChange()`. The userscript host returns a
+  constant marker, so its behaviour is byte-identical to before.
+- `src/targets/extension/background/index.js` — listens to `webNavigation`
+  `onCommitted`, `onHistoryStateUpdated` and `onReferenceFragmentUpdated`, records
+  each one, and pushes it to frame 0.
+- `src/core/application.js` — `waitForNavigation` treats a committed navigation as
+  proof the step advanced; `initialize()` completes a pending step when a
+  navigation was recorded after the Continue click; navigation events schedule a
+  tick, so a single-page step change no longer waits on the 1.5s interval.
+- `src/core/sessions.js` — session ids no longer depend on `crypto.randomUUID`.
+
+### Why this matters
+
+`comparePages` decides "same" or "changed" from URL, step marker, heading and
+overlapping questions. When an ATS posts back to the **same URL** and re-renders a
+structurally similar step, that reads as "same" and the engine concluded Continue
+did nothing. This is the shape of the logged Workday false-page-change and
+rollback reports. A recorded navigation is independent evidence, and the unit
+tests assert the contrast directly: with a navigation record the step is credited,
+without one it stays at zero.
+
+### Findings during verification
+
+1. **Baseline sampled too late (real bug, caught by the new test).** A
+   same-document navigation can commit synchronously inside `control.click()`.
+   `waitForNavigation` originally sampled the marker on entry, which was already
+   after the click, so `navigated` was never true. The baseline is now sampled
+   before the click and passed in.
+2. **`crypto.randomUUID` is secure-context only (real bug).** `createSession`
+   threw `crypto.randomUUID is not a function` on any `http://` page, silently
+   breaking Capture Job. It never showed up under Tampermonkey because ATS sites
+   are HTTPS. Replaced with a `getRandomValues` based v4 fallback.
+3. **Paused sessions are intentionally not auto-resumed.** An early test modelled
+   the reload case from a paused session, which `initialize()` correctly ignores
+   because `session.active` is false. The test now builds an active session with a
+   pending step, which is the real reload scenario.
+4. **Test hygiene:** engines left mid-flight kept the Node process alive after the
+   suite finished. Teardown now destroys every engine and lets pending work unwind
+   before the jsdom window closes.
+
+### Verification
+
+- `npm test`: 148 passed.
+- `npm run test:e2e`: 21 passed. The multi-step specs drive
+  `phase3-application-fixture.html` through its deliberate first-answer rejection
+  to the review step across real navigations (2 steps completed, status `review`),
+  confirm final submission is never clicked with Auto Submit off, confirm the tab
+  binding lives in `chrome.storage.session` and survives a reload, and confirm the
+  background's navigation counter advances with the recorded URL.
+
+---
+
 ## Turn: 2026-09-18 — Stage 3: cross-origin frames become fillable
 
 Closes the long-standing "Greenhouse embed scans 0 fields" limitation, which was

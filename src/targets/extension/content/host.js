@@ -12,22 +12,37 @@ import { MSG } from '../shared/protocol.js';
 export function createExtensionHost() {
   const cache = new Map();
   const listeners = new Set();
+  const navListeners = new Set();
   let keyPresent = false;
   let hydrated = null;
+  // Seeded from the background so a freshly loaded document inherits the tab's
+  // navigation count instead of restarting at zero.
+  let navigation = { id: 0, url: '', frameId: 0, kind: '', at: 0 };
 
   function hydrate() {
-    return sendMessage({ type: MSG.SNAPSHOT }).then((snapshot) => {
+    return Promise.all([
+      sendMessage({ type: MSG.SNAPSHOT }),
+      sendMessage({ type: MSG.NAV_STATE }).catch(() => null),
+    ]).then(([snapshot, nav]) => {
       if (!snapshot || snapshot.error) {
         throw new Error(snapshot?.error || 'Storage snapshot failed');
       }
       cache.clear();
       for (const [key, value] of Object.entries(snapshot.data)) cache.set(key, value);
       keyPresent = Boolean(snapshot.hasApiKey);
+      if (nav && !nav.error) navigation = nav;
     });
   }
 
   // Changes made in other frames or tabs arrive here and refresh the cache.
   api.runtime.onMessage.addListener((message) => {
+    if (message?.type === MSG.NAV_COMMITTED && message.navigation) {
+      navigation = message.navigation;
+      for (const listener of navListeners) {
+        try { listener(navigation); } catch {}
+      }
+      return;
+    }
     if (message?.type !== MSG.STORAGE_CHANGED) return;
     for (const [key, value] of Object.entries(message.keys || {})) {
       if (value === null) cache.delete(key);
@@ -104,6 +119,11 @@ export function createExtensionHost() {
     tabBoundId: () => sendMessage({ type: MSG.TAB_BOUND_ID })
       .then((res) => res?.sessionId || null)
       .catch(() => null),
+    navigationMarker: () => navigation,
+    navigationOnChange: (listener) => {
+      navListeners.add(listener);
+      return () => navListeners.delete(listener);
+    },
     framesList: () => sendMessage({ type: MSG.FRAME_LIST })
       .then((res) => res?.frames || [])
       .catch(() => []),
