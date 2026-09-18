@@ -95,7 +95,69 @@ test('bundled panel mounts once and captures a job using GM storage', async () =
     root.shadowRoot.querySelector('#jc-settings-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
     assert.equal(storage.get('jc:secrets').apiKey, 'fixture-stored-secret');
     assert.equal(root.shadowRoot.querySelector('[name=autoContinue]').checked, true);
-    assert.equal(root.shadowRoot.querySelector('[name=autoSubmit]').disabled, true);
+    assert.equal(root.shadowRoot.querySelector('[name=autoSubmit]').disabled, false);
+    assert.equal(root.shadowRoot.querySelector('[name=autoSubmit]').checked, false);
     assert.equal(dom.window.document.querySelectorAll('#job-copilot-root').length, 1);
   } finally { dom.window.close(); }
+});
+
+test('settings export downloads portable backup without the API key', async () => {
+  const bundle = await build({ entryPoints: ['src/targets/userscript/entry.js'], bundle: true, format: 'iife', write: false });
+  const dom = new JSDOM('<body></body>', { url: 'https://example.com/apply', runScripts: 'dangerously' });
+  const storage = new Map();
+  storage.set('jc:profile', { fullName: 'Export Me' });
+  storage.set('jc:secrets', { apiKey: 'fixture-stored-secret' });
+  dom.window.GM_getValue = (key, fallback) => storage.get(key) ?? fallback;
+  dom.window.GM_setValue = (key, value) => storage.set(key, value);
+  dom.window.GM_getTab = (callback) => callback({});
+  dom.window.GM_saveTab = () => {};
+  dom.window.CSS = { escape: (value) => value };
+  let exportText = '';
+  dom.window.Blob = class {
+    constructor(parts) {
+      exportText = parts.join('');
+    }
+  };
+  dom.window.URL.createObjectURL = () => 'blob:fixture';
+  dom.window.URL.revokeObjectURL = () => {};
+  try {
+    dom.window.eval(bundle.outputFiles[0].text);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const root = dom.window.document.querySelector('#job-copilot-root').shadowRoot;
+    root.querySelector('#jc-toggle-btn').click();
+    root.querySelector('[data-tab=settings]').click();
+    assert.ok(root.querySelector('#jc-export-data'));
+    root.querySelector('#jc-export-data').click();
+    const parsed = JSON.parse(exportText);
+    assert.equal(parsed.kind, 'job-copilot-backup');
+    assert.equal(parsed.data['jc:profile'].fullName, 'Export Me');
+    assert.equal(exportText.includes('fixture-stored-secret'), false);
+    assert.equal(dom.window.document.querySelectorAll('#job-copilot-root').length, 1);
+  } finally {
+    dom.window.close();
+  }
+});
+
+test('userscript yields when the extension panel root is already present', async () => {
+  const bundle = await build({ entryPoints: ['src/targets/userscript/entry.js'], bundle: true, format: 'iife', write: false });
+  const dom = new JSDOM(
+    '<body><div id="job-copilot-root" data-jc-host="extension"></div></body>',
+    { url: 'https://example.com/apply', runScripts: 'dangerously' },
+  );
+  const storage = new Map();
+  dom.window.GM_getValue = (key, fallback) => storage.get(key) ?? fallback;
+  dom.window.GM_setValue = (key, value) => storage.set(key, value);
+  dom.window.GM_getTab = (callback) => callback({});
+  dom.window.GM_saveTab = () => {};
+  dom.window.CSS = { escape: (value) => value };
+  try {
+    dom.window.eval(bundle.outputFiles[0].text);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const root = dom.window.document.querySelector('#job-copilot-root');
+    assert.equal(root.getAttribute('data-jc-host'), 'extension');
+    assert.equal(root.shadowRoot, null);
+    assert.equal(dom.window.document.querySelectorAll('#job-copilot-root').length, 1);
+  } finally {
+    dom.window.close();
+  }
 });

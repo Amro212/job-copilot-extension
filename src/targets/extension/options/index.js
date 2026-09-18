@@ -2,7 +2,7 @@ import { api, sendMessage } from '../shared/browser.js';
 import { MSG } from '../shared/protocol.js';
 import { APP_VERSION, POPULAR_MODELS, DEFAULT_SETTINGS, DEFAULT_PROFILE, STORAGE_KEYS } from '../../../core/constants.js';
 import { PROFILE_SECTIONS } from '../../../core/profile.js';
-import { exportPayload, importPayload } from '../shared/migration.js';
+import { exportPayload, importPayload } from '../../../core/migration.js';
 
 const IDENTITY_FIELDS = [
   { name: 'fullName', label: 'Full name', type: 'text' },
@@ -130,6 +130,34 @@ async function init() {
   setKeyBadge(snapshot.hasApiKey);
   renderModel(settings);
   renderProfile(profile);
+
+  async function refreshResume() {
+    const res = await sendMessage({ type: MSG.DOC_META });
+    const meta = res?.meta;
+    $('resume-status').textContent = meta
+      ? `Stored: ${meta.name} (${Math.round((meta.size || 0) / 1024)} KB)`
+      : 'No resume stored.';
+  }
+  await refreshResume();
+
+  $('save-resume').onclick = async () => {
+    const file = $('resume-file').files?.[0];
+    if (!file) {
+      flash($('resume-feedback'), 'Choose a file first.', true);
+      return;
+    }
+    const buffer = await file.arrayBuffer();
+    await sendMessage({ type: MSG.DOC_PUT, name: file.name, mimeType: file.type, buffer });
+    $('resume-file').value = '';
+    await refreshResume();
+    flash($('resume-feedback'), 'Resume stored.');
+  };
+
+  $('clear-resume').onclick = async () => {
+    await sendMessage({ type: MSG.DOC_DELETE });
+    await refreshResume();
+    flash($('resume-feedback'), 'Resume removed.');
+  };
 
   $('save-key').onclick = async () => {
     const value = $('api-key').value.trim();

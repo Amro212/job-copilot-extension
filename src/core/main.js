@@ -2,13 +2,17 @@ import { APP_NAME, APP_VERSION } from './constants.js';
 import { initializeStorage, resetAll } from './storage.js';
 import { platform } from './platform.js';
 import { logger } from './debug.js';
-import { mountUI, toggleUIVisibility } from './ui.js';
+import { mountUI, toggleUIVisibility, exportUserBackup } from './ui.js';
 
 function registerMenuCommands() {
   if (!platform.capabilities.menuCommands) return;
 
   platform.menu.register(`Toggle ${APP_NAME} Panel`, () => {
     toggleUIVisibility();
+  });
+
+  platform.menu.register(`Export ${APP_NAME} backup`, () => {
+    exportUserBackup();
   });
 
   platform.menu.register(`Reset ${APP_NAME} Storage`, () => {

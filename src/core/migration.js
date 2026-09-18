@@ -1,4 +1,5 @@
-import { STORAGE_KEYS } from '../../../core/constants.js';
+import { STORAGE_KEYS } from './constants.js';
+import { platform } from './platform.js';
 
 export const PAYLOAD_KIND = 'job-copilot-backup';
 
@@ -21,6 +22,14 @@ export function exportPayload(data) {
   return payload;
 }
 
+function scrubSettings(settings) {
+  if (!settings || typeof settings !== 'object') return settings;
+  const clean = { ...settings };
+  delete clean.apiKey;
+  delete clean.openRouterApiKey;
+  return clean;
+}
+
 export function importPayload(payload) {
   if (!payload || typeof payload !== 'object') throw new Error('File is not a JSON object');
   if (payload.kind !== PAYLOAD_KIND) throw new Error('Not a Job Copilot backup file');
@@ -28,9 +37,20 @@ export function importPayload(payload) {
 
   const entries = {};
   for (const key of PORTABLE_KEYS) {
-    const value = payload.data[key];
-    if (value !== undefined && value !== null) entries[key] = value;
+    let value = payload.data[key];
+    if (value === undefined || value === null) continue;
+    if (key === STORAGE_KEYS.SETTINGS) value = scrubSettings(value);
+    entries[key] = value;
   }
   if (!Object.keys(entries).length) throw new Error('Backup contained no importable records');
   return entries;
+}
+
+export function collectPortableData() {
+  const data = {};
+  for (const key of PORTABLE_KEYS) {
+    const value = platform.storage.get(key, undefined);
+    if (value !== undefined && value !== null) data[key] = value;
+  }
+  return data;
 }

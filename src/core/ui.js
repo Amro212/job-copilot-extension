@@ -9,7 +9,8 @@ import {
   saveApiKey,
   getSanitizedState,
 } from './storage.js';
-import { platform } from './platform.js';
+import { platform, getHostName } from './platform.js';
+import { collectPortableData, exportPayload } from './migration.js';
 import { logger } from './debug.js';
 import { testConnection, generateAutofillAnswers, rewriteNarrativeField } from './ai.js';
 import { scanFormFields, harvestComboboxOptions } from './fields/scanner.js';
@@ -26,16 +27,18 @@ import {
   clearHighlights,
   initInlineRewriteBadge,
 } from './fields/highlight.js';
-import { startFormObserver, pauseFormObserver, resumeFormObserver } from './observer.js';
-import { collectRemoteFields, applyRemoteAnswers, searchRemoteOptions, listRemoteFrames, captureRemoteFixtures, isRemoteFieldId } from './remote.js';
+import { startFormObserver, pauseFormObserver, resumeFormObserver, stopFormObserver } from './observer.js';
+import { collectRemoteFields, applyRemoteAnswers, searchRemoteOptions, listRemoteFrames, captureRemoteFixtures, isRemoteFieldId, applyRemoteResumeUploads } from './remote.js';
 import { captureFixture, fixtureFileName } from './capture.js';
 import { createApplicationEngine } from './application.js';
 import { classifyPage } from './pageClassifier.js';
+import { detectAdapter } from './adapters/index.js';
 import { rememberAnswer } from './memory.js';
 import { saveSession } from './sessions.js';
 
 let applicationEngine = null;
 let applicationState = null;
+let panelHostDisconnectObserver = null;
 
 function resolveLiveElement(field) {
   if (!field) return null;
@@ -999,7 +1002,10 @@ async function executeAutofillFlow() {
     if (token !== autofillGeneration) return;
     const remoteFields = remoteGroups.flatMap((group) => group.fields);
 
-    if (targetFields.length === 0 && remoteFields.length === 0) {
+    const fileFields = targetFields.filter((f) => f.type === 'file');
+    const aiTargetFields = targetFields.filter((f) => f.type !== 'file');
+
+    if (aiTargetFields.length === 0 && remoteFields.length === 0 && fileFields.length === 0) {
       autofillProgress.statusText = detectedFieldsCache.length === 0
         ? 'No form fields detected on this page.'
         : 'All fields are already filled. Enable "Overwrite Existing Values" in Settings to overwrite.';
@@ -1011,49 +1017,65 @@ async function executeAutofillFlow() {
 
     if (token !== autofillGeneration) return;
 
-    autofillProgress.total = targetFields.length + remoteFields.length;
+    autofillProgress.total = aiTargetFields.length + remoteFields.length + fileFields.length;
     autofillProgress.statusText = 'Harvesting combobox options...';
     updatePanelDOM();
 
     // Read each field's unfiltered options before asking AI to choose an exact label.
-    await harvestComboboxOptions(targetFields);
+    await harvestComboboxOptions(aiTargetFields);
     if (token !== autofillGeneration) return;
 
-    autofillProgress.statusText = `Generating answers with AI (${settings.model})...`;
-    updatePanelDOM();
-
-    // Embedded frames contribute to the same request, so a page split across
-    // origins still costs one primary AI call.
     const normalized = [
-      ...normalizeFieldsForAI(targetFields, { overwriteExisting: overwrite }),
+      ...normalizeFieldsForAI(aiTargetFields, { overwriteExisting: overwrite }),
       ...remoteFields,
     ];
-    let aiResponse = await generateAutofillAnswers(normalized);
+    let aiResponse = { answers: [] };
+    if (normalized.length) {
+      autofillProgress.statusText = `Generating answers with AI (${settings.model})...`;
+      updatePanelDOM();
+      aiResponse = await generateAutofillAnswers(normalized);
+    }
     if (token !== autofillGeneration) return;
     if (window.location.href !== runUrl) throw new Error('Page changed during autofill. Inspect the current step before retrying.');
     if (['captcha', 'boundary', 'confirmation'].includes(classifyPage().type)) throw new Error(classifyPage().reason);
     if (aiResponse.answers.some(answer => answer.searchQuery)) {
       autofillProgress.statusText = 'Searching for missing combobox options...';
       updatePanelDOM();
-      aiResponse = await resolveComboboxSearchAnswers(targetFields, aiResponse);
+      aiResponse = await resolveComboboxSearchAnswers(aiTargetFields, aiResponse);
       if (token !== autofillGeneration) return;
       aiResponse = await resolveRemoteSearchAnswers(aiResponse);
       if (token !== autofillGeneration) return;
     }
     const answersMap = new Map(aiResponse.answers.map((a) => [a.fieldId, a]));
 
-    logger.info(`Starting progressive fill of ${targetFields.length} local and ${remoteFields.length} embedded fields...`);
+    logger.info(`Starting progressive fill of ${aiTargetFields.length} local, ${fileFields.length} upload and ${remoteFields.length} embedded fields...`);
 
     let filledCount = 0;
     let failedCount = 0;
 
-    for (let i = 0; i < targetFields.length; i++) {
+    for (const field of fileFields) {
+      if (token !== autofillGeneration) break;
+      field.element = resolveLiveElement(field);
+      autofillProgress.statusText = `Attaching resume to "${field.label}"`;
+      updatePanelDOM();
+      const didFill = await fillField(field, '');
+      const verification = didFill ? await verifyField(field, '') : { verified: false, error: 'No stored resume' };
+      if (verification.verified) {
+        filledCount++;
+        fieldResultsCache.set(field.id, { status: FILL_STATUS.VERIFIED, value: verification.actualValue || '' });
+      } else {
+        failedCount++;
+        fieldResultsCache.set(field.id, { status: FILL_STATUS.FAILED, value: '', error: verification.error || 'Resume was not attached' });
+      }
+    }
+
+    for (let i = 0; i < aiTargetFields.length; i++) {
       if (token !== autofillGeneration) break;
       if (window.location.href !== runUrl) throw new Error('Page changed during autofill. Inspect the current step before retrying.');
       if (['captcha', 'boundary', 'confirmation'].includes(classifyPage().type)) throw new Error(classifyPage().reason);
-      const field = targetFields[i];
+      const field = aiTargetFields[i];
       autofillProgress.current = i + 1;
-      autofillProgress.statusText = `Filling ${i + 1} of ${targetFields.length}: "${field.label}"`;
+      autofillProgress.statusText = `Filling ${i + 1} of ${aiTargetFields.length}: "${field.label}"`;
       updatePanelDOM();
 
       try {
@@ -1168,11 +1190,17 @@ async function executeAutofillFlow() {
         if (result.status === FILL_STATUS.VERIFIED || result.status === FILL_STATUS.INFERRED) filledCount++;
         else if (result.status === FILL_STATUS.FAILED) failedCount++;
       }
+      const remoteUploads = await applyRemoteResumeUploads();
+      for (const result of remoteUploads) {
+        fieldResultsCache.set(result.fieldId, result);
+        if (result.status === FILL_STATUS.VERIFIED) filledCount++;
+        else if (result.status === FILL_STATUS.FAILED) failedCount++;
+      }
       autofillProgress.current = autofillProgress.total;
     }
 
     autofillProgress.statusText = `Autofill completed! (${filledCount} filled, ${failedCount} failed)`;
-    logger.info(`Autofill finished: ${filledCount} verified, ${failedCount} failed out of ${targetFields.length + remoteFields.length} fields.`);
+    logger.info(`Autofill finished: ${filledCount} verified, ${failedCount} failed out of ${aiTargetFields.length + fileFields.length + remoteFields.length} fields.`);
   } catch (err) {
     if (token !== autofillGeneration) return;
     logger.error('Autofill execution failed:', err);
@@ -1185,6 +1213,15 @@ async function executeAutofillFlow() {
       updatePanelDOM();
     }
   }
+}
+
+export function exportUserBackup() {
+  const fileName = `job-copilot-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  downloadText(
+    fileName,
+    JSON.stringify(exportPayload(collectPortableData()), null, 2),
+    'application/json',
+  );
 }
 
 function downloadText(fileName, text, type = 'text/html') {
@@ -1299,7 +1336,7 @@ function renderHomeTab() {
   const job = session?.job;
   // --- Workflow card: map session status to visual state ---
   const wfStatus = session?.status || '';
-  const wfIsRunning = wfStatus === 'running';
+  const wfIsRunning = wfStatus === 'running' || wfStatus === 'submitting';
   const wfIsDone = ['review', 'confirmation'].includes(wfStatus);
   const wfIsPaused = wfStatus === 'paused';
   const wfIsWaiting = ['captcha', 'boundary'].includes(wfStatus);
@@ -1310,7 +1347,8 @@ function renderHomeTab() {
     const doneLabel = wfStatus === 'confirmation' ? '✓ Submitted' : '✓ Done — Ready for Review';
     wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-done">${doneLabel}</span>`;
   } else if (wfIsRunning) {
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-running">● Running</span>`;
+    const runLabel = wfStatus === 'submitting' ? '● Submitting' : '● Running';
+    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-running">${runLabel}</span>`;
   } else if (wfIsWaiting) {
     const waitLabel = wfStatus === 'captcha' ? '⏸ CAPTCHA' : '⏸ Manual Step Required';
     wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-paused">${waitLabel}</span>`;
@@ -1411,6 +1449,7 @@ function renderHomeTab() {
     }
   }
 
+  const adapter = detectAdapter();
   return `
     <div class="jc-card">
       <div class="jc-row">
@@ -1419,6 +1458,9 @@ function renderHomeTab() {
       </div>
       <div style="font-size: 12px; color: #94a3b8;">
         ${status.text}
+      </div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+        Engine: ${adapter.id === 'generic' ? 'generic fallback' : escapeHtml(adapter.label)} adapter
       </div>
     </div>
 
@@ -1718,14 +1760,19 @@ function renderSettingsTab() {
         <div class="jc-toggle-row">
           <div>
             <div class="jc-label">Auto Submit</div>
-            <div style="font-size: 11px; color: #64748b;">Final submission stays manual in Phase 3</div>
+            <div style="font-size: 11px; color: #64748b;">Off by default. Submits only when every field is verified, validation is clean, and one Submit control exists — after a cancellable countdown.</div>
           </div>
           <label class="jc-switch">
-            <input type="checkbox" name="autoSubmit" disabled />
+            <input type="checkbox" name="autoSubmit" ${settings.autoSubmit ? 'checked' : ''} />
             <span class="jc-slider"></span>
           </label>
         </div>
       </div>
+
+      <div class="jc-row" style="margin-top: 4px;">
+        <button type="button" class="jc-btn jc-btn-secondary" id="jc-export-data" style="flex: 1;">Export backup JSON</button>
+      </div>
+      <p style="font-size: 11px; color: #64748b; margin: 0;">Profile, settings, memory, and job only. The API key is never included.</p>
 
       <div class="jc-row">
         <button class="jc-btn" type="submit" style="flex: 1;">Save Settings</button>
@@ -2079,6 +2126,9 @@ function attachEventHandlers() {
       };
     }
 
+    const exportBtn = shadowRootRef.querySelector('#jc-export-data');
+    if (exportBtn) exportBtn.onclick = () => exportUserBackup();
+
     settingsForm.onsubmit = (e) => {
       e.preventDefault();
       const formData = new FormData(settingsForm);
@@ -2128,32 +2178,115 @@ function attachEventHandlers() {
   }
 }
 
-export function mountUI() {
-  if (document.getElementById(UI_IDS.CONTAINER)) {
-    return;
+/**
+ * Resolves who may mount `#job-copilot-root`. Extension wins over userscript.
+ */
+export function claimPanelHost(hostName) {
+  let existing = document.getElementById(UI_IDS.CONTAINER);
+  if (existing) {
+    const owner = existing.getAttribute('data-jc-host') || '';
+    if (owner === hostName) return { status: 'already-self', owner, root: existing };
+    if (hostName === 'extension' && owner === 'userscript') {
+      existing.remove();
+      existing = null;
+    } else {
+      return { status: 'yield', owner, root: existing };
+    }
   }
 
-  const rootElement = document.createElement('div');
-  rootElement.id = UI_IDS.CONTAINER;
-  rootElement.style.position = 'absolute';
-  rootElement.style.top = '0';
-  rootElement.style.left = '0';
-  rootElement.style.zIndex = '2147483647';
+  const root = document.createElement('div');
+  root.id = UI_IDS.CONTAINER;
+  root.setAttribute('data-jc-host', hostName);
+  root.style.position = 'absolute';
+  root.style.top = '0';
+  root.style.left = '0';
+  root.style.zIndex = '2147483647';
 
-  const shadow = rootElement.attachShadow({ mode: 'open' });
+  const target = document.body || document.documentElement;
+  if (!target) return { status: 'yield', owner: null, root: null };
+
+  target.appendChild(root);
+
+  let winner = document.getElementById(UI_IDS.CONTAINER);
+  if (winner !== root) {
+    root.remove();
+    const owner = winner?.getAttribute('data-jc-host') || '';
+    if (hostName === 'extension' && owner === 'userscript') {
+      winner.remove();
+      target.appendChild(root);
+      winner = document.getElementById(UI_IDS.CONTAINER);
+    }
+    if (winner !== root) {
+      return { status: 'yield', owner: winner?.getAttribute('data-jc-host') || owner, root: winner };
+    }
+  }
+
+  return { status: 'claimed', owner: hostName, root };
+}
+
+function watchPanelHostDisconnect(rootElement) {
+  if (panelHostDisconnectObserver) {
+    panelHostDisconnectObserver.disconnect();
+    panelHostDisconnectObserver = null;
+  }
+  const parent = rootElement.parentNode;
+  if (!parent) return;
+  panelHostDisconnectObserver = new MutationObserver(() => {
+    if (!rootElement.isConnected) {
+      panelHostDisconnectObserver?.disconnect();
+      panelHostDisconnectObserver = null;
+      unmountUI();
+    }
+  });
+  panelHostDisconnectObserver.observe(parent, { childList: true });
+}
+
+export function unmountUI() {
+  if (panelHostDisconnectObserver) {
+    panelHostDisconnectObserver.disconnect();
+    panelHostDisconnectObserver = null;
+  }
+  applicationEngine?.destroy();
+  applicationEngine = null;
+  applicationState = null;
+  stopFormObserver();
+  shadowRootRef = null;
+}
+
+export function mountUI() {
+  const hostName = getHostName();
+  const claim = claimPanelHost(hostName);
+  if (claim.status === 'yield') {
+    logger.info(`Panel not mounted: "${claim.owner || 'unknown'}" host already owns this page.`);
+    return;
+  }
+  if (claim.status === 'already-self') {
+    if (claim.root?.shadowRoot && shadowRootRef) return;
+  }
+
+  const rootElement = claim.root;
+  if (!rootElement) return;
+
+  const shadow = rootElement.shadowRoot || rootElement.attachShadow({ mode: 'open' });
   shadowRootRef = shadow;
 
-  const styleEl = document.createElement('style');
-  styleEl.textContent = STYLES;
-  shadow.appendChild(styleEl);
+  if (!shadow.querySelector('style')) {
+    const styleEl = document.createElement('style');
+    styleEl.textContent = STYLES;
+    shadow.appendChild(styleEl);
+  }
 
-  const container = document.createElement('div');
-  container.className = 'jc-widget-container';
-  shadow.appendChild(container);
+  let container = shadow.querySelector('.jc-widget-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'jc-widget-container';
+    shadow.appendChild(container);
+  }
+
+  watchPanelHostDisconnect(rootElement);
 
   const target = document.body || document.documentElement;
   if (target) {
-    target.appendChild(rootElement);
     refreshDetectedFields();
     updatePanelDOM();
     initInlineRewriteBadge((targetInput) => {
