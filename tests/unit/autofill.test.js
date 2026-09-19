@@ -447,6 +447,10 @@ test('AI fill and rewrite prompts demand human voice and forbid em dashes', asyn
   assert.match(fillPrompt, /NARRATIVE VOICE/);
   assert.match(fillPrompt, /em dashes/);
   assert.match(fillPrompt, /\u2014/);
+  assert.match(fillPrompt, /NEVER restate or echo the question/);
+  assert.match(fillPrompt, /NEVER use "This involved/);
+  assert.match(fillPrompt, /NEVER write corporate marketing copy/);
+  assert.match(fillPrompt, /NEVER append an essay conclusion/);
   assert.doesNotMatch(fillPrompt, /polished, professional, compelling/);
 
   let rewritePrompt;
@@ -458,6 +462,8 @@ test('AI fill and rewrite prompts demand human voice and forbid em dashes', asyn
   assert.match(rewritePrompt, /NARRATIVE VOICE/);
   assert.match(rewritePrompt, /em dashes/);
   assert.match(rewritePrompt, /\u2014/);
+  assert.match(rewritePrompt, /NEVER restate or echo the question/);
+  assert.match(rewritePrompt, /NEVER use "This involved/);
 });
 
 test('free-text AI answers and rewrites strip em dashes but option values stay exact', async () => {

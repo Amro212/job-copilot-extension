@@ -9,15 +9,33 @@ const AUTOFILL_TIMEOUT_MS = 120000;
 const OPTION_FIELD_TYPES = new Set(['select', 'combobox', 'radio', 'checkbox']);
 
 const NARRATIVE_VOICE_RULES = `NARRATIVE VOICE (all free-text and open-ended answers):
-Write like a real candidate filling a form: first-person, specific, and natural. Professional enough for a hiring manager, never brochure or chatbot copy. Vary sentence length. Every sentence must add a fact, not emphasis.
+Write like a real developer/candidate filling out a job application: first-person ("I"), plain English, concrete, and conversational. Sound like an engineer explaining their work to another engineer, not a PR spokesperson or corporate brochure.
 
-Hard bans:
-- Never use em dashes (\u2014), en dashes (\u2013), or spaced double hyphens as dashes. Use a period, comma, colon, or parentheses.
-- Do not use not-X-but-Y contrasts ("It's not just X, it's Y"). State the point.
-- No staged openers or closers ("Here's the thing", "At its core", "That's what I bring").
-- No inflated or sales wording (pivotal, crucial, testament, landscape, delve, underscore, showcase, robust, meticulous, vibrant, groundbreaking, foster, leverage, boasts, serves as, stands as). Prefer is/have and concrete verbs.
-- Do not pad ideas into forced groups of three.
-- No bold, emoji, or chatbot wrappers.`;
+Hard negative constraints:
+1. NEVER restate or echo the question in your opening sentence. Never start with "I have experience with...", "My most significant project is...", or "During my education at...". Jump straight into what you actually built, did, or solved.
+2. NEVER use "This involved [gerund], [gerund]" or passive task catalogs (e.g. "This involved provisioning, deploying, and fixing..."). Use direct active verbs: "I set up...", "I built...", "I ran into networking issues with Docker, so I rewrote the routing rules...".
+3. NEVER write corporate marketing copy or product landing page summaries (e.g. "...a browser-based tool designed to reduce repetitive work"). Explain what you built in plain terms: "I built an extension that autofills job forms and handles stubborn custom dropdowns."
+4. NEVER append an essay conclusion or self-evaluative summary (e.g. "This project demonstrates my ability to...", "This experience taught me...", "requiring organizational skills to..."). Stop writing once the factual answer is complete.
+5. NEVER append an unprompted skill or keyword list to the end of a narrative (e.g. "My technical skills also include Python, Docker...").
+6. NEVER use inflated corporate jargon or AI buzzwords: leverage, utilize, optimize, streamline, pivotal, crucial, testament, landscape, delve, underscore, showcase, robust, meticulous, vibrant, groundbreaking, foster, boasts, serves as, stands as, facilitate, empower, elevate, enhance, augment. Use plain words: used, built, fixed, ran, set up, handled, helped.
+7. NEVER use em dashes (\u2014), en dashes (\u2013), or spaced double hyphens as dashes. Use a period, comma, colon, or parentheses.
+8. NEVER use not-X-but-Y contrasts ("It's not just X, it's Y") or staged openers ("Here's the thing", "At its core", "That's what I bring").
+9. Do not pad ideas into forced groups of three.
+10. No bold, emoji, or chatbot wrappers.
+11. Vary sentence rhythm (burstiness): mix short, direct sentences with longer ones. Use natural contractions (I've, wasn't, didn't, it's) for natural human flow. Every sentence must add a real fact, not fluff.
+
+Contrastive examples:
+- Question: "Describe your experience with Linux and open source"
+  BAD (Robotic AI): "I have experience with Linux and open source through deploying and operating self-hosted AI agent infrastructure on Oracle Cloud Ubuntu VPS. This involved provisioning the server, expanding storage, deploying multiple containerized services with persistent workspaces... My technical skills also include Python, Docker..."
+  GOOD (Human Engineer): "I run my self-hosted AI workflows on an Ubuntu VPS in Oracle Cloud. I set up the server, expanded the storage volumes, and deployed several containerized services with persistent disk storage. When internal Docker networking caused routing issues between containers, I reconfigured the service routes and added automatic provider fallbacks."
+
+- Question: "Describe your best personal software project, outside of curriculum or work"
+  BAD (Robotic AI): "My most significant personal software project is Job Copilot, a browser-based tool designed to reduce repetitive job application work. It uses structured personal and professional context... This project demonstrates my ability to build practical tools..."
+  GOOD (Human Engineer): "I built Job Copilot, a browser extension and userscript that automates repetitive job application forms. Standard autofill extensions constantly fail on custom UI components like Workday comboboxes, so I engineered a DOM observer and event dispatcher that reliably selects those options across different ATS platforms."
+
+- Question: "Describe any significant leadership or organizational / team responsibility"
+  BAD (Robotic AI): "During my education at the University of Guelph, I was involved in several projects that required organizational and team responsibilities. For the Senior Engineering Design Competition Robot project, our team placed 2nd, which involved coordinating efforts... requiring organizational skills to handle multiple students..."
+  GOOD (Human Engineer): "In our Senior Engineering Design Competition, I helped lead a team of four to build and program an autonomous robot under tight competition deadlines, taking 2nd place overall. Outside of classes, I also tutored math and programming for Paper, managing concurrent student sessions and breaking down difficult technical concepts on the fly."`;
 
 function stripModelDashes(text) {
   if (typeof text !== 'string' || !text) return text;

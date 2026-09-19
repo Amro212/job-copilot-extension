@@ -471,3 +471,32 @@ is preserved. Manual Firefox temporary install remains available if needed via
 `about:debugging` → This Firefox → Load Temporary Add-on →
 `dist/firefox/manifest.json`.
 
+---
+
+## Turn: 2026-09-19 — Narrative voice and tone system prompt overhaul
+
+### Bugs/Findings
+- **Date**: 2026-09-19
+- **Target**: Extension & Userscript (Core AI prompt)
+- **Platform/ATS**: All ATS platforms (open-ended / narrative answers)
+- **Symptoms**: Narrative answers for free-text questions sounded distinctly inhuman, robotic, and over-engineered. The output exhibited:
+  1. Question restatements / throat-clearing ("I have experience with Linux and open source through...", "My most significant personal software project is...", "During my education at...").
+  2. "This involved [gerund], [gerund], [gerund]" structures mechanically converting resume bullets into passive task catalogs.
+  3. Corporate PR/brochure voice describing personal projects like a product marketing landing page.
+  4. Essay conclusions and meta-evaluative self-praise ("This project demonstrates my ability to...", "requiring organizational skills to...").
+  5. Unprompted skill rosters tacked on at the end of answers ("My technical skills also include...").
+  6. Inflated corporate buzzwords and uniform, monotonic sentence length.
+- **Root-Cause Analysis**:
+  `NARRATIVE_VOICE_RULES` in `src/core/ai.js` relied on soft directives ("Write like a real candidate filling a form") and a limited set of banned words. Online research across Reddit (r/ChatGPT, r/PromptEngineering, r/ClaudeAI) demonstrates that LLMs revert to formulaic AI cadence unless given explicit, hard negative constraints against specific structural habits (throat-clearing, question restating, gerund stacking, essay conclusions) along with concrete contrastive (BAD vs GOOD) exemplars.
+- **Resolution**:
+  Replaced `NARRATIVE_VOICE_RULES` in `src/core/ai.js` with comprehensive negative constraints, plain English directives, burstiness/contraction guidance, and concrete contrastive exemplars modeled after real developer responses. Updated unit tests in `tests/unit/autofill.test.js` to assert these constraints.
+
+### Turn changes
+- `src/core/ai.js`: Overhauled `NARRATIVE_VOICE_RULES` with 11 hard negative constraints, plain language directives, and 3 contrastive BAD vs GOOD exemplars for technical, project, and leadership questions.
+- `tests/unit/autofill.test.js`: Added assertions checking that new narrative negative constraints (banning question restatement, "This involved", marketing copy, and essay conclusions) are present in both autofill and rewrite prompt payloads.
+
+### Verification
+- `npm test`: **193 pass, 0 fail** (all unit tests passed).
+
+### Status
+Narrative voice prompt updated and verified.
