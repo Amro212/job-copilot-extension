@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Greenhouse select regression</title>
+<!-- Reproduction from reported Greenhouse empty-option logs/screenshots, 2026-09-19.
+     React-select ownership/commit markup; behavior simulated independently. -->
+<style>body{font:16px sans-serif;padding:24px}.field{margin:20px}label{display:block}[role=option]{padding:8px}</style>
+<body data-submissions="0"><main><h1>Apply</h1><form id="application_form">
+<div class="field"><label for="country">What is your current country of residence?</label><div class="select__control"><span class="select__single-value"></span><input id="country" role="combobox" aria-controls="country-menu" aria-expanded="false"></div></div>
+<div class="field"><label for="question_68696271">Are you located in the US or Canada?</label><div class="select__control"><span class="select__single-value"></span><input id="question_68696271" role="combobox" aria-controls="question-menu" aria-expanded="false"></div></div>
+<button type="submit">Submit Application</button></form></main>
+<div id="country-menu" role="listbox" hidden></div><div id="question-menu" role="listbox" hidden></div>
+<script>
+document.querySelector('form').onsubmit=e=>{e.preventDefault();document.body.dataset.submissions=String(+document.body.dataset.submissions+1)};
+for(const [id,choices] of [['country',['Canada','United States']],['question_68696271',['Yes','No']]]){
+ const input=document.getElementById(id),menu=document.getElementById(input.getAttribute('aria-controls'));
+ const close=()=>{menu.hidden=true;input.setAttribute('aria-expanded','false');input.value=''};
+ const open=()=>{menu.hidden=false;input.setAttribute('aria-expanded','true');menu.replaceChildren();for(const label of choices){const o=document.createElement('div');o.className='select__option';o.setAttribute('role','option');o.textContent=label;o.onmousedown=e=>e.preventDefault();o.onclick=()=>{input.previousElementSibling.textContent=label;document.body.dataset[id]=label;close()};menu.append(o)}};
+ input.onfocus=open;input.oninput=open;input.onblur=close;
+}
+</script></body></html>

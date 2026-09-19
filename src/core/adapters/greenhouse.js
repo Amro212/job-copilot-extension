@@ -44,7 +44,8 @@ export const greenhouseAdapter = {
     const next = element.nextElementSibling;
     return next?.classList?.contains('pac-container') ? [next] : null;
   },
-  comboboxOptionSelector() {
-    return '.pac-item';
+  comboboxOptionSelector(element) {
+    // Places locations and ordinary React-select fields coexist on Greenhouse.
+    return this.isCombobox(element) ? '.pac-item' : '';
   },
 };

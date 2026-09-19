@@ -68,7 +68,7 @@ export function resolveComboboxParts(element) {
   }
   const input = element.matches('input') ? element : container.querySelector('input:not([type="hidden"])');
   const controlBox = container.querySelector('.select__control, [class*="-control"], [class*="combobox-input"]') || element;
-  const toggleBtn = container.querySelector('button[aria-label*="toggle" i], button[aria-label*="open" i], [class*="dropdown-indicator"], [class*="indicatorContainer"], [class*="dropdown-arrow"]');
+  const toggleBtn = detectAdapter().comboboxToggle?.(element) || container.querySelector('button[aria-label*="toggle" i], button[aria-label*="open" i], [class*="dropdown-indicator"], [class*="indicatorContainer"], [class*="dropdown-arrow"]');
   return { container, input, controlBox, toggleBtn };
 }
 
@@ -94,7 +94,7 @@ export function getComboboxMenus(element) {
 export function discoverComboboxOptions(element) {
   const options = [...new Set(getComboboxMenus(element).flatMap(menu => {
     if (menu.hidden || menu.getAttribute('aria-hidden') === 'true' || menu.style.display === 'none') return [];
-    const optionSelector = detectAdapter().comboboxOptionSelector()
+    const optionSelector = detectAdapter().comboboxOptionSelector(element)
       || (isLeverLocation(element) ? '.dropdown-results > .dropdown-location' : isPlacesLocation(element) ? '.pac-item' : OPTION);
     return Array.from(menu.querySelectorAll(optionSelector)).filter(option =>
       option.textContent?.trim() && !option.hidden && option.style.display !== 'none' &&
@@ -219,7 +219,7 @@ export async function openCombobox(element) {
   target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 0 }));
   clickFieldControl(target);
   await delay(80);
-  if (!getComboboxMenus(element).length && toggleBtn) clickFieldControl(toggleBtn);
+  if (menusClosed(element) && toggleBtn) clickFieldControl(toggleBtn);
 }
 
 export async function waitForComboboxOptions(element, timeoutMs, locationQuery) {

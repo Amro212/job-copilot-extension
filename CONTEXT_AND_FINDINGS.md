@@ -5,6 +5,40 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-19 — Resume upload refinement, Greenhouse post-upload stability, and field deduplication
+
+### Bugs & Findings
+1. **Resume attached to cover letter / non-resume file fields**
+   - Target: Both extension and userscript (core autofill flow).
+   - Symptoms: When pages had multiple file upload controls (e.g. resume and cover letter), the stored resume was attached to all file fields indiscriminately.
+   - Root-cause: File inputs were selected with `field.type === 'file'` with no check on whether the field actually asked for a resume/CV vs cover letter, portfolio, writing sample, etc.
+   - Resolution: Added `isResumeField(field, allFileFields)` helper in `src/core/resume.js` that checks field labels, names, IDs, descriptions, and accept attributes against resume/CV patterns while rejecting explicit non-resume patterns (`cover letter`, `portfolio`, `work sample`, `references`, `transcript`, etc.). Ambiguous file fields fall back to treating only the first file input as the resume. Applied filter in `src/core/ui.js`, `src/core/agent.js`, and `src/core/application.js`.
+
+2. **Greenhouse "The question changed or disappeared. Scan the page again."**
+   - Target: Both extension and userscript.
+   - Platform: Greenhouse ATS.
+   - Symptoms: Immediately after uploading the resume on Greenhouse, autofill failed with an error stating the question changed or disappeared.
+   - Root-cause: In `ui.js` and `agent.js`, `resolveLiveElement(field)` called `refreshField(field)` immediately after file upload. Greenhouse re-renders the file upload area upon file selection (updating description/label to display the attached file). `refreshField` strictly asserts that `fresh.label === field.label && fresh.description === field.description`, which threw.
+   - Resolution: Introduced `resolveLiveFileElement` soft re-acquisition in `ui.js` and `agent.js` that tolerates post-upload label/description changes for file fields while verifying element connectivity and files array, leaving strict identity checks for normal question inputs.
+
+3. **Lever "Ambiguous duplicate field IDs"**
+   - Target: Both extension and userscript.
+   - Platform: Lever ATS (and forms with shared `name` attributes).
+   - Symptoms: Autofill aborted completely on forms where multiple inputs lacked an `id` and shared the same `name` attribute.
+   - Root-cause: `assertUniqueFields` threw a fatal error upon finding duplicate IDs instead of disambiguating them.
+   - Resolution: Converted `assertUniqueFields` into `deduplicateFields(fields)` which appends numeric suffixes (`_2`, `_3`) and logs a warning instead of throwing, allowing autofill to proceed cleanly.
+
+### Turn changes:
+- `src/core/resume.js`: Exported `isResumeField(field, allFileFields)` with regex matching for resume vs non-resume file inputs.
+- `src/core/fields/scanner.js`: Implemented `deduplicateFields(fields)` and deprecated `assertUniqueFields` as an alias.
+- `src/core/ui.js`: Filtered file fields with `isResumeField`, used `deduplicateFields`, and used `resolveLiveFileElement` for file field re-acquisition.
+- `src/core/agent.js`: Filtered file fields with `isResumeField`, used `deduplicateFields`, and used soft element re-acquisition in `uploadResume`.
+- `src/core/application.js`: Filtered file fields with `isResumeField` across primary and late uploads.
+- `src/core/ai.js`: Restored explicit profile answers priority rule in `buildNarrativeSystemPrompt`.
+- `tests/unit/upload.test.js`: Added unit tests for `isResumeField` and `deduplicateFields`.
+
+---
+
 ## Turn: 2026-09-18 — Stages 7–10: adapters, resume upload, Auto Submit, Firefox packaging
 
 Earlier aborted shell runs for Stage 2–4 (extension shell E2E, navigation lifecycle) returned empty output and Windows exit `4294967295` (process killed). Those gates had already passed in this repo; work resumed at Stage 7.
@@ -500,3 +534,26 @@ is preserved. Manual Firefox temporary install remains available if needed via
 
 ### Status
 Narrative voice prompt updated and verified.
+
+---
+
+## Turn: 2026-09-19 — Greenhouse dropdowns and Ashby/Lever resume parsing
+
+### Bugs/findings
+- **Target:** Extension and userscript shared core. **Greenhouse:** user reports empty dropdowns across applications; attached logs repeatedly show zero owned options. Root cause: Greenhouse's `.pac-item` option override was applied to every combobox, excluding normal React-select options. Scoped the override to Places inputs; reproduced with failing unit test and independent browser fixture, then verified the fix. User subsequently supplied https://job-boards.greenhouse.io/gitlab/jobs/8773006002. Read-only inspection confirmed the affected Yes/No dropdown uses `.select__option[role=option]` under its `aria-controls` listbox, matching the regression and fix. `greenhouse-select-fixture.html` is a reproduction, not a live capture. Additional Debug capture deferred when user requested no more tests and immediate completion.
+- **Ashby:** user reports unreliable location/source dropdowns and supplies 1Password URL and source-field HTML. Inspected live page: clicking the empty source input leaves it closed; its unlabeled `_toggleButton_` opens an ARIA-linked portal. Existing resolver omitted that toggle and counted hidden menus as open. Added an Ashby-specific toggle selector and visibility-aware fallback, retaining the existing event sequence and exact owned-option matching. Live page captured through Debug → Save page fixture in `ashby-1password-captured.html`; existing replay fixture now includes the observed source control and independently simulated commit state.
+- **Ashby/Lever uploads:** reported delayed resume parsing clears/overwrites autofilled fields. Manual Autofill previously generated answers before upload, then filled immediately; embedded uploads occurred after remote fills. Moved uploads before scanning/answer generation, added bounded parser settling (minimum 3 seconds, 1 second stable fields, maximum 15 seconds), and rescan after processing. Poll value properties, replacement nodes, disabled state and busy indicators, including Lever's captured `.resume-upload-working` markup. Timeout stops filling; pause/page changes cancel the local wait. Preserve post-parser values unless overwrite is enabled. Application workflow and frame agents share the wait.
+
+### Turn changes
+- `src/core/adapters/{greenhouse,ashby}.js`, `src/core/fields/combobox.js`: corrected option selection and toggle resolution; no change to actuator event strategy.
+- `src/core/resume.js`: shared upload/parser stabilization; no host APIs, credentials, network access or applicant-value logging.
+- `src/core/{ui,application,agent,remote}.js`: upload sequencing, fresh target selection, upload overwrite guard, and propagation of embedded upload errors.
+- `fixtures/{ashby-hardening-fixture,ashby-1password-captured,greenhouse-select-fixture,ats-race-fixture}.html`: captured/synthetic evidence and independent behavioral reproductions; race fixture uses a delayed simulated parser, never uploads real documents.
+- `tests/unit/{ats-hardening,upload}.test.js`, `tests/e2e/{ats-hardening,upload}.spec.js`: regressions for ordinary Greenhouse selects, Ashby toggles, parser races, cancellation, timeout, workflow overwrite and embedded uploads.
+- `package.json`: normal build script automatically increments the package version; rebuilt Chrome, Firefox and userscript artifacts.
+
+### Verification/status
+- Confirmed failing dropdown tests and parser-race browser tests before their fixes.
+- `npm test`: **199 passed, 0 failed**. `npm run test:e2e`: **46 passed, 0 failed**, real Chromium with MV3 extension. Builds completed at **0.4.18** for Chrome, Firefox and userscript. Diff whitespace check passed.
+- User requested no further tests after the full suite had completed; none were started after that request. Final follow-up was limited to read-only GitLab markup inspection and this log update.
+- Live parser timing is reproduced deterministically; no personal resume was sent to an ATS and no application was submitted.

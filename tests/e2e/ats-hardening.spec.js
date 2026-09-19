@@ -1,4 +1,4 @@
-import { test, expect, LEVER_HOST, ASHBY_HOST } from './support/fixtures.js';
+import { test, expect, LEVER_HOST, ASHBY_HOST, GREENHOUSE_HOST } from './support/fixtures.js';
 
 const profile = {
   fullName: 'Test Applicant', email: 'test@example.com', location: 'Toronto, Ontario, Canada',
@@ -79,12 +79,27 @@ test('Ashby commits its portal location and visible No button without submission
   await expect(page.locator('#jc-autofill-btn')).toBeEnabled({ timeout: 60000 });
   await expect(page.locator('body')).toHaveAttribute('data-accepted-location', 'Toronto, ON, CAN');
   await expect(page.locator('body')).toHaveAttribute('data-accepted-authorization', 'no');
+  await expect(page.locator('body')).toHaveAttribute('data-accepted-source', 'Other');
   await expect(page.locator('[data-option=no]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[data-option=yes]')).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('#jc-main-panel')).not.toContainText('Required field left empty');
   const fields = JSON.parse(jc.openrouter.requests[0].body.messages.at(-1).content).fieldsToFill;
   expect(fields.find(f => f.fieldId === 'authorization')).toMatchObject({ type: 'radio', required: true, options: [{ value: 'Yes', label: 'Yes' }, { value: 'No', label: 'No' }] });
   expect(fields.some(f => f.label === 'Option')).toBe(false);
+  expect(jc.openrouter.requests).toHaveLength(1);
+  await expect(page.locator('body')).toHaveAttribute('data-submissions', '0');
+});
+
+test('Greenhouse harvests and commits ordinary React-select dropdowns', async ({ jc }) => {
+  await jc.seed({ profile });
+  answerQuestions(jc);
+  const page = await jc.context.newPage();
+  await page.goto(jc.fixtureUrl('greenhouse-select-fixture.html', GREENHOUSE_HOST));
+  await jc.openPanel(page);
+  await page.locator('#jc-autofill-btn').click();
+  await expect(page.locator('#jc-autofill-btn')).toBeEnabled({ timeout: 60000 });
+  await expect(page.locator('body')).toHaveAttribute('data-country', 'Canada');
+  await expect(page.locator('body')).toHaveAttribute('data-question_68696271', 'Yes');
   expect(jc.openrouter.requests).toHaveLength(1);
   await expect(page.locator('body')).toHaveAttribute('data-submissions', '0');
 });

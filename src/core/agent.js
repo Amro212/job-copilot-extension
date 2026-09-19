@@ -1,6 +1,7 @@
-import { scanFormFields, harvestComboboxOptions, assertUniqueFields, refreshField } from './fields/scanner.js';
+import { scanFormFields, harvestComboboxOptions, assertUniqueFields, deduplicateFields, refreshField } from './fields/scanner.js';
 import { normalizeFieldsForAI } from './fields/normalize.js';
 import { fillField } from './fields/fillers.js';
+import { uploadResumeAndWait, isResumeField } from './resume.js';
 import { verifyField } from './fields/verify.js';
 import { scrollToField, highlightActiveField, highlightVerifiedField, highlightFailedField } from './fields/highlight.js';
 import { inspectValidation } from './validation.js';
@@ -115,12 +116,17 @@ export function createFieldAgent() {
     return { results };
   }
 
-  async function uploadResume() {
-    const fields = scanFormFields(document).filter((field) => field.type === 'file');
+  async function uploadResume({ overwriteExisting = false } = {}) {
+    const allFileFields = scanFormFields(document).filter((field) => field.type === 'file');
+    deduplicateFields(allFileFields);
+    const fields = allFileFields.filter((field) => isResumeField(field, allFileFields));
     const results = [];
     for (const field of fields) {
+      field.element = field.element?.isConnected ? field.element : (scanFormFields(document).find(f => f.id === field.id)?.element || field.element);
+      if (!overwriteExisting && !unfilled(field)) continue;
       cache.set(field.id, field);
-      const didFill = await fillField(field, '');
+      const didFill = await uploadResumeAndWait(field);
+      field.element = field.element?.isConnected ? field.element : (scanFormFields(document).find(f => f.id === field.id)?.element || field.element);
       const verification = didFill ? await verifyField(field, '') : { verified: false, actualValue: '', error: 'No stored resume' };
       results.push({
         fieldId: field.id,
@@ -145,7 +151,7 @@ export function createFieldAgent() {
       case 'scan': return scan(command);
       case 'searchOptions': return searchOptions(command);
       case 'fill': return fill(command);
-      case 'uploadResume': return uploadResume();
+      case 'uploadResume': return uploadResume(command);
       case 'validation': return validation();
       // An embedded frame captures its own document; the parent cannot read it.
       case 'captureFixture': return captureFixture(document, { label: command.label || '' });

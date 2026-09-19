@@ -445,25 +445,71 @@ test('AI fill and rewrite prompts demand human voice and forbid em dashes', asyn
   };
   await generateAutofillAnswers([]);
   assert.match(fillPrompt, /NARRATIVE VOICE/);
+  assert.match(fillPrompt, /VOICE PROFILE/);
+  assert.match(fillPrompt, /SPECIFICITY TEST/);
   assert.match(fillPrompt, /em dashes/);
   assert.match(fillPrompt, /\u2014/);
-  assert.match(fillPrompt, /NEVER restate or echo the question/);
-  assert.match(fillPrompt, /NEVER use "This involved/);
-  assert.match(fillPrompt, /NEVER write corporate marketing copy/);
-  assert.match(fillPrompt, /NEVER append an essay conclusion/);
+  assert.match(fillPrompt, /restate or echo the question/i);
+  assert.match(fillPrompt, /This involved/i);
+  assert.match(fillPrompt, /corporate marketing copy/i);
+  assert.match(fillPrompt, /essay conclusion/i);
   assert.doesNotMatch(fillPrompt, /polished, professional, compelling/);
 
   let rewritePrompt;
+  let rewriteTemp;
   globalThis.GM_xmlhttpRequest = options => {
-    rewritePrompt = JSON.parse(options.data).messages[0].content;
+    const payload = JSON.parse(options.data);
+    rewritePrompt = payload.messages[0].content;
+    rewriteTemp = payload.temperature;
     options.onload({ status: 200, responseText: JSON.stringify({ choices: [{ message: { content: 'I built the pipeline. Then I shipped it.' } }] }) });
   };
   await rewriteNarrativeField({ fieldLabel: 'Why us?', currentValue: 'old', feedback: 'shorter' });
   assert.match(rewritePrompt, /NARRATIVE VOICE/);
+  assert.match(rewritePrompt, /VOICE PROFILE/);
   assert.match(rewritePrompt, /em dashes/);
   assert.match(rewritePrompt, /\u2014/);
-  assert.match(rewritePrompt, /NEVER restate or echo the question/);
-  assert.match(rewritePrompt, /NEVER use "This involved/);
+  assert.match(rewritePrompt, /restate or echo the question/i);
+  assert.match(rewritePrompt, /This involved/i);
+  assert.equal(rewriteTemp, 0.6);
+});
+
+test('structured and narrative passes use separate prompts and temperatures', async () => {
+  saveApiKey('fixture-key');
+  const requests = [];
+  globalThis.GM_xmlhttpRequest = options => {
+    const payload = JSON.parse(options.data);
+    requests.push(payload);
+    options.onload({
+      status: 200,
+      responseText: JSON.stringify({
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              answers: [
+                { fieldId: 'why', value: 'I built automation tools.' },
+                { fieldId: 'role', value: 'Developer' },
+              ],
+            }),
+          },
+        }],
+      }),
+    });
+  };
+
+  const response = await generateAutofillAnswers([
+    { fieldId: 'why', label: 'Why this company?', type: 'textarea' },
+    { fieldId: 'role', label: 'Desired role', type: 'select', options: [{ value: 'Developer', label: 'Developer' }] },
+  ]);
+
+  assert.equal(response.answers.length, 2);
+  const structuredReq = requests.find(r => r.messages[0].content.includes('filling structured fields'));
+  const narrativeReq = requests.find(r => r.messages[0].content.includes('writing open-ended job application responses'));
+  assert.ok(structuredReq, 'Structured request must be sent');
+  assert.ok(narrativeReq, 'Narrative request must be sent');
+  assert.equal(structuredReq.temperature, 0.2);
+  assert.equal(narrativeReq.temperature, 0.6);
+  assert.doesNotMatch(structuredReq.messages[0].content, /VOICE PROFILE/);
+  assert.match(narrativeReq.messages[0].content, /VOICE PROFILE/);
 });
 
 test('free-text AI answers and rewrites strip em dashes but option values stay exact', async () => {

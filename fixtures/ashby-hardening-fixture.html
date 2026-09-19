@@ -6,8 +6,12 @@ Live portal markup inspected at https://jobs.ashbyhq.com/1password/ec030dda-caff
 <div class="ashby-application-form-field-entry" data-field-path="_systemfield_name"><label class="ashby-application-form-question-title" for="name">Full Name</label><input id="name" required></div>
 <div class="ashby-application-form-field-entry" data-field-path="_systemfield_location" data-field-entry-id="form_location"><label class="_required_f7cvd_91 ashby-application-form-question-title" for="_systemfield_location">Current Location</label><div class="ashby-application-form-question-description">Where we can employ you.</div><div class="_inputContainer_d7ago_28"><input class="ashby-application-form-input-autocomplete" placeholder="Start typing..." aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" role="combobox"><button class="_toggleButton_d7ago_32" aria-label="Open locations">⌄</button></div></div>
 <div class="ashby-application-form-field-entry" data-field-path="authorization" data-field-entry-id="form_authorization"><label class="_required_f7cvd_91 ashby-application-form-question-title" for="authorization">Do you live in, and are you legally authorized to work in the countries listed in the job posting?</label><div class="ashby-application-form-input-yesno"><button class="ashby-application-form-input-yesno-option" aria-pressed="false" data-option="yes">Yes</button><button class="ashby-application-form-input-yesno-option" aria-pressed="false" data-option="no">No</button><input type="checkbox" tabindex="-1" name="authorization"></div></div>
+<!-- Source dropdown inspected live 2026-09-19: empty input click does not open;
+     unlabeled _toggleButton opens a portal and adds aria-controls. -->
+<div data-field-path="source" data-field-entry-id="form_source"><fieldset><label class="_required_f7cvd_91 ashby-application-form-question-title" for="source">What brought you to this job posting</label><div class="_inputContainer_d7ago_28"><input class="ashby-application-form-input-autocomplete" placeholder="Start typing..." role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-autocomplete="list"><button class="_toggleButton_d7ago_32">⌄</button></div></fieldset></div>
 <button type="submit">Submit Application</button></form></main>
 <div id=":r0:" role="listbox" class="_floatingContainer_d7ago_103" hidden></div>
+<div id="source-menu" role="listbox" hidden><div role="option">Other</div></div>
 <script>
 document.querySelector('form').addEventListener('submit',e=>{e.preventDefault();document.body.dataset.submissions=String(+document.body.dataset.submissions+1)});
 const input=document.querySelector('[role=combobox]'), menu=document.querySelector('[role=listbox]');let accepted='', timer;
@@ -16,4 +20,10 @@ const search=()=>{accepted='';document.body.dataset.acceptedLocation='';clearTim
 input.addEventListener('input',search);input.addEventListener('focus',()=>{if(!accepted)search()});input.addEventListener('blur',()=>{input.value=accepted;close()});
 document.querySelector('[aria-label="Open locations"]').addEventListener('click',e=>{e.preventDefault();search()});
 document.querySelectorAll('.ashby-application-form-input-yesno-option').forEach(button=>button.addEventListener('click',e=>{e.preventDefault();button.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));button.parentElement.querySelector('input').checked=button.dataset.option==='yes';document.body.dataset.acceptedAuthorization=button.dataset.option;}));
+const source=document.querySelector('[data-field-path=source] input'),sourceMenu=document.querySelector('#source-menu');let sourceAccepted='';
+const closeSource=()=>{sourceMenu.hidden=true;source.setAttribute('aria-expanded','false');source.value=sourceAccepted};
+document.querySelector('[data-field-path=source] button').onclick=e=>{e.preventDefault();sourceMenu.hidden=false;source.setAttribute('aria-controls','source-menu');source.setAttribute('aria-expanded','true')};
+source.onblur=closeSource;
+sourceMenu.firstElementChild.onmousedown=e=>e.preventDefault();
+sourceMenu.firstElementChild.onclick=()=>{sourceAccepted='Other';document.body.dataset.acceptedSource='Other';closeSource()};
 </script></body></html>

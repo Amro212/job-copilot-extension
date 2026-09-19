@@ -13,11 +13,12 @@ import { platform, getHostName } from './platform.js';
 import { collectPortableData, exportPayload } from './migration.js';
 import { logger } from './debug.js';
 import { testConnection, generateAutofillAnswers, rewriteNarrativeField } from './ai.js';
-import { scanFormFields, harvestComboboxOptions, assertUniqueFields, refreshField } from './fields/scanner.js';
+import { scanFormFields, harvestComboboxOptions, deduplicateFields, refreshField } from './fields/scanner.js';
 import { resolveComboboxSearchAnswers } from './autofill.js';
 import { extractOptionLabel } from './fields/labels.js';
 import { normalizeFieldsForAI } from './fields/normalize.js';
 import { fillField } from './fields/fillers.js';
+import { uploadResumeAndWait, isResumeField } from './resume.js';
 import { verifyField } from './fields/verify.js';
 import {
   scrollToField,
@@ -42,6 +43,19 @@ let panelHostDisconnectObserver = null;
 
 function resolveLiveElement(field) {
   return refreshField(field);
+}
+
+function resolveLiveFileElement(field, root = document) {
+  if (field.element?.isConnected) return field.element;
+  const fields = scanFormFields(root);
+  deduplicateFields(fields);
+  const fresh = fields.find(candidate => candidate.id === field.id && candidate.type === "file")
+    || fields.find(candidate => candidate.type === "file");
+  if (fresh) {
+    field.element = fresh.element;
+    return fresh.element;
+  }
+  return field.element;
 }
 
 let shadowRootRef = null;
@@ -947,16 +961,51 @@ async function executeAutofillFlow() {
 
   try {
     refreshDetectedFields();
-    assertUniqueFields(detectedFieldsCache);
+    deduplicateFields(detectedFieldsCache);
     const settings = getSettings();
     const overwrite = Boolean(settings.overwriteExisting);
 
-    const targetFields = detectedFieldsCache.filter((f) => {
+    const shouldFill = (f) => {
       if (overwrite) return true;
       if (f.hasExistingValue) return false;
       const val = f.currentValue;
       return !val || val === 'false' || val === '0' || String(val).trim().length === 0;
-    });
+    };
+    const allFileFields = detectedFieldsCache.filter(f => f.type === 'file');
+    const fileFields = allFileFields.filter(f => isResumeField(f, allFileFields) && shouldFill(f));
+    let filledCount = 0;
+    let failedCount = 0;
+    for (const field of fileFields) {
+      if (token !== autofillGeneration) return;
+      field.element = resolveLiveFileElement(field);
+      // An earlier parser may already have attached this upload control.
+      if (!shouldFill(field)) continue;
+      autofillProgress.statusText = `Attaching resume and waiting for processing: "${field.label}"`;
+      updatePanelDOM();
+      const didFill = await uploadResumeAndWait(field, { isCurrent: () => token === autofillGeneration });
+      if (token !== autofillGeneration) return;
+      field.element = resolveLiveFileElement(field);
+      const verification = didFill ? await verifyField(field, '') : { verified: false, error: 'No stored resume' };
+      if (verification.verified) {
+        filledCount++;
+        fieldResultsCache.set(field.id, { status: FILL_STATUS.VERIFIED, value: verification.actualValue || '' });
+      } else {
+        failedCount++;
+        fieldResultsCache.set(field.id, { status: FILL_STATUS.FAILED, value: '', error: verification.error || 'Resume was not attached' });
+      }
+    }
+    const remoteUploads = await applyRemoteResumeUploads({ overwriteExisting: overwrite });
+    if (token !== autofillGeneration) return;
+    for (const result of remoteUploads) {
+      fieldResultsCache.set(result.fieldId, result);
+      if (result.status === FILL_STATUS.VERIFIED) filledCount++;
+      else if (result.status === FILL_STATUS.FAILED) failedCount++;
+    }
+    // Parsing can populate, clear, add, or replace controls. Choose targets only
+    // after it settles, preserving parser/user values unless overwrite is on.
+    refreshDetectedFields();
+    deduplicateFields(detectedFieldsCache);
+    const targetFields = detectedFieldsCache.filter(shouldFill);
 
     // An embedded application (a Greenhouse or Ashby iframe, for example) leaves
     // this document with zero fields while the real form sits one origin away.
@@ -966,10 +1015,9 @@ async function executeAutofillFlow() {
     if (token !== autofillGeneration) return;
     const remoteFields = remoteGroups.flatMap((group) => group.fields);
 
-    const fileFields = targetFields.filter((f) => f.type === 'file');
     const aiTargetFields = targetFields.filter((f) => f.type !== 'file');
 
-    if (aiTargetFields.length === 0 && remoteFields.length === 0 && fileFields.length === 0) {
+    if (aiTargetFields.length === 0 && remoteFields.length === 0 && fileFields.length === 0 && remoteUploads.length === 0) {
       autofillProgress.statusText = detectedFieldsCache.length === 0
         ? 'No form fields detected on this page.'
         : 'All fields are already filled. Enable "Overwrite Existing Values" in Settings to overwrite.';
@@ -1013,25 +1061,6 @@ async function executeAutofillFlow() {
     const answersMap = new Map(aiResponse.answers.map((a) => [a.fieldId, a]));
 
     logger.info(`Starting progressive fill of ${aiTargetFields.length} local, ${fileFields.length} upload and ${remoteFields.length} embedded fields...`);
-
-    let filledCount = 0;
-    let failedCount = 0;
-
-    for (const field of fileFields) {
-      if (token !== autofillGeneration) break;
-      field.element = resolveLiveElement(field);
-      autofillProgress.statusText = `Attaching resume to "${field.label}"`;
-      updatePanelDOM();
-      const didFill = await fillField(field, '');
-      const verification = didFill ? await verifyField(field, '') : { verified: false, error: 'No stored resume' };
-      if (verification.verified) {
-        filledCount++;
-        fieldResultsCache.set(field.id, { status: FILL_STATUS.VERIFIED, value: verification.actualValue || '' });
-      } else {
-        failedCount++;
-        fieldResultsCache.set(field.id, { status: FILL_STATUS.FAILED, value: '', error: verification.error || 'Resume was not attached' });
-      }
-    }
 
     for (let i = 0; i < aiTargetFields.length; i++) {
       if (token !== autofillGeneration) break;
@@ -1152,12 +1181,6 @@ async function executeAutofillFlow() {
           remote: true,
         });
         if (result.status === FILL_STATUS.VERIFIED || result.status === FILL_STATUS.INFERRED) filledCount++;
-        else if (result.status === FILL_STATUS.FAILED) failedCount++;
-      }
-      const remoteUploads = await applyRemoteResumeUploads();
-      for (const result of remoteUploads) {
-        fieldResultsCache.set(result.fieldId, result);
-        if (result.status === FILL_STATUS.VERIFIED) filledCount++;
         else if (result.status === FILL_STATUS.FAILED) failedCount++;
       }
       autofillProgress.current = autofillProgress.total;

@@ -8,6 +8,7 @@ import { getSettings } from './storage.js';
 import { scanFormFields as scanAllFields, harvestComboboxOptions } from './fields/scanner.js';
 import { normalizeFieldsForAI } from './fields/normalize.js';
 import { fillField } from './fields/fillers.js';
+import { uploadResumeAndWait, isResumeField } from './resume.js';
 import { verifyField } from './fields/verify.js';
 import { generateAutofillAnswers } from './ai.js';
 import { resolveComboboxSearchAnswers } from './autofill.js';
@@ -187,8 +188,7 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
     status('paused', `The page's Continue button stayed disabled after waiting ${navigationTimeoutMs / 1000}s. Auto Continue is still on; inspect the page before resuming.`);
   }
   async function applyResumeUploads(fields, token, signature) {
-    const files = fields.filter(f => f.type === 'file');
-    if (!files.length) return true;
+    const files = fields.filter(f => f.type === 'file' && isResumeField(f, fields));
     if (!platform.capabilities.fileUpload) return true;
     const meta = await platform.documents.meta();
     for (const original of files) {
@@ -197,7 +197,7 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
       if (!field) continue;
       if (!empty(field) && !getSettings().overwriteExisting) continue;
       field.element.scrollIntoView?.({ block: 'center', behavior: 'instant' });
-      const filled = await fillField(field, meta?.name);
+      const filled = await uploadResumeAndWait(field, { isCurrent: () => token === generation && Boolean(session?.active) });
       await delay(settleMs);
       if (!await settleFields(signature, token, 'field action', field.id)) return false;
       const live = scanFormFields().find(f => f.id === field.id);
@@ -210,10 +210,8 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
       });
       emit();
     }
-    try {
-      const remote = await applyRemoteResumeUploads();
-      for (const entry of remote) results.set(entry.fieldId, entry);
-    } catch {}
+    const remote = await applyRemoteResumeUploads({ overwriteExisting: getSettings().overwriteExisting });
+    for (const entry of remote) results.set(entry.fieldId, entry);
     return true;
   }
 
@@ -398,7 +396,7 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
             step.questions[field.id] = question;
           }
           if (!await applyResumeUploads(fields, token, signature)) return;
-          const targets = fields.filter(f => f.type !== 'file' && (getSettings().overwriteExisting || empty(f)));
+          const targets = scanFormFields().filter(f => f.type !== 'file' && (getSettings().overwriteExisting || empty(f)));
           const missing = [];
           for (const field of targets) {
             const cached = recallAnswer(session, field);
@@ -419,7 +417,7 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
           if (targets.length && !await applyAnswers(targets, Object.values(step.answers), token, signature)) return;
         } else {
           // Recover persisted answers after a full document reload without another primary request.
-          if (!await applyResumeUploads(fields.filter(f => f.type === 'file' && empty(f)), token, signature)) return;
+          if (!await applyResumeUploads(fields.filter(f => f.type === 'file' && isResumeField(f, fields) && empty(f)), token, signature)) return;
           const missing = fields.filter(f => f.type !== 'file' && empty(f));
           if (missing.length && !await applyAnswers(missing, Object.values(step.answers), token, signature)) return;
         }
@@ -431,7 +429,7 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
           step.lateRequests++;
           saveSession(session);
           const targets = late.filter(f => f.type !== 'file' && (getSettings().overwriteExisting || empty(f)));
-          if (!await applyResumeUploads(late.filter(f => f.type === 'file'), token, signature)) return;
+          if (!await applyResumeUploads(late.filter(f => f.type === 'file' && isResumeField(f, late)), token, signature)) return;
           if (targets.length) {
             const answers = await request(targets, { allowSearch: false }, token, signature);
             if (!guard(token)) return;

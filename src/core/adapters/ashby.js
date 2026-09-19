@@ -60,6 +60,9 @@ export const ashbyAdapter = {
   isCombobox(element) {
     return Boolean(element?.matches?.('.ashby-select-input, .ashby-application-form-input-autocomplete, [data-ashby-field]'));
   },
+  comboboxToggle(element) {
+    return element?.parentElement?.querySelector('button[class*="_toggleButton_"]') || null;
+  },
   continueControl() {
     return null;
   },

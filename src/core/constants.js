@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS = {
   autoContinue: true,
   autoSubmit: false,
   autopilot: false,
+  narrativeVoiceEditor: true,
 };
 
 export const DEFAULT_PROFILE = {

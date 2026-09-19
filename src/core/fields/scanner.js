@@ -339,6 +339,19 @@ export function scanFormFields(root = document) {
   });
 }
 
+export function deduplicateFields(fields) {
+  const counts = new Map();
+  for (const field of fields) {
+    const n = (counts.get(field.id) || 0) + 1;
+    counts.set(field.id, n);
+    if (n > 1) {
+      const deduped = `${field.id}_${n}`;
+      logger.warn(`Duplicate field ID "${field.id}" renamed to "${deduped}"`);
+      field.id = deduped;
+    }
+  }
+}
+
 export function assertUniqueFields(fields) {
   const ids = new Set();
   for (const field of fields) {
@@ -351,7 +364,7 @@ export function assertUniqueFields(fields) {
 // even when the outer group survives. Never apply an answer to a changed question.
 export function refreshField(field, root = document) {
   const fields = scanFormFields(root);
-  assertUniqueFields(fields);
+  deduplicateFields(fields);
   const fresh = fields.find(candidate => candidate.id === field.id);
   if (!fresh || fresh.label !== field.label || fresh.type !== field.type || fresh.description !== field.description) {
     throw new Error('The question changed or disappeared. Scan the page again.');

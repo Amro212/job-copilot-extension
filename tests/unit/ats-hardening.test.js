@@ -6,7 +6,7 @@ import { scanFormFields, harvestComboboxOptions } from '../../src/core/fields/sc
 import { normalizeFieldsForAI } from '../../src/core/fields/normalize.js';
 import { fillField } from '../../src/core/fields/fillers.js';
 import { verifyField } from '../../src/core/fields/verify.js';
-import { readComboboxSelection, setComboboxSearch, waitForComboboxOptions } from '../../src/core/fields/combobox.js';
+import { readComboboxSelection, setComboboxSearch, waitForComboboxOptions, discoverComboboxOptions, openCombobox } from '../../src/core/fields/combobox.js';
 import { saveProfile, saveApiKey } from '../../src/core/storage.js';
 import { generateAutofillAnswers } from '../../src/core/ai.js';
 import { createFieldAgent } from '../../src/core/agent.js';
@@ -29,6 +29,24 @@ function boot(ats) {
   saveApiKey('test-key');
 }
 afterEach(() => dom?.window.close());
+
+test('Greenhouse React-select options are not filtered as Places suggestions', async () => {
+  boot('ashby');
+  document.body.innerHTML = '<form id="application_form"><div class="field"><input role="combobox" aria-controls="choices"><div id="choices" role="listbox"><div role="option">Canada</div></div></div></form>';
+  // Greenhouse detection wins over Ashby markup in this fixture.
+  const input = document.querySelector('[role=combobox]');
+  assert.deepEqual(discoverComboboxOptions(input).map(o => o.textContent), ['Canada']);
+});
+
+test('Ashby opens the unlabeled sibling toggle even when its owned menu is hidden', async () => {
+  boot('ashby');
+  document.querySelector('main').innerHTML = '<fieldset><label class="ashby-application-form-question-title" for="source">What brought you to this job posting</label><div class="_inputContainer_d7ago_28"><input class="ashby-application-form-input-autocomplete" role="combobox" aria-expanded="false" aria-controls="source-menu"><button class="_toggleButton_d7ago_32"></button></div></fieldset><div id="source-menu" role="listbox" hidden><div role="option">Other</div></div>';
+  const input = document.querySelector('[role=combobox]');
+  document.querySelector('button').onclick = () => { document.querySelector('#source-menu').hidden = false; input.setAttribute('aria-expanded', 'true'); };
+  await openCombobox(input);
+  assert.equal(input.getAttribute('aria-expanded'), 'true');
+  assert.deepEqual(discoverComboboxOptions(input).map(o => o.textContent), ['Other']);
+});
 
 test('Lever custom questions retain their real labels and pronouns have one identity', () => {
   boot('lever');
@@ -104,10 +122,15 @@ test('Ashby search text is not committed and IDs come from the owning field', as
 
 test('correct questions reach AI and explicit short profile answers replace irrelevant prose', async () => {
   boot('lever');
-  let sent;
+  let sent = [];
   globalThis.GM_xmlhttpRequest = options => {
-    sent = JSON.parse(JSON.parse(options.data).messages.at(-1).content).fieldsToFill;
-    options.onload({ status: 200, responseText: JSON.stringify({ choices: [{ message: { content: JSON.stringify({ answers: sent.map(f => ({ fieldId: f.fieldId, value: 'An unrelated paragraph about my experience.' })) }) } }] }) });
+    const content = JSON.parse(JSON.parse(options.data).messages.at(-1).content);
+    if (content.fieldsToFill) {
+      sent.push(...content.fieldsToFill);
+      options.onload({ status: 200, responseText: JSON.stringify({ choices: [{ message: { content: JSON.stringify({ answers: content.fieldsToFill.map(f => ({ fieldId: f.fieldId, value: 'An unrelated paragraph about my experience.' })) }) } }] }) });
+    } else if (content.answersToEdit) {
+      options.onload({ status: 200, responseText: JSON.stringify({ choices: [{ message: { content: JSON.stringify({ answers: content.answersToEdit }) } }] }) });
+    }
   };
   const fields = normalizeFieldsForAI(scanFormFields().filter(f => f.type !== 'combobox'));
   const { answers } = await generateAutofillAnswers(fields);

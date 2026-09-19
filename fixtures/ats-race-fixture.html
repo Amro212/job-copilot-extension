@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Resume parser race regression</title>
+<!-- Deterministic replay of reported Ashby/Lever parser overwrite race (2026-09-19).
+     Upload/field markup based on pages/ashby-example-1.html and lever-example-1.html.
+     Delayed parser is simulated; no requests or personal documents are sent. -->
+<style>body{font:16px sans-serif;padding:24px}label{display:block;margin:16px}input{padding:8px}</style>
+<body><main><h1>Apply</h1><form>
+<div class="ashby-application-form-autofill-input-root" data-state="default"><label>Autofill from resume<input id="resume" type="file"></label><span id="parse-status" role="status"></span></div>
+<label>Full Name<input id="name" required></label>
+<label>Email<input id="email" type="email" required></label>
+<label>LinkedIn URL<input id="linkedin"></label>
+<button type="submit">Submit Application</button></form></main>
+<script>
+const params = new URLSearchParams(location.search);
+if (params.get('ats') === 'ashby') document.body.setAttribute('data-ashby-root','');
+if (params.has('workflow')) document.querySelector('[type=submit]').remove();
+document.body.dataset.submissions='0';
+document.querySelector('form').onsubmit=e=>{e.preventDefault();document.body.dataset.submissions=String(+document.body.dataset.submissions+1)};
+document.querySelector('#resume').addEventListener('change',()=>{
+  document.body.dataset.parse='pending';
+  const root=document.querySelector('.ashby-application-form-autofill-input-root');
+  root.dataset.state='loading'; root.setAttribute('aria-busy','true');
+  document.querySelector('#parse-status').textContent='Processing resume...';
+  setTimeout(()=>{
+    if (params.has('stuck')) return;
+    const name=document.querySelector('#name'); const replacement=name.cloneNode(true); name.replaceWith(replacement);
+    replacement.value='Parsed Applicant'; document.querySelector('#email').value='';
+    root.dataset.state='default'; root.removeAttribute('aria-busy');
+    document.querySelector('#parse-status').textContent='Resume processed';
+    document.body.dataset.parse='complete';
+    document.body.dataset.parsedAt=String(Date.now());
+  },1800);
+});
+</script></body></html>

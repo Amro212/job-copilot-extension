@@ -138,12 +138,12 @@ export async function collectRemoteValidation() {
   return errors;
 }
 
-export async function applyRemoteResumeUploads() {
+export async function applyRemoteResumeUploads({ overwriteExisting = false } = {}) {
   const frames = await listRemoteFrames();
   const results = [];
   for (const frame of frames) {
-    const result = await platform.frames.command(frame.frameId, { action: 'uploadResume' });
-    if (!ok(result)) continue;
+    const result = await platform.frames.command(frame.frameId, { action: 'uploadResume', overwriteExisting });
+    if (!ok(result)) throw new Error(result?.error || 'Embedded resume upload did not finish.');
     for (const entry of result.results || []) {
       results.push({ ...entry, fieldId: remoteFieldId(frame.frameId, entry.fieldId) });
     }
