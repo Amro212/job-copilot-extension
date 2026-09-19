@@ -27,6 +27,7 @@
     </div>
     <div class="application-question">
       <h3>LOCATION</h3>
+      <span class="application-label">Current location</span>
       <input class="location-input" name="location" placeholder="Start typing a location">
       <input type="hidden" name="selectedLocation" value="">
       <div class="dropdown-container">
@@ -59,14 +60,29 @@
     const menu = document.querySelector('.dropdown-container');
     input.addEventListener('focus', () => { menu.style.display = 'block'; menu.classList.add('open'); });
     input.addEventListener('input', () => { menu.style.display = 'block'; menu.classList.add('open'); });
-    menu.querySelectorAll('.dropdown-location').forEach((option) => {
-      option.addEventListener('mousedown', (event) => event.preventDefault());
-      option.addEventListener('click', () => {
+    let searchTimer;
+    input.addEventListener('keydown', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        const results = menu.querySelector('.dropdown-results');
+        results.replaceChildren();
+        if (!input.value) return;
+        for (const label of ['Toronto, ON, CAN', 'Toronto, OH, USA']) {
+          const option = document.createElement('div');
+          option.className = 'dropdown-location';
+          option.textContent = label;
+          results.append(option);
+        }
+      }, 500);
+    });
+    menu.addEventListener('mousedown', (event) => {
+        const option = event.target.closest('.dropdown-location');
+        if (!option) return;
+        event.preventDefault();
         input.value = option.textContent.trim();
-        hidden.value = option.textContent.trim();
+        hidden.value = JSON.stringify({ name: option.textContent.trim() });
         menu.style.display = 'none';
         menu.classList.remove('open');
-      });
     });
   </script>
 </body>

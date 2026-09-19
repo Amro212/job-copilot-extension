@@ -1,4 +1,4 @@
-import { scanFormFields, harvestComboboxOptions } from './fields/scanner.js';
+import { scanFormFields, harvestComboboxOptions, assertUniqueFields, refreshField } from './fields/scanner.js';
 import { normalizeFieldsForAI } from './fields/normalize.js';
 import { fillField } from './fields/fillers.js';
 import { verifyField } from './fields/verify.js';
@@ -19,24 +19,19 @@ export function createFieldAgent() {
   let cache = new Map();
 
   function unfilled(field) {
+    if (field.hasExistingValue) return false;
     const value = field.currentValue;
     return !value || value === 'false' || value === '0' || String(value).trim().length === 0;
   }
 
   function resolveLive(field) {
-    const element = field.element;
-    if (element?.isConnected) return element;
-    const fresh = scanFormFields(document).find((candidate) => candidate.id === field.id);
-    if (fresh) {
-      cache.set(fresh.id, fresh);
-      return fresh.element;
-    }
-    return element;
+    return refreshField(field);
   }
 
   async function scan({ overwriteExisting = false } = {}) {
     const page = classifyPage();
     const scanned = scanFormFields(document);
+    assertUniqueFields(scanned);
     cache = new Map(scanned.map((field) => [field.id, field]));
 
     const targets = scanned.filter((field) => field.type !== 'file' && (overwriteExisting || unfilled(field)));

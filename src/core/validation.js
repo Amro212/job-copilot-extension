@@ -1,5 +1,6 @@
 import { isVisible, visibleText } from './pageClassifier.js';
 import { isDisabled } from './navigation.js';
+import { detectAdapter } from './adapters/index.js';
 
 // ARIA alerts announce success and progress as well as errors.
 function isErrorMessage(node) {
@@ -19,7 +20,7 @@ export function inspectValidation(fields, control = null, doc = document) {
     const ids = `${el.getAttribute('aria-errormessage') || ''} ${el.getAttribute('aria-describedby') || ''}`.trim().split(/\s+/);
     const nodes = ids.map(id => doc.getElementById(id)).filter(node => node && isVisible(node));
     const invalid = el.getAttribute('aria-invalid') === 'true' || el.validity?.valid === false;
-    const missing = field.required && (field.type === 'checkbox' ? !el.checked : field.type === 'radio' ? !(field.elements || [el]).some(r => r.checked) : !String(field.currentValue ?? '').trim());
+    const missing = field.required && (field.widget ? detectAdapter().readChoice?.(field)?.length !== 1 : field.type === 'checkbox' ? !el.checked : field.type === 'radio' ? !(field.elements || [el]).some(r => r.checked) : !String(field.currentValue ?? '').trim());
     const messages = nodes.filter(node => invalid || isErrorMessage(node));
     messages.forEach(node => owned.add(node));
     if (invalid || missing || messages.some(node => visibleText(node))) errors.push({ fieldId: field.id, label: field.label, kind: el.getAttribute('aria-invalid') === 'true' || messages.length ? 'semantic' : 'native', message: messages.map(visibleText).filter(Boolean).join(' ') || el.validationMessage || 'Required value missing or rejected.' });

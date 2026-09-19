@@ -64,6 +64,10 @@ function matchesDemographicOption(key, value, label) {
 // questions remain grounded by the AI rather than being replaced by a short value.
 export function fixedProfileAnswer(field, profile, { allowSearch = true } = {}) {
   const label = normalize(field.label);
+  if (['text', 'textarea', 'url'].includes(field.type)) {
+    const key = isResidenceLabel(field.label) ? 'location' : /^(?:your )?linkedin(?: (?:url|link|profile|profile url|profile link))?$/.test(label) ? 'linkedin' : null;
+    if (key && profile[key]?.trim()) return { fieldId: field.fieldId, value: profile[key].trim(), inferred: false };
+  }
   // Only explicit residence questions: bare "Location" can refer to an employer.
   if (field.type === 'combobox' && isResidenceLabel(field.label) && profile.location?.trim()) {
     const location = profile.location.trim();

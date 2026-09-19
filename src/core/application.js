@@ -19,7 +19,7 @@ import { applyRemoteResumeUploads } from './remote.js';
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const scanPageFields = () => scanAllFields().filter(f => isVisible(f.element) && !f.element.closest('[role=listbox],.select__menu')).map(f => ({ ...f, label: workflowLabel(f) }));
 const scanFormFields = () => scanPageFields().filter(f => !f.element.disabled && !f.element.readOnly);
-const empty = field => field.type === 'checkbox' ? !field.element.checked : field.type === 'file' ? !(field.element.files && field.element.files.length) : !String(field.currentValue ?? '').trim();
+const empty = field => field.hasExistingValue ? false : field.type === 'checkbox' ? !field.element.checked : field.type === 'file' ? !(field.element.files && field.element.files.length) : !String(field.currentValue ?? '').trim();
 const runnable = new Set(['running', 'captcha', 'waiting', 'submitting']);
 
 export function createApplicationEngine({ answer = generateAutofillAnswers, onChange = () => {}, settleMs = 180, transitionMs = 1200, navigationTimeoutMs = transitionMs === 0 ? 0 : 10000, submitCountdownMs = 5000 } = {}) {

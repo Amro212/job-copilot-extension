@@ -24,6 +24,9 @@ export function nameToLabel(name) {
 export function extractLabel(element) {
   if (!element || !(element instanceof Element)) return '';
 
+  const metadata = detectAdapter().fieldMetadata?.(element);
+  if (metadata?.label) return cleanText(metadata.label);
+
   // 1. Check aria-label
   const ariaLabel = element.getAttribute('aria-label');
   if (ariaLabel && ariaLabel.trim()) {
@@ -137,6 +140,8 @@ export function extractGroupLabel(elements = [], groupName = '') {
   if (!elements || elements.length === 0) return nameToLabel(groupName);
 
   const firstEl = elements[0];
+  const metadata = detectAdapter().fieldMetadata?.(firstEl);
+  if (metadata?.label) return cleanText(metadata.label);
 
   // 1. Check <fieldset> <legend>
   const fieldset = firstEl.closest('fieldset');
@@ -225,6 +230,8 @@ export function extractOptionLabel(element) {
 
 export function extractDescription(element) {
   if (!element || !(element instanceof Element)) return '';
+  const metadata = detectAdapter().fieldMetadata?.(element);
+  if (metadata?.description) return cleanText(metadata.description);
 
   const describedBy = element.getAttribute('aria-describedby');
   if (describedBy) {

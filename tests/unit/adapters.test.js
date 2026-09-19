@@ -31,7 +31,10 @@ afterEach(() => dom?.window.close());
 
 test('unknown hosts keep the generic fallback', () => {
   boot('<main><label for="n">Name</label><input id="n"></main>', 'https://example.com/apply');
-  assert.equal(detectAdapter().id, 'generic');
+  const adapter = detectAdapter();
+  assert.equal(adapter.id, 'generic');
+  assert.equal(adapter.fieldMetadata(document.querySelector('#n')), null);
+  assert.deepEqual(adapter.choiceGroups(document), []);
   const fields = scanFormFields();
   assert.equal(fields[0].label, 'Name');
 });

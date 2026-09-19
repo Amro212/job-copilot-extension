@@ -1,7 +1,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { scanFormFields, harvestComboboxOptions } from '../../src/core/fields/scanner.js';
+import { scanFormFields, harvestComboboxOptions, refreshField } from '../../src/core/fields/scanner.js';
 import { openCombobox, closeCombobox, setComboboxSearch, waitForComboboxOptions } from '../../src/core/fields/combobox.js';
 import { fillCombobox, fillField } from '../../src/core/fields/fillers.js';
 import { verifyCombobox } from '../../src/core/fields/verify.js';
@@ -140,7 +140,7 @@ function leverLocation({ reject = false } = {}) {
         const option = document.createElement('div');
         option.className = 'dropdown-location';
         option.textContent = label;
-        option.onclick = () => { input.value = label; menu.style.display = 'none'; };
+        option.onclick = () => { input.value = label; document.querySelector('[name="selectedLocation"]').value = JSON.stringify({ name: label }); menu.style.display = 'none'; };
         menu.querySelector('.dropdown-results').append(option);
       }
     }, 350);
@@ -156,7 +156,7 @@ test('Lever location is a combobox with a clean residence label', () => {
   assert.equal(field.label, 'Current location');
 });
 
-test('Lever delayed location harvest and selection survive blur without hidden backing data', async () => {
+test('Lever delayed location harvest and selection survive blur with committed backing data', async () => {
   const input = leverLocation();
   const fields = scanFormFields();
   await harvestComboboxOptions(fields, new Map([['location-input', 'Toronto, Ontario, Canada']]));
@@ -166,7 +166,8 @@ test('Lever delayed location harvest and selection survive blur without hidden b
   assert.equal(input.value, 'Toronto, ON, CAN');
   assert.equal((await verifyCombobox(input, 'Toronto, ON, CAN')).verified, true);
   input.dispatchEvent(new Event('input', { bubbles: true }));
-  assert.equal(scanFormFields()[0].currentValue, '', 'editing invalidates the earlier option activation');
+  document.querySelector('[name="selectedLocation"]').value = '';
+  assert.equal(scanFormFields()[0].currentValue, '', 'invalid backing data invalidates the earlier selection');
 });
 
 test('Lever query text alone is not a selection and blur rejection fails verification', async () => {
@@ -503,6 +504,15 @@ test('workflow requests include job and validation context without putting the A
   assert.equal(content.jobContext.company, 'Example');
   assert.equal(content.repairErrors[0].fieldId, 'essay');
   assert.equal(JSON.stringify(payload).includes('fixture-private-key'), false);
+});
+
+test('refreshField keeps harvested combobox options while a first-page menu is open', () => {
+  const widget = combo('school', ['Acadia University', 'Algonquin College']);
+  const [field] = scanFormFields();
+  field.options = [{ value: 'University of Waterloo', label: 'University of Waterloo' }];
+  widget.open();
+  refreshField(field);
+  assert.deepEqual(field.options.map(option => option.label), ['University of Waterloo']);
 });
 
 test('query resolution asks AI to choose only from newly harvested options', async () => {

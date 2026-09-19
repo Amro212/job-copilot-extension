@@ -14,6 +14,12 @@ export const genericAdapter = {
     comboboxEscapeRollback: false,
     placesLocation: false,
   },
+  fieldMetadata() {
+    return null;
+  },
+  choiceGroups() {
+    return [];
+  },
   isSectionHeading() {
     return false;
   },

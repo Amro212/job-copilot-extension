@@ -1,5 +1,6 @@
 import { FIELD_TYPES } from '../constants.js';
-import { readComboboxSelection, optionKey, waitForComboboxSelection } from './combobox.js';
+import { readComboboxSelection, optionKey, waitForComboboxSelection, findExactOption } from './combobox.js';
+import { detectAdapter } from '../adapters/index.js';
 
 export async function verifyField(field, expectedValue) {
   if (!field || !field.element) {
@@ -16,6 +17,12 @@ export async function verifyField(field, expectedValue) {
   }
 
   const expectedStr = String(expectedValue || '').trim().toLowerCase();
+  if (field.widget) {
+    const actual = detectAdapter().readChoice?.(field) || [];
+    const option = findExactOption(field.options || [], expectedValue);
+    const verified = Boolean(option && actual.length === 1 && optionKey(actual[0]) === optionKey(option.value));
+    return { verified, actualValue: actual.join(', '), error: verified ? undefined : 'The expected single choice was not accepted' };
+  }
 
   switch (field.type) {
     case FIELD_TYPES.RADIO: {
@@ -25,7 +32,9 @@ export async function verifyField(field, expectedValue) {
         return { verified: false, actualValue: '', error: 'No option selected' };
       }
       const actualVal = checkedRadio.value || checkedRadio.closest('label')?.textContent?.trim() || '';
-      return { verified: true, actualValue: actualVal };
+      const option = findExactOption(field.options || [], expectedValue);
+      const verified = Boolean(option && radios.filter(r => r.checked).length === 1 && optionKey(actualVal) === optionKey(option.value));
+      return { verified, actualValue: actualVal, error: verified ? undefined : 'Selected radio does not match the expected option' };
     }
 
     case FIELD_TYPES.CHECKBOX: {
@@ -57,9 +66,12 @@ export async function verifyField(field, expectedValue) {
         };
       }
 
+      const option = findExactOption(field.options || [], expectedValue);
+      const verified = Boolean(option && optionKey(actualVal) === optionKey(option.value));
       return {
-        verified: true,
+        verified,
         actualValue: actualVal,
+        error: verified ? undefined : 'Selected option does not match the expected option',
       };
     }
 

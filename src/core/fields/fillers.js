@@ -5,6 +5,7 @@ import { logger } from '../debug.js';
 import { isLeverLocation, isPlacesLocation, recordLocationActivation } from './combobox.js';
 import { optionKey, findExactOption, optionData, resolveComboboxParts, readComboboxSelection, discoverComboboxOptions, openCombobox, closeCombobox, setComboboxSearch, waitForComboboxOptions, waitForComboboxSelection, clickFieldControl } from './combobox.js';
 import { platform } from '../platform.js';
+import { detectAdapter } from '../adapters/index.js';
 
 function setNativeInputValue(element, value) {
   try {
@@ -343,6 +344,14 @@ export async function fillFileInput(element) {
 
 export async function fillField(field, targetValue) {
   if (!field || !field.element) return false;
+  if (['select', 'radio'].includes(field.type)) {
+    const option = findExactOption(field.options || [], targetValue);
+    if (!option) return false;
+    targetValue = option.value;
+    if (field.widget) return detectAdapter().fillChoice?.(field, targetValue, {
+      click: clickFieldControl, checkbox: fillCheckbox, text: fillTextInput,
+    }) === true;
+  }
   logger.info(`Field action: id=${field.id || '(none)'}, type=${field.type}, tag=${field.element.tagName}, path=${window.location.pathname}`);
 
   switch (field.type) {

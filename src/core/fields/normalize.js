@@ -7,10 +7,9 @@ export function normalizeFieldsForAI(detectedFields, options = {}) {
   void overwriteExisting;
 
   return detectedFields.map((field) => {
-    const isFilled = Boolean(
+    const isFilled = Boolean(field.hasExistingValue ||
       field.currentValue &&
-      field.currentValue !== 'false' &&
-      field.currentValue !== '0' &&
+      !(field.type === 'checkbox' && field.currentValue === 'false') &&
       String(field.currentValue).trim().length > 0
     );
 

@@ -399,3 +399,75 @@ from their import paths.
 Core is proven host-agnostic while still shipping the working userscript. Next:
 the extension shell (manifests, background worker, hydrated storage cache,
 OpenRouter proxy, options page, popup).
+
+---
+
+## Turn: 2026-09-19 — Lever and Ashby autofill hardening
+
+Reported extension bugs: Lever location searches did not commit; custom questions
+became `"Type your response"` or internal identifiers; all pronouns were checked;
+Ashby Yes/No targeted backing `"Option"` checkboxes; Ashby autocomplete treated
+typed search text as a committed selection. Greenhouse remained the regression
+baseline.
+
+### Reproduction
+
+Against supplied `pages/` HTML and the public CSC Generation Lever application,
+Lever’s location script searches on debounced `keydown`. The previous helper sent
+input/keyup only: zero network requests before `keydown`, one afterward. Nested
+`.application-label .text` was missed. Nine pronoun checkboxes shared the name
+`pronouns`, so the scanner reused one field ID. Ashby Yes/No backing checkboxes
+were scanned independently. `quirks.selectionInInput` treated the Ashby input
+value as a selection.
+
+The prior agent implemented the adapter hooks, grouping, exact-choice validation,
+Lever `keydown` search, Ashby committed-state reading, residence/LinkedIn profile
+routing, fixtures, and tests, then stopped before panel duplicate-ID rejection,
+full build/E2E, and the findings log.
+
+### Fixes completed in this turn
+
+- **Panel path** now calls `assertUniqueFields` before generating answers, matching
+  the frame agent. Generic adapters expose empty `fieldMetadata` / `choiceGroups`
+  fallbacks.
+- **`refreshField`** keeps harvested combobox options when a live first-page menu
+  is still open. Without that, a paginated school search was overwritten and the
+  exact answer was rejected.
+- **Existing Lever fixture** now has a `Current location` application-label so
+  residence harvest still runs after the keydown/JSON location rewrite.
+- **Overwrite-off E2E** now seeds a committed Lever location (display +
+  `selectedLocation` JSON). Uncommitted typed text is not a selection: Lever’s
+  blur handler clears it, which matches the search-vs-commit distinction.
+
+### Files
+
+- Adapters: `src/core/adapters/lever.js`, `ashby.js`, `generic.js`
+- Pipeline: `scanner.js`, `combobox.js`, `fillers.js`, `verify.js`, `labels.js`,
+  `normalize.js`, `ai.js`, `profile.js`, `location.js`, `agent.js`, `ui.js`,
+  `application.js`, `validation.js`
+- Fixtures: `fixtures/lever-hardening-fixture.html`,
+  `fixtures/ashby-hardening-fixture.html`, `fixtures/lever-application-fixture.html`
+- Tests: `tests/unit/ats-hardening.test.js`, `tests/e2e/ats-hardening.spec.js`,
+  plus updates to `tests/unit/autofill.test.js` and `tests/unit/adapters.test.js`
+
+### Verification (2026-09-19)
+
+- Unit: **193 pass, 0 fail** (`npm test`).
+- Build: userscript + `dist/job-copilot-chrome.zip` + `dist/job-copilot-firefox.xpi`
+  at v0.4.15. Firefox manifest keeps `background.scripts` and `gecko.id`.
+- E2E: **39 pass, 0 fail** (`npm run test:e2e`) with the Chromium extension loaded.
+  Covers Lever questions/location/pronouns, Ashby Yes/No and portal location,
+  Greenhouse Places, Workday, generic autofill, iframe search pass, userscript
+  dual-install, and Auto Submit. No accidental form submission on the hardening
+  fixtures (`data-submissions=0`).
+- Firefox: Playwright’s extension harness is Chromium-only. This machine has no
+  Firefox install, so temporary-addon loading was not executed. The XPI packs the
+  same core as the Chromium build that passed E2E.
+
+### Status
+
+Hardening complete. Greenhouse, generic, Workday, iframe, and userscript coverage
+is preserved. Manual Firefox temporary install remains available if needed via
+`about:debugging` → This Firefox → Load Temporary Add-on →
+`dist/firefox/manifest.json`.
+

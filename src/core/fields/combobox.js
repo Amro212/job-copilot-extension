@@ -37,7 +37,7 @@ export function isCustomCombobox(element) {
 }
 
 export function recordLocationActivation(element, label) {
-  if (isLeverLocation(element)) {
+  if (isLeverLocation(element) || detectAdapter().id === 'ashby') {
     activatedLocations.set(element, label);
     element.addEventListener('input', () => activatedLocations.delete(element), { once: true });
   }
@@ -73,8 +73,6 @@ export function resolveComboboxParts(element) {
 }
 
 export function getComboboxMenus(element) {
-  const adapterMenus = detectAdapter().comboboxMenus(element);
-  if (adapterMenus) return adapterMenus;
   if (isLeverLocation(element)) return Array.from(element.parentElement.querySelectorAll('.dropdown-container'));
   if (isPlacesLocation(element)) {
     const parent = element.parentElement;
@@ -88,6 +86,8 @@ export function getComboboxMenus(element) {
   const root = element.getRootNode();
   // An explicit but absent/empty menu is authoritative. Never borrow another menu.
   if (ids.size) return [...ids].map(id => root.getElementById?.(id) || element.ownerDocument.getElementById(id)).filter(Boolean);
+  const adapterMenus = detectAdapter().comboboxMenus(element);
+  if (adapterMenus) return adapterMenus;
   return Array.from(container.querySelectorAll(MENU));
 }
 
@@ -135,11 +135,15 @@ export function readComboboxSelection(element) {
     if (value) return [value];
   }
   if (isLeverLocation(element)) {
-    // Lever can leave selectedLocation empty even after a real option click.
-    // Require an observed activation plus exact persisted display and closed menu.
+    // The real site commits structured data on mousedown. Display text alone
+    // (including a click we attempted) is not proof that the site accepted it.
+    let selected;
+    try { selected = JSON.parse(element.parentElement.querySelector('[name="selectedLocation"]').value); } catch {}
+    return selected?.name && element.value === selected.name && menusClosed(element) ? [selected.name] : [];
+  }
+  if (detectAdapter().id === 'ashby') {
     const activated = activatedLocations.get(element);
-    return activated && element.value === activated && getComboboxMenus(element).every(menu =>
-      menu.hidden || menu.style.display === 'none' || element.ownerDocument.defaultView.getComputedStyle(menu).display === 'none') ? [activated] : [];
+    return activated && element.value === activated && menusClosed(element) ? [activated] : [];
   }
   const { container, input } = resolveComboboxParts(element);
   const labels = countryLabelsByInput.get(input || element);
@@ -160,19 +164,25 @@ export function readComboboxSelection(element) {
   // A searchable input's value is query text, never evidence of a selection.
 }
 
+function menusClosed(element) {
+  return element.getAttribute('aria-expanded') !== 'true' && getComboboxMenus(element).every(menu =>
+    menu.hidden || menu.getAttribute('aria-hidden') === 'true' || element.ownerDocument.defaultView.getComputedStyle(menu).display === 'none');
+}
+
 export function setComboboxSearch(input, value) {
   if (!input) return () => true;
   // Identity, not just text: a newer search may reuse the same query later.
-  const search = { query: value };
+  const search = { query: value, started: Date.now(), priorOptions: new Set(discoverComboboxOptions(input)) };
   searchesByInput.set(input, search);
   const ownsSearch = () => input.isConnected && searchesByInput.get(input) === search && input.value === value;
-  if (input.value === value) return ownsSearch;
+  if (input.value === value && !isLeverLocation(input)) return ownsSearch;
   activatedLocations.delete(input);
   const setter = Object.getOwnPropertyDescriptor(input.ownerDocument.defaultView.HTMLInputElement.prototype, 'value')?.set;
   if (setter) setter.call(input, value);
   else input.value = value;
   input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
   input.dispatchEvent(new KeyboardEvent('keyup', { key: value ? value.slice(-1) : 'Backspace', bubbles: true, composed: true }));
+  detectAdapter().afterComboboxSearch?.(input, value);
   return ownsSearch;
 }
 
@@ -234,6 +244,7 @@ export async function waitForComboboxOptions(element, timeoutMs, locationQuery) 
     // to every query term; never accept the first nonempty list blindly.
     const location = isLeverLocation(element) || isPlacesLocation(element) || isResidenceLabel(extractLabel(element));
     const options = discoverComboboxOptions(element).filter(option => {
+      if (isLeverLocation(element) && search && (Date.now() - search.started < 500 || search.priorOptions.has(option))) return false;
       const text = optionKey(option.textContent);
       return location && query ? locationMatches(text, locationQuery || query) : words.every(word => text.includes(word));
     });

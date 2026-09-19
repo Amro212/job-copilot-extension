@@ -278,13 +278,13 @@ ${NARRATIVE_VOICE_RULES}
     } else {
       ans.searchQuery = ans.searchQuery.trim();
     }
-    if (field.type === 'combobox' && ans.value !== '') {
+    if (['combobox', 'select', 'radio'].includes(field.type) && ans.value !== '') {
       const option = findExactOption(field.options || [], ans.value);
       if (!option) {
         logger.warn(`AI[${ans.fieldId}]: rejected answer outside ${field.options?.length || 0} owned options`);
         return false;
       }
-      ans.value = option.label;
+      ans.value = field.type === 'combobox' ? option.label : option.value;
     }
     if (!OPTION_FIELD_TYPES.has(field.type) && typeof ans.value === 'string') {
       ans.value = stripModelDashes(ans.value);

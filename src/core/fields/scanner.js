@@ -1,4 +1,5 @@
 import { FIELD_TYPES, UI_IDS } from '../constants.js';
+import { detectAdapter } from '../adapters/index.js';
 import { extractLabel, extractGroupLabel, extractOptionLabel, extractDescription } from './labels.js';
 import { logger } from '../debug.js';
 import { getProfile } from '../storage.js';
@@ -66,6 +67,12 @@ export function scanFormFields(root = document) {
   const detectedFields = [];
   const processedElements = new Set();
   const processedRadioGroups = new Set();
+  const adapter = detectAdapter();
+  for (const field of adapter.choiceGroups?.(root, getProfile()) || []) {
+    if (!isVisible(field.element) || isInsideCopilot(field.element)) continue;
+    detectedFields.push(field);
+    field.element.querySelectorAll('input, button').forEach(el => processedElements.add(el));
+  }
 
   const candidates = Array.from(root.querySelectorAll(`
     input,
@@ -283,6 +290,9 @@ export function scanFormFields(root = document) {
         description,
         required: isRequired(el, label),
         currentValue,
+        // Preserve user text even when the widget exposes no proof of commitment.
+        // This is an overwrite guard, never evidence used by verification.
+        hasExistingValue: Boolean(String(el.value || '').trim()),
         options,
         constraints: {},
         isNarrative: false,
@@ -319,7 +329,39 @@ export function scanFormFields(root = document) {
     });
   }
 
-  return detectedFields;
+  return detectedFields.map(field => {
+    if (field.widget) return field;
+    const metadata = adapter.fieldMetadata?.(field.element);
+    // Ordinary checkboxes retain their own option identity and label. Only
+    // adapter-declared single-choice widgets consume a whole question container.
+    if (field.type === FIELD_TYPES.CHECKBOX) return field;
+    return { ...field, ...metadata };
+  });
+}
+
+export function assertUniqueFields(fields) {
+  const ids = new Set();
+  for (const field of fields) {
+    if (ids.has(field.id)) throw new Error('Ambiguous duplicate field IDs. Inspect the page before filling.');
+    ids.add(field.id);
+  }
+}
+
+// Replace the entire descriptor: framework rerenders can replace option nodes
+// even when the outer group survives. Never apply an answer to a changed question.
+export function refreshField(field, root = document) {
+  const fields = scanFormFields(root);
+  assertUniqueFields(fields);
+  const fresh = fields.find(candidate => candidate.id === field.id);
+  if (!fresh || fresh.label !== field.label || fresh.type !== field.type || fresh.description !== field.description) {
+    throw new Error('The question changed or disappeared. Scan the page again.');
+  }
+  const options = field.options;
+  Object.assign(field, fresh);
+  // An open first-page menu is not the harvested result. Keep the options we
+  // already discovered so fill can search for that exact choice.
+  if (field.type === FIELD_TYPES.COMBOBOX && options?.length) field.options = options;
+  return field.element;
 }
 
 /**
@@ -332,6 +374,7 @@ export async function harvestComboboxOptions(fields, searchQueries = new Map()) 
   for (const field of fields.filter(field => field.type === FIELD_TYPES.COMBOBOX)) {
     const element = field.element;
     if (!element) continue;
+    if (readComboboxSelection(element).length) continue;
     const { input } = resolveComboboxParts(element);
     let ownsSearch;
     try {

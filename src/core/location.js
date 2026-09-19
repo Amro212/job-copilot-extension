@@ -10,7 +10,7 @@ const regions = new Map(Object.entries({
 const countries = new Map(Object.entries({ ca: 'canada', can: 'canada', us: 'united states', usa: 'united states', uk: 'united kingdom', gb: 'united kingdom', gbr: 'united kingdom' }));
 
 export function isResidenceLabel(label) {
-  return /^(?:current location|your current location|where are you (?:currently )?(?:located|based)|location of residence)$/.test(key(label).replace(/[✱*:?]+$/g, '').trim());
+  return /^(?:current location|your current location|where are you (?:currently )?(?:located|based)|location of residence|where do you live(?:\?\s*\(city and state\/province\))?)$/.test(key(label).replace(/[✱*:?]+$/g, '').trim());
 }
 
 export function locationMatches(candidate, requested) {

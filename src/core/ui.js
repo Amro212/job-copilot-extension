@@ -13,7 +13,7 @@ import { platform, getHostName } from './platform.js';
 import { collectPortableData, exportPayload } from './migration.js';
 import { logger } from './debug.js';
 import { testConnection, generateAutofillAnswers, rewriteNarrativeField } from './ai.js';
-import { scanFormFields, harvestComboboxOptions } from './fields/scanner.js';
+import { scanFormFields, harvestComboboxOptions, assertUniqueFields, refreshField } from './fields/scanner.js';
 import { resolveComboboxSearchAnswers } from './autofill.js';
 import { extractOptionLabel } from './fields/labels.js';
 import { normalizeFieldsForAI } from './fields/normalize.js';
@@ -41,45 +41,7 @@ let applicationState = null;
 let panelHostDisconnectObserver = null;
 
 function resolveLiveElement(field) {
-  if (!field) return null;
-
-  try {
-    if (field.element && field.element.isConnected) {
-      return field.element;
-    }
-  } catch {}
-
-  if (field.id) {
-    try {
-      const byId = document.getElementById(field.id);
-      if (byId && byId.isConnected) {
-        field.element = byId;
-        return byId;
-      }
-    } catch {}
-  }
-
-  if (field.selector) {
-    try {
-      const bySelector = document.querySelector(field.selector);
-      if (bySelector && bySelector.isConnected) {
-        field.element = bySelector;
-        return bySelector;
-      }
-    } catch {}
-  }
-
-  if (field.name) {
-    try {
-      const byName = document.querySelector(`[name="${CSS.escape(field.name)}"]`);
-      if (byName && byName.isConnected) {
-        field.element = byName;
-        return byName;
-      }
-    } catch {}
-  }
-
-  return field.element;
+  return refreshField(field);
 }
 
 let shadowRootRef = null;
@@ -985,11 +947,13 @@ async function executeAutofillFlow() {
 
   try {
     refreshDetectedFields();
+    assertUniqueFields(detectedFieldsCache);
     const settings = getSettings();
     const overwrite = Boolean(settings.overwriteExisting);
 
     const targetFields = detectedFieldsCache.filter((f) => {
       if (overwrite) return true;
+      if (f.hasExistingValue) return false;
       const val = f.currentValue;
       return !val || val === 'false' || val === '0' || String(val).trim().length === 0;
     });
