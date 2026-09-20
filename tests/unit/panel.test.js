@@ -24,6 +24,9 @@ test('workflow shows verified completion count and retained structural diagnosti
     const root = dom.window.document.querySelector('#job-copilot-root').shadowRoot;
     root.querySelector('#jc-toggle-btn').click();
     assert.match(root.textContent, /1\s+step completed/);
+    assert.equal(root.querySelector('[data-tab=review]'), null);
+    const tabs = Array.from(root.querySelectorAll('.jc-tab-btn')).map(btn => btn.getAttribute('data-tab'));
+    assert.deepEqual(tabs, ['home', 'profile', 'settings', 'debug']);
     root.querySelector('[data-tab=debug]').click();
     assert.match(root.textContent, /Last Workflow Change/);
     assert.match(root.textContent, /"fieldId": "language"/);

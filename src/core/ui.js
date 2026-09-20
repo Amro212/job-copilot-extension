@@ -12,7 +12,7 @@ import {
 import { platform, getHostName } from './platform.js';
 import { collectPortableData, exportPayload } from './migration.js';
 import { logger } from './debug.js';
-import { testConnection, generateAutofillAnswers, rewriteNarrativeField } from './ai.js';
+import { testConnection, generateAutofillAnswers } from './ai.js';
 import { scanFormFields, harvestComboboxOptions, deduplicateFields, refreshField } from './fields/scanner.js';
 import { resolveComboboxSearchAnswers } from './autofill.js';
 import { extractOptionLabel } from './fields/labels.js';
@@ -72,10 +72,6 @@ let remoteFieldCount = 0;
 let remoteFrameCount = 0;
 let fieldResultsCache = new Map(); // fieldId -> { status, value, error, inferred }
 
-// Rewrite modal state
-let activeRewriteField = null;
-let isRewriting = false;
-let rewriteFeedbackInput = '';
 
 const STYLES = `
 :host {
@@ -558,60 +554,6 @@ input:checked + .jc-slider:before {
   transition: width 0.2s ease;
 }
 
-.jc-field-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px;
-  background: #090d16;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-}
-
-.jc-field-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.jc-field-name {
-  font-weight: 600;
-  font-size: 12px;
-  color: #f1f5f9;
-}
-
-.jc-field-val-preview {
-  font-size: 11px;
-  color: #94a3b8;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.jc-modal-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.jc-modal {
-  width: 100%;
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
 .jc-workflow-card {
   background: rgba(30, 41, 59, 0.4);
@@ -1251,54 +1193,6 @@ async function saveFixtureSnapshot() {
   }
 }
 
-function openRewriteModal(field) {
-  activeRewriteField = field;
-  rewriteFeedbackInput = '';
-  panelVisible = true;
-  updatePanelDOM();
-}
-
-async function executeFieldRewrite(feedback) {
-  if (!activeRewriteField) return;
-
-  isRewriting = true;
-  updatePanelDOM();
-
-  try {
-    const field = activeRewriteField;
-    field.element = resolveLiveElement(field);
-    const currentVal = field.element?.value || field.currentValue || '';
-
-    const rewritten = await rewriteNarrativeField({
-      fieldLabel: field.label,
-      currentValue: currentVal,
-      feedback,
-      constraints: field.constraints,
-    });
-
-    if (rewritten) {
-      scrollToField(field.element);
-      await fillField(field, rewritten);
-      highlightVerifiedField(field.element);
-
-      fieldResultsCache.set(field.id, {
-        status: FILL_STATUS.VERIFIED,
-        value: rewritten,
-      });
-
-      logger.info(`Rewrote and updated field "${field.label}"`);
-    }
-
-    activeRewriteField = null;
-  } catch (err) {
-    logger.error('Rewrite failed:', err);
-    alert(`Rewrite Error: ${err.message}`);
-  } finally {
-    isRewriting = false;
-    refreshDetectedFields();
-    updatePanelDOM();
-  }
-}
 
 function renderPill() {
   const status = getStatusInfo();
@@ -1495,77 +1389,6 @@ function renderHomeTab() {
   `;
 }
 
-function renderReviewTab() {
-  if (detectedFieldsCache.length === 0) {
-    return `
-      <div class="jc-card">
-        <div style="text-align: center; color: #94a3b8; padding: 20px 0;">
-          No form fields detected on this page.<br/>
-          <button class="jc-btn jc-btn-secondary" id="jc-rescan-review-btn" style="margin: 12px auto 0;">🔄 Rescan Form</button>
-        </div>
-      </div>
-    `;
-  }
-
-  const fieldRows = detectedFieldsCache.map((field) => {
-    const result = fieldResultsCache.get(field.id);
-    let statusBadge = '<span class="jc-badge" style="background: #1e293b; color: #94a3b8;">Pending</span>';
-
-    if (result) {
-      if (result.status === FILL_STATUS.VERIFIED) {
-        statusBadge = '<span class="jc-badge jc-badge-green">Verified ✓</span>';
-      } else if (result.status === FILL_STATUS.INFERRED) {
-        statusBadge = '<span class="jc-badge jc-badge-amber">Review ⚠️</span>';
-      } else if (result.status === FILL_STATUS.FAILED) {
-        statusBadge = '<span class="jc-badge jc-badge-red">Failed ✗</span>';
-      } else if (result.status === FILL_STATUS.SKIPPED) {
-        statusBadge = '<span class="jc-badge" style="background: #334155; color: #94a3b8;">Skipped</span>';
-      }
-    }
-
-    let currentVal = '';
-    if (field.type === FIELD_TYPES.RADIO) {
-      const radios = field.elements || [field.element];
-      const checkedRadio = radios.find((r) => r.checked);
-      currentVal = checkedRadio ? (extractOptionLabel(checkedRadio) || checkedRadio.value) : '';
-    } else if (field.type === FIELD_TYPES.CHECKBOX) {
-      currentVal = field.element?.checked ? 'Checked ✓' : 'Unchecked';
-    } else if (field.type === FIELD_TYPES.SELECT) {
-      const sel = field.element;
-      const opt = sel?.options?.[sel?.selectedIndex];
-      currentVal = opt && opt.value !== '' ? (opt.text.trim() || opt.value) : '';
-    } else {
-      currentVal = field.element?.value || field.element?.textContent || field.currentValue || '';
-    }
-
-    const rewriteBtn = field.isNarrative
-      ? `<button class="jc-btn jc-btn-secondary jc-btn-small jc-field-rewrite-btn" data-field-id="${field.id}">✨ Rewrite</button>`
-      : '';
-
-    return `
-      <div class="jc-field-row">
-        <div class="jc-field-header">
-          <span class="jc-field-name">${escapeHtml(field.label || field.id)}</span>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            ${statusBadge}
-            ${rewriteBtn}
-          </div>
-        </div>
-        <div class="jc-field-val-preview">${escapeHtml(currentVal || '(empty)')}</div>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <div class="jc-row" style="margin-bottom: 4px;">
-      <span class="jc-card-title">Form Fields (${detectedFieldsCache.length})</span>
-      <button class="jc-btn jc-btn-secondary jc-btn-small" id="jc-rescan-review-btn">🔄 Rescan</button>
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      ${fieldRows}
-    </div>
-  `;
-}
 
 function renderProfileTab() {
   const profile = getProfile();
@@ -1838,42 +1661,6 @@ function renderDebugTab() {
   `;
 }
 
-function renderRewriteModal() {
-  if (!activeRewriteField) return '';
-
-  const currentVal = activeRewriteField.element?.value || activeRewriteField.currentValue || '';
-
-  return `
-    <div class="jc-modal-overlay" id="jc-rewrite-modal-overlay">
-      <div class="jc-modal">
-        <div class="jc-row">
-          <strong style="font-size: 13px; color: #f8fafc;">✨ Rewrite Response</strong>
-          <button class="jc-close-btn" id="jc-cancel-rewrite-btn">✕</button>
-        </div>
-        <div style="font-size: 11px; color: #94a3b8;">
-          <strong>Field:</strong> ${escapeHtml(activeRewriteField.label)}
-        </div>
-        <div class="jc-form-group">
-          <label>Current Text</label>
-          <div style="max-height: 80px; overflow-y: auto; background: #090d16; padding: 6px 8px; border-radius: 6px; font-size: 11px; color: #cbd5e1;">
-            ${escapeHtml(currentVal || '(empty)')}
-          </div>
-        </div>
-        <div class="jc-form-group">
-          <label>Revision Feedback / Custom Instructions</label>
-          <input class="jc-input" id="jc-rewrite-feedback-input" type="text" placeholder="e.g. Make it more concise, emphasize cloud leadership" />
-        </div>
-        <div class="jc-row" style="margin-top: 6px;">
-          <button class="jc-btn jc-btn-secondary" id="jc-cancel-rewrite-btn-2" style="flex: 1;">Cancel</button>
-          <button class="jc-btn" id="jc-submit-rewrite-btn" style="flex: 1;" ${isRewriting ? 'disabled' : ''}>
-            ${isRewriting ? 'Generating...' : '✨ Rewrite & Replace'}
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 function updatePanelDOM() {
   if (!shadowRootRef) return;
 
@@ -1884,7 +1671,6 @@ function updatePanelDOM() {
   if (panelVisible) {
     let tabContent = '';
     if (currentTab === 'home') tabContent = renderHomeTab();
-    else if (currentTab === 'review') tabContent = renderReviewTab();
     else if (currentTab === 'profile') tabContent = renderProfileTab();
     else if (currentTab === 'settings') tabContent = renderSettingsTab();
     else if (currentTab === 'debug') tabContent = renderDebugTab();
@@ -1902,7 +1688,6 @@ function updatePanelDOM() {
 
         <div class="jc-nav-tabs">
           <button class="jc-tab-btn ${currentTab === 'home' ? 'active' : ''}" data-tab="home">Home</button>
-          <button class="jc-tab-btn ${currentTab === 'review' ? 'active' : ''}" data-tab="review">Review</button>
           <button class="jc-tab-btn ${currentTab === 'profile' ? 'active' : ''}" data-tab="profile">Profile</button>
           <button class="jc-tab-btn ${currentTab === 'settings' ? 'active' : ''}" data-tab="settings">Settings</button>
           <button class="jc-tab-btn ${currentTab === 'debug' ? 'active' : ''}" data-tab="debug">Debug</button>
@@ -1911,8 +1696,6 @@ function updatePanelDOM() {
         <div class="jc-content">
           ${tabContent}
         </div>
-
-        ${renderRewriteModal()}
       </div>
     `;
   }
@@ -1967,7 +1750,6 @@ function attachEventHandlers() {
       const targetTab = btn.getAttribute('data-tab');
       if (targetTab) {
         currentTab = targetTab;
-        if (targetTab === 'review') refreshDetectedFields();
         updatePanelDOM();
       }
     };
@@ -2000,15 +1782,6 @@ function attachEventHandlers() {
     };
   }
 
-  const rescanReviewBtn = shadowRootRef.querySelector('#jc-rescan-review-btn');
-  if (rescanReviewBtn) {
-    rescanReviewBtn.onclick = () => {
-      refreshDetectedFields();
-      logger.info(`Rescanned form: ${detectedFieldsCache.length} fields detected.`);
-      updatePanelDOM();
-    };
-  }
-
   // Test AI button
   const testAiBtn = shadowRootRef.querySelector('#jc-test-ai-btn');
   if (testAiBtn) {
@@ -2023,33 +1796,6 @@ function attachEventHandlers() {
         isAiTesting = false;
         updatePanelDOM();
       }
-    };
-  }
-
-  // Review Tab: Rewrite buttons for specific fields
-  const rewriteBtns = shadowRootRef.querySelectorAll('.jc-field-rewrite-btn');
-  rewriteBtns.forEach((btn) => {
-    btn.onclick = () => {
-      const fieldId = btn.getAttribute('data-field-id');
-      const target = detectedFieldsCache.find((f) => f.id === fieldId);
-      if (target) {
-        openRewriteModal(target);
-      }
-    };
-  });
-
-  // Rewrite Modal handlers
-  const cancelRewriteBtn = shadowRootRef.querySelector('#jc-cancel-rewrite-btn');
-  const cancelRewriteBtn2 = shadowRootRef.querySelector('#jc-cancel-rewrite-btn-2');
-  if (cancelRewriteBtn) cancelRewriteBtn.onclick = () => { activeRewriteField = null; updatePanelDOM(); };
-  if (cancelRewriteBtn2) cancelRewriteBtn2.onclick = () => { activeRewriteField = null; updatePanelDOM(); };
-
-  const submitRewriteBtn = shadowRootRef.querySelector('#jc-submit-rewrite-btn');
-  if (submitRewriteBtn) {
-    submitRewriteBtn.onclick = () => {
-      const feedbackInput = shadowRootRef.querySelector('#jc-rewrite-feedback-input');
-      const feedback = feedbackInput ? feedbackInput.value.trim() : '';
-      executeFieldRewrite(feedback);
     };
   }
 

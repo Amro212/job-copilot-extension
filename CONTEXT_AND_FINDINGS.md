@@ -557,3 +557,24 @@ Narrative voice prompt updated and verified.
 - `npm test`: **199 passed, 0 failed**. `npm run test:e2e`: **46 passed, 0 failed**, real Chromium with MV3 extension. Builds completed at **0.4.18** for Chrome, Firefox and userscript. Diff whitespace check passed.
 - User requested no further tests after the full suite had completed; none were started after that request. Final follow-up was limited to read-only GitLab markup inspection and this log update.
 - Live parser timing is reproduced deterministically; no personal resume was sent to an ATS and no application was submitted.
+
+---
+
+## Turn: 2026-09-19 — Remove Review tab and associated remnants
+
+### Bugs/findings
+- **Target:** Extension and userscript UI panel (`src/core/ui.js`).
+- **Symptoms:** User requested removing the "Review" tab entirely, noting that it is empty, non-functional, and irrelevant for the tool.
+- **Root-cause analysis:** The panel UI included a non-functional "Review" tab (`renderReviewTab`) alongside a field rewrite modal (`renderRewriteModal`, `openRewriteModal`, `executeFieldRewrite`) and specific rescan buttons that were unneeded and cluttered the navigation tabs.
+- **Resolution:** Removed the Review tab button, `renderReviewTab()` function, the field rewrite modal and handlers, unused rewrite state variables, and associated review/modal CSS rules from `src/core/ui.js`. Added a unit test assertion in `tests/unit/panel.test.js` verifying the panel nav tabs consist only of `['home', 'profile', 'settings', 'debug']` and that `[data-tab=review]` is absent.
+
+### Turn changes
+- `src/core/ui.js`: Removed the Review tab button, `renderReviewTab()`, rewrite modal (`renderRewriteModal()`, `openRewriteModal()`, `executeFieldRewrite()`), rewrite state variables, rescan review button handlers, and unused CSS rules (`.jc-field-row`, `.jc-field-header`, `.jc-field-name`, `.jc-field-val-preview`, `.jc-modal-overlay`, `.jc-modal`).
+- `tests/unit/panel.test.js`: Added unit test assertion ensuring the Review tab is absent and only Home, Profile, Settings, and Debug tabs exist.
+- `package.json`, `dist/`: Built extension and userscript at version 0.4.21.
+
+### Verification/status
+- `npm test`: **202 passed, 0 failed**.
+- `tests/e2e/shell.spec.js`: **6 passed, 0 failed**.
+- Build succeeded: Chrome (`dist/chrome`), Firefox (`dist/firefox`), and userscript (`dist/userscript`) updated.
+
