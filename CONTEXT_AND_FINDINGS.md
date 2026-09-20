@@ -5,6 +5,16 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-20 — Comprehensive Project Documentation, Licensing, and Security Policy
+
+### Turn changes:
+- `README.md`: Created detailed, beginner-friendly and developer-friendly documentation covering project overview, feature set, ATS compatibility matrix (Greenhouse, Lever, Ashby, Workday, generic), 4-step quickstart for job seekers, human-in-the-loop safety boundaries, project architecture, build commands, test suites, ATS fixture capture workflow, and troubleshooting FAQ.
+- `LICENSE`: Added standard MIT License text with copyright attributed to "Job Copilot Contributors".
+- `SECURITY.md`: Authored formal security and privacy policy defining local-first storage, zero-telemetry architecture, OpenRouter BYOK model, threat boundaries (strict API key isolation in background worker / GM sandbox away from page DOM), anti-bot compliance, and private vulnerability disclosure instructions.
+- `CONTEXT_AND_FINDINGS.md`: Logged documentation and licensing additions.
+
+---
+
 ## Turn: 2026-09-19 — Resume upload refinement, Greenhouse post-upload stability, and field deduplication
 
 ### Bugs & Findings
