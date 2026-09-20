@@ -2,37 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Job Copilot</title>
-  <style>
-    :root { color-scheme: dark; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 14px; width: 280px;
-      font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-      background: #0f172a; color: #e2e8f0;
-    }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-    h1 { font-size: 14px; margin: 0; }
-    .version { font-size: 11px; color: #64748b; }
-    .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 99px; }
-    .badge.ok { background: rgba(34,197,94,.2); color: #86efac; }
-    .badge.warn { background: rgba(245,158,11,.2); color: #fcd34d; }
-    dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0 0 12px; }
-    dt { color: #94a3b8; font-size: 12px; }
-    dd { margin: 0; font-size: 12px; font-weight: 600; text-align: right; }
-    button {
-      font: inherit; font-weight: 600; cursor: pointer; width: 100%;
-      padding: 8px 10px; border-radius: 6px; margin-bottom: 6px;
-      background: #2563eb; color: #fff; border: 1px solid #2563eb;
-    }
-    button.secondary { background: #334155; border-color: #475569; color: #e2e8f0; }
-    button:hover { filter: brightness(1.1); }
-    .note { font-size: 11px; color: #94a3b8; margin: 6px 0 0; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{VISUAL_NAME}}</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
 </head>
-<body>
+<body class="popup">
   <header>
-    <h1>Job Copilot <span class="version" id="version"></span></h1>
+    <h1>{{VISUAL_NAME}} <span class="version" id="version"></span></h1>
     <span class="badge warn" id="key-status">No key</span>
   </header>
   <dl>

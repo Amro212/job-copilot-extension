@@ -2,59 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Job Copilot Options</title>
-  <style>
-    :root { color-scheme: dark; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 32px 24px 64px;
-      font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-      background: #0f172a; color: #e2e8f0;
-    }
-    main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
-    h1 { font-size: 20px; margin: 0; }
-    h2 { font-size: 15px; margin: 0 0 4px; }
-    .version { font-size: 12px; color: #64748b; font-weight: 400; }
-    section {
-      background: #1e293b; border: 1px solid #334155;
-      border-radius: 10px; padding: 18px 20px;
-      display: flex; flex-direction: column; gap: 14px;
-    }
-    .hint { font-size: 12px; color: #94a3b8; margin: 0; }
-    .group { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
-    input, select, textarea {
-      font: inherit; width: 100%; padding: 8px 10px;
-      background: #0f172a; color: #e2e8f0;
-      border: 1px solid #334155; border-radius: 6px;
-    }
-    input:focus, select:focus, textarea:focus { outline: 2px solid #3b82f6; outline-offset: -1px; }
-    textarea { min-height: 120px; resize: vertical; }
-    .row { display: flex; gap: 8px; align-items: center; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-    button {
-      font: inherit; font-weight: 600; cursor: pointer;
-      padding: 8px 14px; border-radius: 6px;
-      background: #2563eb; color: #fff; border: 1px solid #2563eb;
-    }
-    button.secondary { background: #334155; border-color: #475569; color: #e2e8f0; }
-    button:hover { filter: brightness(1.1); }
-    .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
-    .badge.ok { background: rgba(34,197,94,.2); color: #86efac; }
-    .badge.warn { background: rgba(245,158,11,.2); color: #fcd34d; }
-    .badge.err { background: rgba(239,68,68,.2); color: #fca5a5; }
-    .feedback { font-size: 12px; color: #86efac; min-height: 16px; }
-    .feedback.error { color: #fca5a5; }
-    fieldset { border: 1px solid #334155; border-radius: 8px; padding: 14px; margin: 0; }
-    legend { font-size: 12px; font-weight: 700; padding: 0 6px; color: #cbd5e1; }
-    .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{VISUAL_NAME}} Options</title>
+  <link rel="stylesheet" href="../assets/theme.css" />
 </head>
-<body>
-  <main>
-    <h1>Job Copilot <span class="version" id="version"></span></h1>
+<body class="options">
+  <div class="settings-shell">
+    <aside class="settings-nav">
+      <div class="brand"><span data-product-name>{{VISUAL_NAME}}</span> <span class="version" id="version"></span></div>
+      <nav aria-label="Settings sections">
+        <a href="#connection">API connection</a><a href="#models">Model</a>
+        <a href="#profile">Profile &amp; preferences</a><a href="#resume">Resume</a>
+        <a href="#advanced">Backup &amp; migration</a>
+      </nav>
+      <p class="note">Stored in this browser.<br />Your API key stays in the extension.</p>
+    </aside>
+    <main class="settings-main">
+<header class="page-heading"><h1>Settings</h1><p class="hint">Configure your connection, profile, and application preferences.</p></header>
 
-    <section>
+    <section id="connection">
       <div>
         <h2>OpenRouter API key</h2>
         <p class="hint">Stored by the extension. It is never sent to the page, the content script, or any log.</p>
@@ -69,12 +35,12 @@
       <div class="actions">
         <button id="save-key">Save key</button>
         <button class="secondary" id="test-key">Test connection</button>
-        <button class="secondary" id="clear-key">Remove key</button>
-        <span class="feedback" id="key-feedback"></span>
+        <button class="secondary danger" id="clear-key">Remove key</button>
+        <span class="feedback" role="status" aria-live="polite" id="key-feedback"></span>
       </div>
     </section>
 
-    <section>
+    <section id="models">
       <div>
         <h2>Model</h2>
         <p class="hint">Used for the primary autofill request, repairs, and rewrites.</p>
@@ -82,15 +48,15 @@
       <div class="group">
         <label for="model">OpenRouter model</label>
         <select id="model"></select>
-        <input id="model-custom" type="text" placeholder="Custom model id" hidden />
+        <input aria-label="Custom model ID" id="model-custom" type="text" placeholder="Custom model id" hidden />
       </div>
       <div class="actions">
         <button id="save-model">Save model</button>
-        <span class="feedback" id="model-feedback"></span>
+        <span class="feedback" role="status" aria-live="polite" id="model-feedback"></span>
       </div>
     </section>
 
-    <section>
+    <section id="profile">
       <div>
         <h2>Profile</h2>
         <p class="hint">Explicit answers here take priority over anything inferred from your resume context.</p>
@@ -114,28 +80,28 @@
         </fieldset>
         <div class="actions" style="margin-top: 14px;">
           <button type="submit">Save profile</button>
-          <span class="feedback" id="profile-feedback"></span>
+          <span class="feedback" role="status" aria-live="polite" id="profile-feedback"></span>
         </div>
       </form>
     </section>
 
-    <section>
+    <section id="resume">
       <div>
         <h2>Resume</h2>
         <p class="hint">One file, stored in the extension. Autofill attaches it to resume upload controls and checks the filename afterwards.</p>
       </div>
       <div class="row">
-        <input id="resume-file" type="file" accept=".pdf,.doc,.docx,application/pdf" />
+        <input aria-label="Resume file" id="resume-file" type="file" accept=".pdf,.doc,.docx,application/pdf" />
       </div>
       <p class="hint" id="resume-status">No resume stored.</p>
       <div class="actions">
         <button type="button" id="save-resume">Store resume</button>
-        <button class="secondary" type="button" id="clear-resume">Remove resume</button>
-        <span class="feedback" id="resume-feedback"></span>
+        <button class="secondary danger" type="button" id="clear-resume">Remove resume</button>
+        <span class="feedback" role="status" aria-live="polite" id="resume-feedback"></span>
       </div>
     </section>
 
-    <section>
+    <section id="advanced">
       <div>
         <h2>Backup and migration</h2>
         <p class="hint">Import a JSON export from the Tampermonkey userscript, or back up what is stored here. Exports never include the API key.</p>
@@ -144,10 +110,11 @@
         <button class="secondary" id="export-data">Export JSON</button>
         <button class="secondary" id="import-data">Import JSON</button>
         <input id="import-file" type="file" accept="application/json,.json" hidden />
-        <span class="feedback" id="migration-feedback"></span>
+        <span class="feedback" role="status" aria-live="polite" id="migration-feedback"></span>
       </div>
     </section>
-  </main>
+    </main>
+  </div>
   <script src="index.js"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+import { TOKENS, VISUAL_NAME, installPanelFonts } from './theme.js';
 import { APP_VERSION, APP_NAME, POPULAR_MODELS, UI_IDS, FILL_STATUS } from './constants.js';
 import { PROFILE_SECTIONS, PROFILE_FIELDS } from './profile.js';
 import {
@@ -100,37 +101,10 @@ const ICONS = {
 const STYLES = `
 :host {
   all: initial;
-  /* Kareer / DESIGN.md Design System Tokens */
-  --kr-bg-0: #080B10;       /* page / deepest background */
-  --kr-bg-1: #0D1117;       /* main panel */
-  --kr-bg-2: #131922;       /* cards / controls */
-  --kr-bg-3: #1A222D;       /* elevated / hover */
-
-  --kr-line: #26303D;
-  --kr-line-strong: #344152;
-
-  --kr-text-1: #F2F5F7;
-  --kr-text-2: #A8B2BF;
-  --kr-text-3: #667180;
-
-  --kr-signal: #A3E635;     /* brand / primary system signal (restrained lime) */
-  --kr-signal-hover: #B5F04A;
-  --kr-signal-dim: rgba(163, 230, 53, 0.10);
-
-  --kr-info: #62C8FF;
-  --kr-success: #52D98C;
-  --kr-warning: #F2B84B;
-  --kr-danger: #F06A6A;
-
-  --kr-radius-xs: 4px;
-  --kr-radius-sm: 6px;
-  --kr-radius-md: 8px;
-  --kr-radius-lg: 10px;
-  --kr-radius-round: 999px;
-
+  ${TOKENS}
   /* Aliased internal tokens */
-  --jc-font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --jc-font-mono: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+  --jc-font: var(--kr-font);
+  --jc-font-mono: var(--kr-font-mono);
   --jc-bg-base: var(--kr-bg-0);
   --jc-bg-surface: var(--kr-bg-1);
   --jc-bg-surface-glass: rgba(13, 17, 23, 0.97);
@@ -1153,6 +1127,42 @@ input:checked + .jc-slider:before {
   color: var(--kr-success);
   display: none;
 }
+
+/* Shared typography and compact, keyboard-accessible instrument surfaces. */
+button, input, select, textarea { font-family: var(--jc-font); }
+button svg { flex-shrink: 0; }
+:host { color-scheme: dark; }
+:focus-visible { outline: 2px solid var(--kr-signal); outline-offset: 3px; }
+.jc-hud-brand { border: 0; background: transparent; color: inherit; font: inherit; }
+.jc-hud-expanded .jc-hud-cta { background: var(--kr-bg-2); color: var(--kr-text-1); border-color: var(--kr-line); }
+.jc-hud-adapter { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jc-panel { background: var(--kr-bg-1); }
+.jc-header, .jc-header-actions, .jc-row > *, .jc-wf-actions > * { min-width: 0; }
+.jc-val { text-align: right; overflow-wrap: anywhere; word-break: normal; }
+.jc-label { flex-shrink: 0; }
+.jc-content { scrollbar-color: var(--kr-line-strong) var(--kr-bg-0); scrollbar-width: thin; }
+.jc-card-title { font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--kr-text-1); }
+.jc-form-group label { text-transform: none; letter-spacing: 0; font-size: 12px; }
+.jc-review-value { font-family: var(--jc-font); }
+.jc-review-item { background: transparent; border: 0; border-bottom: 1px solid var(--kr-line); border-radius: 0; padding: 10px 0; }
+.jc-review-item:last-child { border-bottom: 0; }
+.jc-tab-btn[data-tab="debug"] { flex: .8; margin-left: 8px; border-left-color: var(--kr-line); border-radius: 0; }
+.jc-wf-actions { flex-wrap: wrap; }
+.jc-wf-actions .jc-btn { flex: 1 1 auto; }
+#jc-model-select, #jc-custom-model-input { font-family: var(--jc-font-mono); }
+@media (max-width: 520px) {
+  .jc-widget-container { right: 12px; bottom: 12px; }
+  .jc-panel { max-width: calc(100vw - 24px); }
+  .jc-hud-bar { gap: 4px; padding-left: 8px; max-width: calc(100vw - 24px); }
+  .jc-hud-adapter { max-width: 64px; }
+  .jc-hud-title { font-size: 12px; }
+  .jc-content { padding: 10px; }
+  .jc-card { padding: 10px; }
+  .jc-btn { padding-left: 10px; padding-right: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
 `;
 
 function escapeHtml(str) {
@@ -1632,10 +1642,10 @@ function renderHud() {
   if (isPebble) {
     const pebbleDotClass = isAutofilling || wfIsRunning ? 'running' : status.dotClass;
     return `
-      <div class="jc-pebble" id="jc-pebble-toggle-btn" title="Expand Kareer">
+      <button type="button" class="jc-pebble" id="jc-pebble-toggle-btn" title="Expand Kareer">
         <div class="jc-status-dot ${pebbleDotClass} jc-pebble-dot"></div>
         ${ICONS.brandMark}
-      </div>
+      </button>
     `;
   }
 
@@ -1682,16 +1692,16 @@ function renderHud() {
   }
 
   return `
-    <div class="jc-hud-bar" id="jc-hud">
-      <div class="jc-hud-brand" id="jc-toggle-btn" title="${panelVisible ? 'Collapse panel' : 'Open Kareer Inspector'}">
+    <div class="jc-hud-bar ${panelVisible ? 'jc-hud-expanded' : ''}" id="jc-hud">
+      <button type="button" class="jc-hud-brand" id="jc-toggle-btn" aria-expanded="${panelVisible}" title="${panelVisible ? 'Collapse panel' : 'Open Kareer Inspector'}">
         <div class="jc-status-dot ${dotClass}"></div>
         <div class="jc-hud-title">
           <span class="jc-hud-brand-mark">${ICONS.brandMark}</span>
-          <span>Kareer</span>
+          <span>${VISUAL_NAME}</span>
         </div>
         <span class="jc-hud-adapter">${escapeHtml(adapter.id === 'generic' ? 'Generic' : adapter.label)}</span>
         ${countBadge}
-      </div>
+      </button>
       ${ctaContent}
       <button class="jc-hud-icon-btn" id="jc-hud-expand-btn" title="${panelVisible ? 'Collapse panel' : 'Open Inspector'}">
         ${panelVisible ? ICONS.minimize : ICONS.maximize}
@@ -1845,7 +1855,7 @@ function renderHomeTab() {
     ${wfErrorHtml}
     <div class="jc-wf-actions">
       <button class="jc-btn jc-btn-secondary" id="jc-capture-job" ${isAutofilling || applicationEngine?.busy ? 'disabled' : ''}>Capture Job</button>
-      <button class="jc-btn" id="jc-start-application" ${isAutofilling || applicationEngine?.busy ? 'disabled' : ''}>${session ? 'Start / Resume' : 'Start Application'}</button>
+      <button class="jc-btn ${!session || wfIsRunning || wfIsDone || wfIsWaiting || isAutofilling ? 'jc-btn-secondary' : ''}" id="jc-start-application" ${isAutofilling || applicationEngine?.busy ? 'disabled' : ''}>${session ? 'Start / Resume' : 'Start Application'}</button>
       <button class="jc-btn jc-btn-secondary ${wfIsRunning ? 'jc-btn-pause-active' : ''}" id="jc-pause-application">Pause</button>
     </div>
   </div>`;
@@ -1911,15 +1921,15 @@ function renderHomeTab() {
     <div class="jc-card">
       <div class="jc-row">
         <span class="jc-card-title">Form Fields</span>
-        <span class="jc-badge jc-badge-blue">${fieldCount + remoteFieldCount} DETECTED</span>
+        <span class="jc-badge jc-badge-blue" style="text-transform: uppercase;">${fieldCount + remoteFieldCount} detected</span>
       </div>
       ${remoteFieldCount ? `
       <div style="font-size: 11px; color: var(--jc-text-secondary);">
-        ${fieldCount} local, ${remoteFieldCount} in ${remoteFrameCount} embedded frame${remoteFrameCount === 1 ? '' : 's'}.
+        ${fieldCount} here, ${remoteFieldCount} in ${remoteFrameCount} embedded frame${remoteFrameCount === 1 ? '' : 's'}.
       </div>
       ` : ''}
       <div class="jc-row" style="margin-top: 4px; gap: 8px;">
-        <button class="jc-btn jc-btn-large" id="jc-autofill-btn" style="flex: 1;" ${isAutofilling ? 'disabled' : ''}>
+        <button class="jc-btn jc-btn-large ${session ? 'jc-btn-secondary' : ''}" id="jc-autofill-btn" style="flex: 1;" ${isAutofilling ? 'disabled' : ''}>
           ${isAutofilling ? `${ICONS.play} Filling Fields...` : `${ICONS.play} Autofill This Page`}
         </button>
         <button class="jc-btn jc-btn-secondary ${isAutofilling ? 'jc-btn-pause-active' : ''}" id="jc-pause-autofill-btn" style="padding: 9px 14px; font-size: 12px;" ${!isAutofilling ? 'disabled' : ''} title="Pause / Stop autofill">
@@ -1943,7 +1953,7 @@ function renderHomeTab() {
       </div>
       <div class="jc-row" style="margin-top: 6px;">
         <span class="jc-label">Adapter</span>
-        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${adapter.id === 'generic' ? 'Generic' : escapeHtml(adapter.label)}</span>
+        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${adapter.id === 'generic' ? 'generic fallback' : `${escapeHtml(adapter.label)} adapter`}</span>
       </div>
       <div class="jc-row">
         <span class="jc-label">Host</span>
@@ -2259,7 +2269,7 @@ function updatePanelDOM() {
         <div class="jc-header">
           <div class="jc-header-title">
             <span class="jc-brand-mark">${ICONS.brandMark}</span>
-            <span>Kareer</span>
+            <span>${VISUAL_NAME}</span>
             <span class="jc-version-tag">v${APP_VERSION}</span>
           </div>
           <div class="jc-header-actions">
@@ -2619,6 +2629,7 @@ export function unmountUI() {
 }
 
 export function mountUI() {
+  installPanelFonts();
   const hostName = getHostName();
   const claim = claimPanelHost(hostName);
   if (claim.status === 'yield') {

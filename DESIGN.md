@@ -137,7 +137,7 @@ The UI should communicate state before decoration.
 
 --kr-text-1: #F2F5F7;
 --kr-text-2: #A8B2BF;
---kr-text-3: #667180;
+--kr-text-3: #8995A5;
 
 --kr-signal: #A3E635;     /* brand / primary system signal (restrained lime) */
 --kr-signal-hover: #B5F04A;
@@ -253,46 +253,25 @@ Do not make every button or badge a pill.
 
 ## 8. Typography
 
-### Primary UI font
+### Bundled typography
 
-Use the system sans stack for clarity and speed:
-
-```css
-font-family:
-  Inter,
-  -apple-system,
-  BlinkMacSystemFont,
-  "Segoe UI",
-  sans-serif;
-```
-
-If Inter is not bundled, system fonts are acceptable.
-
-### Technical / telemetry font
-
-Use monospace selectively:
+Use **Geist Sans** for interface copy and **Geist Mono** selectively for model IDs,
+ATS identifiers, field counts, latency, logs, versions, and technical metadata.
+Answer previews and ordinary labels remain sans serif.
 
 ```css
-font-family:
-  "SFMono-Regular",
-  "Cascadia Code",
-  "Roboto Mono",
-  Consolas,
-  monospace;
+--kr-font: 'Kareer Geist', sans-serif;
+--kr-font-mono: 'Kareer Geist Mono', monospace;
 ```
 
-Use monospace for:
-
-- model IDs
-- ATS identifiers
-- field counts
-- latency
-- debug output
-- technical metadata
-- version numbers
-- keyboard shortcuts
-
-Do **not** render the entire product in monospace.
+Variable WOFF2 fonts (weights 100–900) ship in `src/assets/fonts/`, from the
+official Geist 1.7.2 package with its SIL Open Font License. No remote font
+requests and no installed-font dependency. Extension pages use local
+`@font-face` rules in generated `assets/theme.css`. The panel registers the
+same bundled bytes as binary FontFace objects on document.fonts, making them
+available inside Shadow DOM without depending on a website's font-src policy.
+The userscript embeds these bytes too. Build artifacts, not raw source HTML,
+are the runnable extension pages.
 
 ### Weight
 
@@ -773,3 +752,29 @@ The winning mark can then inherit:
 - dark graphite
 - technical typography
 - compact browser-extension proportions
+
+
+## 23. Shared implementation and configuration console
+
+- `src/core/theme.js` owns visual tokens, font filenames, and the working UI name.
+  The panel interpolates tokens; the build emits the same tokens for all extension
+  pages. Product manifests and protocol identifiers retain Job Copilot naming.
+- Muted text is #8995A5 for readable small metadata on graphite surfaces.
+- Options is a 1180px maximum-width console: 210px sticky section navigation,
+  56px gutter, flat sections separated by rules, two-column profile fields.
+  At 800px navigation becomes a wrapping row; at 520px fields become one column.
+- Keep one lime save action per independently saved options section. Remove,
+  test, import, and export controls remain secondary; destructive text is red.
+  Profile save stays in document flow so it cannot obscure inputs.
+- Run emphasizes Autofill when no session exists. With a resumable session,
+  Start / Resume gets lime and Autofill becomes secondary. Running, review,
+  and safety-boundary workflow controls remain quiet. Expanded HUD Autofill is
+  secondary so it does not compete with the panel. This is presentation only;
+  action handlers and safety behavior remain unchanged.
+- Retain Run, Profile, Settings, Debug tabs and inline field review. Debug uses
+  a dividing rule. Field review rows use separators rather than nested cards.
+- Use visible keyboard focus, native buttons for HUD toggles, reduced-motion
+  support, wrapping metadata, and selective ellipsis with title text.
+- Both manifests inherit options_ui.page = options/index.html and open_in_tab.
+  No external hosting or hardcoded extension ID. Packaged CSS/fonts stay internal;
+  no web-accessible-resource permission is needed for embedded panel fonts.

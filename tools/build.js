@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { zipDirectory } from './zip.js';
+import { TOKENS, FONT_FILES, fontFaceCSS, VISUAL_NAME } from '../src/core/theme.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '..');
@@ -30,7 +31,7 @@ function computeSourceHash() {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         scan(fullPath);
-      } else if (entry.isFile() && /\.(js|css|html|json)$/.test(entry.name)) {
+      } else if (entry.isFile() && /\.(js|css|html|json|woff2|txt)$/.test(entry.name)) {
         hash.update(path.relative(rootDir, fullPath).replace(/\\/g, '/'));
         hash.update(fs.readFileSync(fullPath));
       }
@@ -129,7 +130,12 @@ const shared = (pkg) => ({
   minify: false,
   target: ['chrome110', 'firefox115'],
   legalComments: 'inline',
-  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __UI_FONTS__: JSON.stringify(Object.fromEntries(FONT_FILES.map(([, file]) => [
+      file, fs.readFileSync(path.join(srcDir, 'assets', 'fonts', file)).toString('base64'),
+    ]))),
+  },
 });
 
 function userscriptOptions(pkg) {
@@ -171,12 +177,17 @@ function writeExtensionStaticFiles(pkg, browser) {
   const manifest = { ...base, ...overlay, version: pkg.version };
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+  fs.cpSync(path.join(srcDir, 'assets', 'fonts'), path.join(outDir, 'assets', 'fonts'), { recursive: true });
+  const pageStyles = fs.readFileSync(path.join(extDir, 'shared', 'pages.css'), 'utf8');
+  fs.writeFileSync(path.join(outDir, 'assets', 'theme.css'),
+    fontFaceCSS(file => `fonts/${file}`) + `\n:root {${TOKENS}}\n` + pageStyles);
 
   for (const page of ['options', 'popup', 'first-run']) {
     const html = path.join(extDir, page, 'index.html');
     if (fs.existsSync(html)) {
       fs.mkdirSync(path.join(outDir, page), { recursive: true });
-      fs.copyFileSync(html, path.join(outDir, page, 'index.html'));
+      fs.writeFileSync(path.join(outDir, page, 'index.html'),
+        fs.readFileSync(html, 'utf8').replaceAll('{{VISUAL_NAME}}', VISUAL_NAME));
     }
     const js = path.join(extDir, page, 'index.js');
     // first-run is a tiny page script, not an esbuild entry.
