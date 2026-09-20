@@ -1,6 +1,6 @@
-<div align="center">
-
-# 🚀 Job Copilot
+<p align="center">
+  <img src="./src/assets/brand/kareer-logo-horizontal.png" alt="Kareer Logo" width="380" />
+</p>
 
 **AI-powered job application autofill for Chrome, Firefox, and Tampermonkey.**
 

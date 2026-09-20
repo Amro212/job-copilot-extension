@@ -5,6 +5,85 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-20 — Official Kareer Branding Assets Integration
+
+### Turn changes:
+- `src/assets/brand/`:
+  - Created canonical brand directory and moved all 7 official PNG assets from temporary `assets/`:
+    - `kareer-brand-identity.png`
+    - `kareer-app-icon.png`
+    - `kareer-logo-horizontal.png`
+    - `kareer-logo-stacked.png`
+    - `kareer-promo-banner.png`
+    - `kareer-icon-monochrome.png`
+    - `kareer-mark-lime.png`
+  - Created `kareer-mark.svg`: Exact vector representation of the official Kareer mark (dog-eared document + forward chevron).
+- `src/targets/extension/icons/`:
+  - Generated multi-resolution PNG icons using Lanczos resampling from `kareer-app-icon.png`:
+    - `icon-16.png`, `icon-32.png`, `icon-48.png`, `icon-128.png`
+- `src/targets/extension/manifest.base.json`:
+  - Registered `icons` and `action.default_icon` for all 4 sizes.
+- `src/core/ui.js`:
+  - Replaced placeholder 3-line `ICONS.brandMark` with the official Kareer vector SVG (`viewBox="0 0 100 100"`, `fill="currentColor"`).
+  - Added dedicated SVG sizing rules for `.jc-pebble svg` (20x20), `.jc-hud-brand-mark svg` (14x14), and `.jc-brand-mark svg` (15x15) to match design specifications.
+- `src/targets/extension/shared/pages.css`:
+  - Replaced `.brand::before` placeholder rectangle with SVG mask of the official Kareer mark.
+  - Added official Kareer mark to `.popup h1` and `.first-run h1`.
+- `tools/build.js`:
+  - Added `src/assets/brand/` copy step to `dist/<browser>/assets/brand/` during extension packaging.
+- `README.md` & `DESIGN.md`:
+  - Updated README header with official horizontal brand lockup.
+  - Documented canonical brand asset locations and icon hierarchy in DESIGN.md.
+- `assets/`:
+  - Cleaned up temporary root directory.
+
+### Verification results:
+- **Unit tests**: 202/202 passed.
+- **Build**: Successfully built userscript, Chrome zip, and Firefox xpi at v0.4.29.
+- **Static assets**: Verified `dist/chrome/icons/` and `dist/chrome/assets/brand/` contain all generated icons and brand files.
+- **Manifest**: Verified `manifest.json` in dist contains proper `icons` and `action.default_icon`.
+
+### Current status:
+Official branding assets are now active across all surfaces (HUD bar, panel header, pebble launcher, popup, options, first-run, README, and extension packages).
+
+---
+
+## Turn: 2026-09-20 — Brand Assets: Inspection & Renaming
+
+### Turn changes:
+- `assets/`:
+  - Inspected and renamed all raw ChatGPT export images to clear, descriptive kebab-case names:
+    - `ChatGPT Image Sep 20, 2026, 05_31_36 PM (1).png` -> `kareer-brand-identity.png` (Brand overview sheet with core palette, lockups, and icon variations)
+    - `ChatGPT Image Sep 20, 2026, 05_31_37 PM (2).png` -> `kareer-app-icon.png` (Squircle app icon with graphite surface and lime K mark)
+    - `ChatGPT Image Sep 20, 2026, 05_31_38 PM (3).png` -> `kareer-logo-horizontal.png` (Horizontal lockup with lime K glyph and white wordmark)
+    - `ChatGPT Image Sep 20, 2026, 05_31_38 PM (4).png` -> `kareer-logo-stacked.png` (Stacked lockup with lime K glyph and white wordmark)
+    - `ChatGPT Image Sep 20, 2026, 05_31_38 PM (5).png` -> `kareer-promo-banner.png` (16:9 hero/promo banner with perspective grid and telemetry)
+    - `ChatGPT Image Sep 20, 2026, 05_32_28 PM (1).png` -> `kareer-icon-monochrome.png` (White K glyph on black square background)
+    - `ChatGPT Image Sep 20, 2026, 05_32_28 PM (2).png` -> `kareer-mark-lime.png` (Isolated lime K glyph/mark)
+- Current status: Assets organized and ready for docs, store listings, and presentation.
+
+---
+
+## Turn: 2026-09-20 — QA Verification: Kareer Visual System Complete
+
+### Verification results:
+- **Unit tests**: 202/202 pass.
+- **Visual E2E tests**: 3/3 pass (typography, options navigation, responsive console, HUD, panel tabs, workflow states, error feedback).
+- **Build**: Chrome zip, Firefox xpi, and userscript all build at v0.4.28.
+- **Impeccable detect**: 0 antipatterns on built output.
+- **Font audit**: Both `Kareer Geist` and `Kareer Geist Mono` load from local WOFF2 files. No remote font or CDN requests.
+- **Manifest audit**: Both Chrome and Firefox manifests have `options_ui.page = "options/index.html"` with `open_in_tab: true`. No hardcoded extension IDs.
+- **CTA hierarchy**: "One dominant lime CTA" principle verified — Autofill gets lime when no session, Start/Resume gets lime when session is paused, HUD CTA becomes secondary when panel is expanded.
+- **Blue/gradient audit**: Zero gradient CTAs. Only blue usage is the semantic `jc-badge-blue` for informational telemetry (per DESIGN.md).
+- **Sparkle audit**: Icon defined but never used in branding.
+- **Remote dependency audit**: Zero external font/network references in source or built output.
+- **Pre-existing E2E failures**: Lever pronoun and embedded-search assertion tests reproduce on baseline; unrelated to visual system changes (documented in prior turns).
+
+### Current status:
+The Kareer visual system redesign is complete and production-ready. All verification gates pass. The shared design token system (`theme.js`) drives both the Shadow DOM panel and extension pages. No remaining visual work is blocking.
+
+---
+
 ## Turn: 2026-09-20 — Brand Direction Refinement: Restrained Lime (#A3E635) & Graphite Calibration
 
 ### Turn changes:
@@ -643,3 +722,57 @@ Narrative voice prompt updated and verified.
 - `tests/e2e/shell.spec.js`: **6 passed, 0 failed**.
 - Build succeeded: Chrome (`dist/chrome`), Firefox (`dist/firefox`), and userscript (`dist/userscript`) updated.
 
+
+
+## Turn: 2026-09-20 — Coherent Kareer visual system
+
+### Bugs/findings
+- Target: extension options/popup/Firefox permission page and shared panel/userscript.
+  User reports old blue options styling, fallback typography, competing lime CTAs.
+  Root cause: independent inline styles and duplicated tokens; both Run actions
+  used primary styling. Resolved with shared tokens, bundled Geist, configuration
+  console layout, and state-dependent action emphasis. Existing staged edits preserved.
+- Production audit: both browser manifests already use internal options_ui with
+  options/index.html and open_in_tab. No hardcoded dev path found in that wiring.
+- Visual QA found profile sticky save bar covering fields; removed sticky positioning.
+  Review list nested cards replaced with flat row separators.
+
+### Turn changes
+- src/core/theme.js: shared colors/type/spacing/radii, working UI name, binary font registration.
+- src/assets/fonts/: Geist Sans/Mono variable WOFF2 and original OFL license (geist 1.7.2).
+- src/core/ui.js: shared tokens and font loader, primary CTA hierarchy, keyboard HUD
+  toggles, quieter tabs/cards, metadata wrapping, narrow viewports, reduced motion.
+  No application, storage, actuator, API, or workflow handler changes.
+- src/targets/extension/{options,popup,first-run}/index.html and shared/pages.css:
+  shared console styles, options section navigation, form hierarchy, semantic actions,
+  local stylesheet links, viewport metadata and accessible feedback.
+- tools/build.js: copy local fonts/license; generate shared CSS and UI branding;
+  embed font bytes in core bundles; include fonts in build-cache hashing.
+- tests/e2e/visual-system.spec.js: real extension options navigation, font loading,
+  long metadata, responsive overflow, CTA hierarchy, panel tab screenshots.
+- DESIGN.md: canonical Geist/font packaging, muted contrast, console layout and CTA rules.
+- package.json: existing builder automatically advances patch version.
+
+### Verification/status
+- Initial npm test: 202 passed. All three builds succeeded.
+- New visual E2E checks: 2 passed. Browser launch required sandbox escalation after EPERM.
+- Full E2E suite and final visual review in progress; final results recorded below.
+
+### Final audit notes
+- Restored existing diagnostic strings (adapter suffix, generic fallback, "here"
+  embedded breakdown, lowercase DOM "detected" with uppercase CSS) so the staged
+  redesign remains compatible with existing E2E assertions.
+- Isolated baseline experiment: rebuilt content script with HEAD's original ui.js,
+  using the same unchanged core and fixture harness. Both nonvisual failures
+  reproduced: Lever hardening expects LinkedIn Link in the primary AI request but
+  it is absent; paginated embedded combobox expects 2 requests but receives 4.
+  These are pre-existing assertion/behavior discrepancies, deferred because this
+  request expressly excludes autofill/API behavior changes. No tests weakened.
+- Impeccable independent finish review: ship for visual scope after verifying the
+  overlapping profile-save fix and flatter review rows. Optional follow-up: expose
+  panel selected-tab state to assistive technology; inherited CSS-only selection.
+- Clean-browser userscript smoke: HUD, expanded panel and both Geist fonts loaded.
+- Inspected Chrome ZIP and Firefox XPI: internal options HTML/script, generated CSS,
+  both local WOFF2 files and OFL license present. Signed Firefox installation was
+  not exercised; Chromium real-extension options opening was exercised.
+- Latest build version: 0.4.28. Final unit run: 202 passed, 0 failed.

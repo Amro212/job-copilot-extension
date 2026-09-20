@@ -75,7 +75,7 @@ let remoteFrameCount = 0;
 let fieldResultsCache = new Map(); // fieldId -> { status, value, error, inferred }
 
 const ICONS = {
-  brandMark: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3.5" y1="2.5" x2="3.5" y2="13.5"/><line x1="12.5" y1="3" x2="3.5" y2="8.5"/><line x1="5.5" y1="7.5" x2="12.5" y2="13"/></svg>`,
+  brandMark: `<svg width="14" height="14" viewBox="0 0 100 100" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M41.1 12.3L29.7 12.2L28.8 12.5L9.8 31L9.2 32.1L9 36.8V81.8L9.3 83.6L10.1 85.2L11.4 86.6L13 87.5L14.2 87.8H40.6L41.2 87.6L41.8 86.9L41.9 13.2ZM36 16.1V28.5L35.9 31.7H14.7L14.5 31.5L30.6 16ZM68.6 31.8L42.6 58L69.5 87.4H90.2L64.9 57.8L91 31.8Z"/></svg>`,
   sparkle: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1v14M1 8h14M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>`,
   zap: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="9 1 2 9 7 9 7 15 14 7 9 7 9 1"/></svg>`,
   play: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><polygon points="4 2 13 8 4 14 4 2"/></svg>`,
@@ -181,6 +181,12 @@ const STYLES = `
   position: relative;
 }
 
+.jc-pebble svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
 .jc-pebble:hover {
   transform: translateY(-1px);
   border-color: var(--kr-line-strong);
@@ -238,6 +244,12 @@ const STYLES = `
   color: var(--kr-signal);
   display: flex;
   align-items: center;
+}
+
+.jc-hud-brand-mark svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .jc-status-dot {
@@ -423,6 +435,12 @@ const STYLES = `
   color: var(--kr-signal);
   display: flex;
   align-items: center;
+}
+
+.jc-brand-mark svg {
+  width: 15px;
+  height: 15px;
+  display: block;
 }
 
 .jc-version-tag {

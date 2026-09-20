@@ -284,6 +284,20 @@ Prefer:
 
 Avoid excessive bold text.
 
+### Brand Assets
+
+Official brand assets ship in `src/assets/brand/`:
+- `kareer-brand-identity.png`: Master identity sheet with palette, lockups, and icon variations.
+- `kareer-app-icon.png`: Master 1254x1254 squircle application icon.
+- `kareer-logo-horizontal.png`: Primary horizontal brand lockup.
+- `kareer-logo-stacked.png`: Vertical stacked lockup.
+- `kareer-promo-banner.png`: 16:9 hero/promo banner with perspective grid.
+- `kareer-icon-monochrome.png`: Monochrome mark for high-contrast/print contexts.
+- `kareer-mark-lime.png` / `kareer-mark.svg`: Official isolated vector mark (dog-eared document stem + forward chevron).
+
+Extension icons ship in `src/targets/extension/icons/`:
+- `icon-16.png`, `icon-32.png`, `icon-48.png`, `icon-128.png`
+
 ---
 
 ## 9. Layout
