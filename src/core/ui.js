@@ -61,6 +61,7 @@ function resolveLiveFileElement(field, root = document) {
 let shadowRootRef = null;
 let currentTab = 'home';
 let panelVisible = false;
+let isPebble = false;
 let lastAiTestResult = null;
 let isAiTesting = false;
 
@@ -72,21 +73,110 @@ let remoteFieldCount = 0;
 let remoteFrameCount = 0;
 let fieldResultsCache = new Map(); // fieldId -> { status, value, error, inferred }
 
+const ICONS = {
+  brandMark: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3.5" y1="2.5" x2="3.5" y2="13.5"/><line x1="12.5" y1="3" x2="3.5" y2="8.5"/><line x1="5.5" y1="7.5" x2="12.5" y2="13"/></svg>`,
+  sparkle: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1v14M1 8h14M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>`,
+  zap: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="9 1 2 9 7 9 7 15 14 7 9 7 9 1"/></svg>`,
+  play: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><polygon points="4 2 13 8 4 14 4 2"/></svg>`,
+  pause: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg>`,
+  refresh: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 2.5v4h4M15 13.5v-4h-4"/><path d="M13.2 6A5.5 5.5 0 0 0 3.2 4.2L1 6.5m14 3l-2.2 2.3A5.5 5.5 0 0 1 2.8 10"/></svg>`,
+  check: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4.5"/></svg>`,
+  x: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>`,
+  shield: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5l6 2.5v4.5c0 4-3 7-6 7.5-3-.5-6-3.5-6-7.5V4l6-2.5z"/></svg>`,
+  alert: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l6.5 11.5H1.5L8 2zM8 6.5v3M8 11.5v.5"/></svg>`,
+  eye: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2.5"/></svg>`,
+  eyeOff: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l14 14M6.7 6.8a2.5 2.5 0 0 0 3.5 3.5M2.5 4.5C1.8 5.5 1 8 1 8s2.5 5 7 5c1.8 0 3.3-.6 4.5-1.5M5.5 2.2C6.3 2.1 7.1 2 8 2c4.5 0 7 5 7 5s-.8 1.6-2 3"/></svg>`,
+  locate: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="1" x2="8" y2="3"/><line x1="8" y1="13" x2="8" y2="15"/><line x1="1" y1="8" x2="3" y2="8"/><line x1="13" y1="8" x2="15" y2="8"/></svg>`,
+  maximize: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 2 14 2 14 6"/><polyline points="6 14 2 14 2 10"/><line x1="14" y1="2" x2="9" y2="7"/><line x1="2" y1="14" x2="7" y2="9"/></svg>`,
+  minimize: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="13" y2="8"/></svg>`,
+  chevronDown: `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"/></svg>`,
+  user: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 14v-1.5a3.5 3.5 0 0 0-3.5-3.5h-3A3.5 3.5 0 0 0 3 12.5V14"/><circle cx="8" cy="5" r="3"/></svg>`,
+  settings: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.5"/><path d="M13.5 9.5l1.1-.6a1 1 0 0 0 .4-1.3l-1-1.7a1 1 0 0 0-1.2-.5l-1.2.5a5 5 0 0 0-1.1-.6L10.3 4a1 1 0 0 0-1-.8H7.3a1 1 0 0 0-1 .8L6.1 5.3a5 5 0 0 0-1.1.6l-1.2-.5a1 1 0 0 0-1.2.5l-1 1.7a1 1 0 0 0 .4 1.3l1.1.6a5 5 0 0 0 0 1.2l-1.1.6a1 1 0 0 0-.4 1.3l1 1.7a1 1 0 0 0 1.2.5l1.2-.5a5 5 0 0 0 1.1.6l.2 1.3a1 1 0 0 0 1 .8h2a1 1 0 0 0 1-.8l.2-1.3a5 5 0 0 0 1.1-.6l1.2.5a1 1 0 0 0 1.2-.5l1-1.7a1 1 0 0 0-.4-1.3l-1.1-.6a5 5 0 0 0 0-1.2z"/></svg>`,
+  terminal: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 4 7 8 3 12"/><line x1="9" y1="12" x2="13" y2="12"/></svg>`,
+  list: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="4" x2="14" y2="4"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="14" y2="12"/><circle cx="3" cy="4" r=".8" fill="currentColor"/><circle cx="3" cy="8" r=".8" fill="currentColor"/><circle cx="3" cy="12" r=".8" fill="currentColor"/></svg>`,
+  externalLink: `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4"/><polyline points="10 2 14 2 14 6"/><line x1="7" y1="9" x2="14" y2="2"/></svg>`,
+};
 
 const STYLES = `
 :host {
   all: initial;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Kareer / DESIGN.md Design System Tokens */
+  --kr-bg-0: #080B10;       /* page / deepest background */
+  --kr-bg-1: #0D1117;       /* main panel */
+  --kr-bg-2: #131922;       /* cards / controls */
+  --kr-bg-3: #1A222D;       /* elevated / hover */
+
+  --kr-line: #26303D;
+  --kr-line-strong: #344152;
+
+  --kr-text-1: #F2F5F7;
+  --kr-text-2: #A8B2BF;
+  --kr-text-3: #667180;
+
+  --kr-signal: #A3E635;     /* brand / primary system signal (restrained lime) */
+  --kr-signal-hover: #B5F04A;
+  --kr-signal-dim: rgba(163, 230, 53, 0.10);
+
+  --kr-info: #62C8FF;
+  --kr-success: #52D98C;
+  --kr-warning: #F2B84B;
+  --kr-danger: #F06A6A;
+
+  --kr-radius-xs: 4px;
+  --kr-radius-sm: 6px;
+  --kr-radius-md: 8px;
+  --kr-radius-lg: 10px;
+  --kr-radius-round: 999px;
+
+  /* Aliased internal tokens */
+  --jc-font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --jc-font-mono: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+  --jc-bg-base: var(--kr-bg-0);
+  --jc-bg-surface: var(--kr-bg-1);
+  --jc-bg-surface-glass: rgba(13, 17, 23, 0.97);
+  --jc-bg-elevated: var(--kr-bg-2);
+  --jc-bg-hover: var(--kr-bg-3);
+  --jc-bg-subtle: rgba(255, 255, 255, 0.03);
+  --jc-border-subtle: var(--kr-line);
+  --jc-border-hover: var(--kr-line-strong);
+  --jc-border-active: var(--kr-signal);
+  --jc-text-primary: var(--kr-text-1);
+  --jc-text-secondary: var(--kr-text-2);
+  --jc-text-muted: var(--kr-text-3);
+  --jc-accent: var(--kr-signal);
+  --jc-accent-primary: var(--kr-signal);
+  --jc-accent-primary-hover: var(--kr-signal-hover);
+  --jc-success: var(--kr-success);
+  --jc-success-bg: rgba(82, 217, 140, 0.12);
+  --jc-warning: var(--kr-warning);
+  --jc-warning-bg: rgba(242, 184, 75, 0.12);
+  --jc-danger: var(--kr-danger);
+  --jc-danger-bg: rgba(240, 106, 106, 0.12);
+  --jc-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --jc-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.025);
+  --jc-radius-sm: var(--kr-radius-sm);
+  --jc-radius-md: var(--kr-radius-md);
+  --jc-radius-lg: var(--kr-radius-lg);
+  --jc-radius-pill: var(--kr-radius-round);
+
+  font-family: var(--jc-font);
   font-size: 13px;
-  line-height: 1.4;
-  color: #e2e8f0;
+  line-height: 1.45;
+  color: var(--jc-text-primary);
   box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+::selection {
+  background: var(--kr-signal-dim);
+  color: var(--kr-signal);
+}
+
+/* Container & Dock/HUD */
 .jc-widget-container {
   position: fixed;
   bottom: 20px;
@@ -99,71 +189,235 @@ const STYLES = `
   pointer-events: none;
 }
 
-.jc-pill-btn {
+/* Floating Pebble (ultra-compact minimize) */
+.jc-pebble {
   pointer-events: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--kr-radius-md);
+  background: var(--kr-bg-1);
+  border: 1px solid var(--kr-line);
+  box-shadow: var(--jc-shadow-lg);
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  color: #f8fafc;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  border-radius: 9999px;
-  padding: 8px 16px;
+  justify-content: center;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--kr-signal);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.jc-pebble:hover {
+  transform: translateY(-1px);
+  border-color: var(--kr-line-strong);
+  background: var(--kr-bg-2);
+}
+
+.jc-pebble-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--kr-bg-0);
+}
+
+/* Compact HUD Bar */
+.jc-hud-bar {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--kr-bg-1);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-md);
+  padding: 5px 8px 5px 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 
-.jc-pill-btn:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-  border-color: #475569;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+.jc-hud-bar:hover {
+  border-color: var(--kr-line-strong);
+}
+
+.jc-hud-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding-right: 4px;
+}
+
+.jc-hud-title {
+  font-weight: 650;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: var(--kr-text-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jc-hud-brand-mark {
+  color: var(--kr-signal);
+  display: flex;
+  align-items: center;
 }
 
 .jc-status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  background: var(--kr-success);
+  box-shadow: 0 0 6px rgba(82, 217, 140, 0.6);
+  flex-shrink: 0;
 }
 
 .jc-status-dot.no-key {
-  background: #f59e0b;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  background: var(--kr-warning);
+  box-shadow: 0 0 6px rgba(242, 184, 75, 0.6);
 }
 
 .jc-status-dot.error {
-  background: #ef4444;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  background: var(--kr-danger);
+  box-shadow: 0 0 6px rgba(240, 106, 106, 0.6);
 }
 
+.jc-status-dot.running {
+  background: var(--kr-signal);
+  box-shadow: 0 0 4px rgba(163, 230, 53, 0.4);
+  animation: jc-pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes jc-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.jc-hud-badge {
+  font-family: var(--jc-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--kr-radius-xs);
+  font-variant-numeric: tabular-nums;
+  background: var(--kr-bg-2);
+  color: var(--kr-text-2);
+  border: 1px solid var(--kr-line);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jc-hud-badge-accent {
+  background: var(--kr-bg-2);
+  color: var(--kr-signal);
+  border-color: rgba(163, 230, 53, 0.35);
+}
+
+.jc-hud-adapter {
+  font-family: var(--jc-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: var(--kr-radius-xs);
+  background: var(--kr-bg-2);
+  color: var(--kr-text-2);
+  border: 1px solid var(--kr-line);
+}
+
+.jc-hud-cta {
+  background: var(--kr-signal);
+  color: #0A0D10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--kr-radius-sm);
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.jc-hud-cta:hover {
+  background: var(--kr-signal-hover);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  transform: translateY(-1px);
+}
+
+.jc-hud-cta:active {
+  transform: translateY(0);
+}
+
+.jc-hud-cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.jc-hud-cta-running {
+  background: var(--kr-bg-2);
+  color: var(--kr-signal);
+  border: 1px solid rgba(163, 230, 53, 0.4);
+  box-shadow: none;
+}
+
+.jc-hud-cta-running:hover {
+  background: var(--kr-bg-3);
+  box-shadow: none;
+}
+
+.jc-hud-icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--kr-text-2);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--kr-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.jc-hud-icon-btn:hover {
+  background: var(--kr-bg-3);
+  color: var(--kr-text-1);
+  border-color: var(--kr-line);
+}
+
+/* Inspection Drawer / Panel */
 .jc-panel {
   pointer-events: auto;
-  width: 450px;
+  width: 460px;
   max-width: calc(100vw - 40px);
-  height: 600px;
-  max-height: calc(100vh - 80px);
-  background: #0f172a;
-  background-image: radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.7) 0px, transparent 50%),
-                    radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.9) 0px, transparent 50%);
-  border: 1px solid #334155;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  height: 620px;
+  max-height: calc(100vh - 90px);
+  background: rgba(13, 17, 23, 0.97);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-lg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.025);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: jc-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: jc-slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes jc-slide-up {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: translateY(10px) scale(0.99);
   }
   to {
     opacity: 1;
@@ -171,11 +425,11 @@ const STYLES = `
   }
 }
 
+/* Panel Header */
 .jc-header {
-  padding: 14px 18px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid #1e293b;
+  padding: 12px 16px;
+  background: var(--kr-bg-1);
+  border-bottom: 1px solid var(--kr-line);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -185,105 +439,154 @@ const STYLES = `
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  color: #f8fafc;
+  font-weight: 650;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: var(--kr-text-1);
+}
+
+.jc-brand-mark {
+  color: var(--kr-signal);
+  display: flex;
+  align-items: center;
 }
 
 .jc-version-tag {
-  background: #1e293b;
-  color: #94a3b8;
+  font-family: var(--jc-font-mono);
+  background: var(--kr-bg-2);
+  color: var(--kr-text-3);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid #334155;
+  border-radius: var(--kr-radius-xs);
+  border: 1px solid var(--kr-line);
+}
+
+.jc-model-chip {
+  font-family: var(--jc-font-mono);
+  font-size: 10px;
+  color: var(--kr-text-2);
+  background: var(--kr-bg-2);
+  padding: 2px 7px;
+  border-radius: var(--kr-radius-xs);
+  border: 1px solid var(--kr-line);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jc-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .jc-close-btn {
   background: transparent;
-  border: none;
-  color: #94a3b8;
+  border: 1px solid transparent;
+  color: var(--kr-text-2);
   cursor: pointer;
   padding: 4px;
-  border-radius: 6px;
+  border-radius: var(--kr-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
 .jc-close-btn:hover {
-  background: #1e293b;
-  color: #f8fafc;
+  background: var(--kr-bg-3);
+  color: var(--kr-text-1);
+  border-color: var(--kr-line);
 }
 
+/* Nav Tabs */
 .jc-nav-tabs {
   display: flex;
-  background: #090d16;
-  border-bottom: 1px solid #1e293b;
-  padding: 0 8px;
+  gap: 4px;
+  background: var(--kr-bg-1);
+  border-bottom: 1px solid var(--kr-line);
+  padding: 6px 12px;
 }
 
 .jc-tab-btn {
   flex: 1;
   background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: #94a3b8;
+  border: 1px solid transparent;
+  color: var(--kr-text-2);
   font-size: 12px;
-  font-weight: 600;
-  padding: 10px 4px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border-radius: var(--kr-radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  user-select: none;
 }
 
 .jc-tab-btn:hover {
-  color: #f1f5f9;
+  color: var(--kr-text-1);
+  background: var(--kr-bg-2);
 }
 
 .jc-tab-btn.active {
-  color: #38bdf8;
-  border-bottom-color: #38bdf8;
+  color: var(--kr-signal);
+  background: var(--kr-bg-2);
+  border-color: rgba(163, 230, 53, 0.35);
+  font-weight: 600;
 }
 
+/* Content Area */
 .jc-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  background: var(--kr-bg-0);
 }
 
 .jc-content::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 .jc-content::-webkit-scrollbar-track {
   background: transparent;
 }
 .jc-content::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
+  background: var(--kr-line);
+  border-radius: 2px;
 }
 
+/* Card Surface */
 .jc-card {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid #334155;
-  border-radius: 10px;
+  background: var(--kr-bg-2);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-md);
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.jc-card:hover {
+  border-color: var(--kr-line-strong);
 }
 
 .jc-card-title {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: var(--kr-text-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .jc-row {
@@ -295,47 +598,49 @@ const STYLES = `
 
 .jc-label {
   font-size: 12px;
-  color: #cbd5e1;
+  color: var(--kr-text-2);
   font-weight: 500;
 }
 
 .jc-val {
   font-size: 12px;
-  color: #f8fafc;
+  color: var(--kr-text-1);
   font-weight: 600;
   word-break: break-all;
 }
 
+/* Form Controls */
 .jc-form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .jc-form-group label {
   font-size: 11px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--kr-text-2);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .jc-input, .jc-select, .jc-textarea {
   width: 100%;
-  background: #090d16;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  color: #f8fafc;
-  padding: 8px 10px;
+  background: var(--kr-bg-1);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-sm);
+  color: var(--kr-text-1);
+  padding: 7px 10px;
   font-size: 12px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  caret-color: var(--kr-signal);
 }
 
 .jc-input:focus, .jc-select:focus, .jc-textarea:focus {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 1px #38bdf8;
+  border-color: var(--kr-signal);
+  box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.2);
 }
 
 .jc-textarea {
@@ -343,66 +648,83 @@ const STYLES = `
   resize: vertical;
 }
 
+/* Buttons */
 .jc-btn {
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
+  background: var(--kr-signal);
+  color: #0A0D10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--kr-radius-sm);
   padding: 8px 14px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 650;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .jc-btn:hover {
-  background: #1d4ed8;
+  background: var(--kr-signal-hover);
+  transform: translateY(-1px);
+}
+
+.jc-btn:active {
+  transform: translateY(0);
+}
+
+.jc-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.35);
 }
 
 .jc-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
 }
 
 .jc-btn-large {
-  padding: 12px 18px;
+  padding: 9px 16px;
   font-size: 13px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  background: var(--kr-signal);
+  color: #0A0D10;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .jc-btn-large:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
+  background: var(--kr-signal-hover);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 .jc-btn-secondary {
-  background: #1e293b;
-  color: #cbd5e1;
-  border: 1px solid #334155;
+  background: var(--kr-bg-2);
+  color: var(--kr-text-1);
+  border: 1px solid var(--kr-line);
+  font-weight: 500;
 }
 
 .jc-btn-secondary:hover {
-  background: #334155;
-  color: #f8fafc;
+  background: var(--kr-bg-3);
+  border-color: var(--kr-line-strong);
+  color: var(--kr-text-1);
 }
 
 .jc-btn-small {
   padding: 4px 8px;
   font-size: 11px;
-  border-radius: 6px;
+  border-radius: var(--kr-radius-xs);
 }
 
+/* Toggles & Switches */
 .jc-toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--kr-line);
 }
 
 .jc-toggle-row:last-child {
@@ -412,8 +734,9 @@ const STYLES = `
 .jc-switch {
   position: relative;
   display: inline-block;
-  width: 36px;
-  height: 20px;
+  width: 34px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .jc-switch input {
@@ -426,197 +749,209 @@ const STYLES = `
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #334155;
-  transition: 0.2s;
-  border-radius: 20px;
+  background-color: var(--kr-line-strong);
+  transition: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: var(--kr-radius-round);
 }
 
 .jc-slider:before {
   position: absolute;
   content: "";
-  height: 14px;
-  width: 14px;
+  height: 12px;
+  width: 12px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
-  transition: 0.2s;
+  background-color: var(--kr-text-1);
+  transition: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 50%;
 }
 
 input:checked + .jc-slider {
-  background-color: #2563eb;
+  background-color: var(--kr-signal);
 }
 
 input:checked + .jc-slider:before {
   transform: translateX(16px);
+  background-color: #0A0D10;
 }
 
+/* Badges & Chips */
 .jc-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: var(--kr-radius-xs);
+  font-family: var(--jc-font-mono);
+  font-size: 10px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .jc-badge-green {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(82, 217, 140, 0.12);
+  color: var(--kr-success);
+  border: 1px solid rgba(82, 217, 140, 0.3);
 }
 
 .jc-badge-amber {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(242, 184, 75, 0.12);
+  color: var(--kr-warning);
+  border: 1px solid rgba(242, 184, 75, 0.3);
 }
 
 .jc-badge-red {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(240, 106, 106, 0.12);
+  color: var(--kr-danger);
+  border: 1px solid rgba(240, 106, 106, 0.3);
 }
 
 .jc-badge-blue {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(98, 200, 255, 0.12);
+  color: var(--kr-info);
+  border: 1px solid rgba(98, 200, 255, 0.3);
 }
 
+/* Alerts & Banners */
 .jc-alert {
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--kr-radius-sm);
   font-size: 12px;
   line-height: 1.4;
 }
 
 .jc-alert-success {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(82, 217, 140, 0.1);
+  border: 1px solid rgba(82, 217, 140, 0.3);
   color: #a7f3d0;
 }
 
 .jc-alert-error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(240, 106, 106, 0.1);
+  border: 1px solid rgba(240, 106, 106, 0.3);
   color: #fecaca;
 }
 
-.jc-log-box {
-  background: #090d16;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 8px;
-  max-height: 180px;
-  overflow-y: auto;
-  font-family: monospace;
-  font-size: 11px;
+/* Safety Boundary Card */
+.jc-safety-banner {
+  background: rgba(242, 184, 75, 0.08);
+  border: 1px solid rgba(242, 184, 75, 0.3);
+  border-radius: var(--kr-radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.jc-safety-icon {
+  color: var(--kr-warning);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.jc-safety-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.jc-log-item {
-  line-height: 1.3;
-  word-break: break-all;
+.jc-safety-title {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--kr-warning);
 }
 
-.jc-log-time {
-  color: #64748b;
-  margin-right: 4px;
-}
-
-.jc-log-level-INFO { color: #38bdf8; }
-.jc-log-level-WARN { color: #fbbf24; }
-.jc-log-level-ERROR { color: #f87171; }
-.jc-log-level-DEBUG { color: #94a3b8; }
-
-.jc-save-feedback {
+.jc-safety-desc {
   font-size: 11px;
-  color: #34d399;
-  display: none;
+  color: var(--kr-text-2);
+  line-height: 1.4;
 }
 
+/* Progress Bars */
 .jc-progress-bar-container {
   width: 100%;
-  height: 6px;
-  background: #1e293b;
-  border-radius: 3px;
+  height: 2px;
+  background: var(--kr-line);
+  border-radius: 1px;
   overflow: hidden;
-  margin-top: 4px;
 }
 
 .jc-progress-bar {
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #38bdf8, #2563eb);
-  transition: width 0.2s ease;
+  background: var(--kr-signal);
+  transform-origin: left center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 1px;
 }
 
-
+/* Workflow Card */
 .jc-workflow-card {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 14px 14px 12px;
+  background: var(--kr-bg-2);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-md);
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-left: 3px solid #475569;
-  transition: border-color 0.3s ease;
+  transition: all 0.15s ease;
 }
 
 .jc-workflow-card.wf-running {
-  border-left-color: #38bdf8;
+  border-color: rgba(163, 230, 53, 0.35);
+  background: var(--kr-bg-2);
 }
 
 .jc-workflow-card.wf-paused {
-  border-left-color: #f59e0b;
+  border-color: rgba(242, 184, 75, 0.35);
+  background: rgba(242, 184, 75, 0.03);
 }
 
 .jc-workflow-card.wf-done {
-  border-left-color: #10b981;
+  border-color: rgba(82, 217, 140, 0.35);
+  background: rgba(82, 217, 140, 0.03);
 }
 
 .jc-wf-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: var(--kr-radius-xs);
+  font-family: var(--jc-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .jc-wf-badge-running {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: var(--kr-signal-dim);
+  color: var(--kr-signal);
+  border: 1px solid rgba(163, 230, 53, 0.35);
   animation: jc-pulse-badge 1.8s ease-in-out infinite;
 }
 
 .jc-wf-badge-paused {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(242, 184, 75, 0.12);
+  color: var(--kr-warning);
+  border: 1px solid rgba(242, 184, 75, 0.35);
 }
 
 .jc-wf-badge-done {
-  background: rgba(16, 185, 129, 0.18);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  font-size: 12px;
-  padding: 4px 12px;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+  background: rgba(82, 217, 140, 0.12);
+  color: var(--kr-success);
+  border: 1px solid rgba(82, 217, 140, 0.35);
 }
 
 .jc-wf-badge-idle {
-  background: rgba(100, 116, 139, 0.15);
-  color: #94a3b8;
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: var(--kr-bg-3);
+  color: var(--kr-text-3);
+  border: 1px solid var(--kr-line);
 }
 
 @keyframes jc-pulse-badge {
@@ -627,62 +962,67 @@ input:checked + .jc-slider:before {
 .jc-wf-job-title {
   font-size: 13px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--kr-text-1);
   line-height: 1.3;
 }
 
 .jc-wf-job-company {
   font-size: 12px;
-  color: #94a3b8;
-  font-weight: 500;
+  color: var(--kr-text-2);
+  font-weight: 400;
 }
 
 .jc-wf-reason {
   font-size: 12px;
-  color: #cbd5e1;
+  color: var(--kr-text-2);
   line-height: 1.4;
-  padding: 6px 8px;
-  background: rgba(15, 23, 42, 0.6);
-  border-radius: 6px;
-  border-left: 2px solid #475569;
+  padding: 8px 10px;
+  background: var(--kr-bg-1);
+  border-radius: var(--kr-radius-sm);
+  border: 1px solid var(--kr-line);
 }
 
 .jc-wf-reason.wf-error {
-  border-left-color: #f59e0b;
-  color: #fde68a;
+  border-color: rgba(242, 184, 75, 0.3);
+  color: var(--kr-warning);
+  background: rgba(242, 184, 75, 0.06);
 }
 
 .jc-wf-metrics {
   display: flex;
   gap: 16px;
-  font-size: 12px;
+  font-size: 11px;
+  font-family: var(--jc-font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .jc-wf-metric {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #94a3b8;
+  color: var(--kr-text-2);
 }
 
 .jc-wf-metric strong {
-  color: #e2e8f0;
-  font-weight: 700;
+  color: var(--kr-text-1);
+  font-weight: 600;
 }
 
 .jc-wf-step-bar-container {
   width: 100%;
-  height: 4px;
-  background: #1e293b;
-  border-radius: 2px;
+  height: 2px;
+  background: var(--kr-line);
+  border-radius: 1px;
   overflow: hidden;
 }
 
 .jc-wf-step-bar {
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #38bdf8, #2563eb);
-  border-radius: 2px;
-  transition: width 0.4s ease;
+  background: var(--kr-signal);
+  border-radius: 1px;
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 0;
 }
 
@@ -691,7 +1031,7 @@ input:checked + .jc-slider:before {
 }
 
 .jc-wf-step-bar.wf-done {
-  background: linear-gradient(90deg, #34d399, #10b981);
+  background: var(--kr-success);
 }
 
 @keyframes jc-bar-pulse {
@@ -707,7 +1047,7 @@ input:checked + .jc-slider:before {
 
 .jc-wf-actions .jc-btn {
   flex: 1;
-  padding: 10px 14px;
+  padding: 7px 12px;
   font-size: 12px;
 }
 
@@ -716,16 +1056,102 @@ input:checked + .jc-slider:before {
 }
 
 .jc-btn-pause-active {
-  background: rgba(245, 158, 11, 0.18) !important;
-  color: #fbbf24 !important;
-  border-color: rgba(245, 158, 11, 0.45) !important;
-  animation: jc-pulse-badge 1.8s ease-in-out infinite;
+  background: rgba(242, 184, 75, 0.12) !important;
+  color: var(--kr-warning) !important;
+  border-color: rgba(242, 184, 75, 0.45) !important;
 }
 
-.jc-btn-pause-active:hover {
-  background: rgba(245, 158, 11, 0.3) !important;
-  color: #fef3c7 !important;
-  border-color: rgba(245, 158, 11, 0.6) !important;
+/* Review Tab Surface */
+.jc-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jc-review-item {
+  background: var(--kr-bg-1);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.jc-review-item:hover {
+  border-color: var(--kr-line-strong);
+  background: var(--kr-bg-2);
+}
+
+.jc-review-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.jc-review-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kr-text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jc-review-value {
+  font-size: 11px;
+  color: var(--kr-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--jc-font-mono);
+}
+
+.jc-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Logs & Telemetry */
+.jc-log-box {
+  background: var(--kr-bg-0);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-sm);
+  padding: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  font-family: var(--jc-font-mono);
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jc-log-item {
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.jc-log-time {
+  color: var(--kr-text-3);
+  margin-right: 4px;
+}
+
+.jc-log-level-INFO { color: var(--kr-info); }
+.jc-log-level-WARN { color: var(--kr-warning); }
+.jc-log-level-ERROR { color: var(--kr-danger); }
+.jc-log-level-DEBUG { color: var(--kr-text-3); }
+
+.jc-save-feedback {
+  font-size: 11px;
+  color: var(--kr-success);
+  display: none;
 }
 `;
 
@@ -1194,16 +1620,147 @@ async function saveFixtureSnapshot() {
 }
 
 
-function renderPill() {
+function renderHud() {
   const status = getStatusInfo();
-  const fieldCount = detectedFieldsCache.length;
-  const countBadge = fieldCount > 0 ? `<span class="jc-badge jc-badge-blue" style="padding: 1px 5px; font-size: 10px;">${fieldCount}</span>` : '';
+  const fieldCount = detectedFieldsCache.length + remoteFieldCount;
+  const adapter = detectAdapter();
+  const session = applicationState?.session;
+  const wfStatus = session?.status || '';
+  const wfIsRunning = wfStatus === 'running' || wfStatus === 'submitting';
+  const wfIsWaiting = ['captcha', 'boundary'].includes(wfStatus);
+
+  if (isPebble) {
+    const pebbleDotClass = isAutofilling || wfIsRunning ? 'running' : status.dotClass;
+    return `
+      <div class="jc-pebble" id="jc-pebble-toggle-btn" title="Expand Kareer">
+        <div class="jc-status-dot ${pebbleDotClass} jc-pebble-dot"></div>
+        ${ICONS.brandMark}
+      </div>
+    `;
+  }
+
+  const dotClass = isAutofilling || wfIsRunning ? 'running' : status.dotClass;
+  const countBadge = fieldCount > 0
+    ? `<span class="jc-hud-badge jc-hud-badge-accent">${fieldCount}</span>`
+    : '';
+
+  let ctaContent = '';
+  if (isAutofilling) {
+    ctaContent = `
+      <button class="jc-hud-cta jc-hud-cta-running" id="jc-hud-autofill-btn" title="Autofill in progress">
+        ${ICONS.play}
+        <span>${autofillProgress.current}/${autofillProgress.total || fieldCount}</span>
+      </button>
+      <button class="jc-hud-icon-btn" id="jc-hud-pause-btn" title="Pause autofill">
+        ${ICONS.pause}
+      </button>
+    `;
+  } else if (wfIsRunning) {
+    ctaContent = `
+      <button class="jc-hud-cta jc-hud-cta-running" id="jc-hud-autofill-btn" title="Workflow running">
+        ${ICONS.play}
+        <span>Running...</span>
+      </button>
+      <button class="jc-hud-icon-btn" id="jc-hud-pause-btn" title="Pause workflow">
+        ${ICONS.pause}
+      </button>
+    `;
+  } else if (wfIsWaiting) {
+    ctaContent = `
+      <button class="jc-hud-cta" id="jc-hud-autofill-btn" style="background: rgba(242, 184, 75, 0.15); color: #F2B84B; border: 1px solid rgba(242, 184, 75, 0.4);" title="Action required on page">
+        ${ICONS.shield}
+        <span>Action Required</span>
+      </button>
+    `;
+  } else {
+    ctaContent = `
+      <button class="jc-hud-cta" id="jc-hud-autofill-btn" ${fieldCount === 0 ? 'disabled' : ''} title="Autofill fields on this page">
+        ${ICONS.play}
+        <span>Autofill</span>
+      </button>
+    `;
+  }
 
   return `
-    <div class="jc-pill-btn" id="jc-toggle-btn" title="Toggle Job Copilot Panel">
-      <div class="jc-status-dot ${status.dotClass}"></div>
-      <span>Job Copilot</span>
-      ${countBadge}
+    <div class="jc-hud-bar" id="jc-hud">
+      <div class="jc-hud-brand" id="jc-toggle-btn" title="${panelVisible ? 'Collapse panel' : 'Open Kareer Inspector'}">
+        <div class="jc-status-dot ${dotClass}"></div>
+        <div class="jc-hud-title">
+          <span class="jc-hud-brand-mark">${ICONS.brandMark}</span>
+          <span>Kareer</span>
+        </div>
+        <span class="jc-hud-adapter">${escapeHtml(adapter.id === 'generic' ? 'Generic' : adapter.label)}</span>
+        ${countBadge}
+      </div>
+      ${ctaContent}
+      <button class="jc-hud-icon-btn" id="jc-hud-expand-btn" title="${panelVisible ? 'Collapse panel' : 'Open Inspector'}">
+        ${panelVisible ? ICONS.minimize : ICONS.maximize}
+      </button>
+      <button class="jc-hud-icon-btn" id="jc-pebble-toggle-btn" title="Minimize to pebble">
+        ${ICONS.x}
+      </button>
+    </div>
+  `;
+}
+
+function renderFieldReviewSection() {
+  const fields = detectedFieldsCache;
+  const verifiedFields = [];
+  const inferredFields = [];
+  const failedFields = [];
+  const untouchedFields = [];
+
+  for (const f of fields) {
+    const res = fieldResultsCache.get(f.id);
+    if (res?.status === FILL_STATUS.VERIFIED) {
+      verifiedFields.push({ field: f, result: res });
+    } else if (res?.status === FILL_STATUS.INFERRED || res?.inferred) {
+      inferredFields.push({ field: f, result: res });
+    } else if (res?.status === FILL_STATUS.FAILED) {
+      failedFields.push({ field: f, result: res });
+    } else {
+      untouchedFields.push({ field: f, result: res });
+    }
+  }
+
+  const renderItem = (item, badgeClass, badgeLabel) => {
+    const val = item.result?.value ?? item.field.currentValue ?? '';
+    const displayVal = val !== '' ? String(val) : 'Empty';
+    return `
+      <div class="jc-review-item">
+        <div class="jc-review-info">
+          <div class="jc-review-label">${escapeHtml(item.field.label || item.field.id)}</div>
+          <div class="jc-review-value" title="${escapeHtml(displayVal)}">${escapeHtml(displayVal)}</div>
+        </div>
+        <div class="jc-review-meta">
+          <span class="jc-badge ${badgeClass}">${badgeLabel}</span>
+          <button type="button" class="jc-btn jc-btn-secondary jc-btn-small jc-locate-field-btn" data-field-id="${escapeHtml(item.field.id)}" title="Scroll to and highlight field">
+            ${ICONS.locate}
+          </button>
+        </div>
+      </div>
+    `;
+  };
+
+  return `
+    <div class="jc-card">
+      <div class="jc-row">
+        <span class="jc-card-title">Field Verification & Review</span>
+        <span class="jc-badge jc-badge-blue">${fields.length} FIELDS</span>
+      </div>
+      <div class="jc-row" style="gap: 6px; flex-wrap: wrap;">
+        <span class="jc-badge jc-badge-green">${verifiedFields.length} VERIFIED</span>
+        <span class="jc-badge jc-badge-amber">${inferredFields.length} INFERRED</span>
+        <span class="jc-badge jc-badge-red">${failedFields.length} FAILED</span>
+        <span class="jc-badge" style="background: var(--kr-bg-3); color: var(--kr-text-3);">${untouchedFields.length} UNTOUCHED</span>
+      </div>
+      <div class="jc-review-list" style="margin-top: 6px;">
+        ${fields.length === 0 ? '<div style="font-size: 12px; color: var(--jc-text-muted); text-align: center; padding: 12px;">No form fields detected on this page.</div>' : ''}
+        ${failedFields.map(i => renderItem(i, 'jc-badge-red', 'FAILED')).join('')}
+        ${inferredFields.map(i => renderItem(i, 'jc-badge-amber', 'INFERRED')).join('')}
+        ${verifiedFields.map(i => renderItem(i, 'jc-badge-green', 'VERIFIED')).join('')}
+        ${untouchedFields.map(i => renderItem(i, '', 'UNTOUCHED')).join('')}
+      </div>
     </div>
   `;
 }
@@ -1215,28 +1772,30 @@ function renderHomeTab() {
   const fieldCount = detectedFieldsCache.length;
   const session = applicationState?.session;
   const job = session?.job;
+  const page = classifyPage();
+
   // --- Workflow card: map session status to visual state ---
   const wfStatus = session?.status || '';
   const wfIsRunning = wfStatus === 'running' || wfStatus === 'submitting';
   const wfIsDone = ['review', 'confirmation'].includes(wfStatus);
   const wfIsPaused = wfStatus === 'paused';
-  const wfIsWaiting = ['captcha', 'boundary'].includes(wfStatus);
+  const wfIsWaiting = ['captcha', 'boundary'].includes(wfStatus) || ['captcha', 'boundary'].includes(page.type);
   const wfCardClass = wfIsRunning ? 'wf-running' : wfIsDone ? 'wf-done' : (wfIsPaused || wfIsWaiting) ? 'wf-paused' : '';
 
   let wfBadgeHtml;
   if (wfIsDone) {
-    const doneLabel = wfStatus === 'confirmation' ? '✓ Submitted' : '✓ Done — Ready for Review';
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-done">${doneLabel}</span>`;
+    const doneLabel = wfStatus === 'confirmation' ? 'SUBMITTED' : 'READY FOR REVIEW';
+    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-done">${ICONS.check} ${doneLabel}</span>`;
   } else if (wfIsRunning) {
-    const runLabel = wfStatus === 'submitting' ? '● Submitting' : '● Running';
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-running">${runLabel}</span>`;
+    const runLabel = wfStatus === 'submitting' ? 'SUBMITTING' : 'RUNNING';
+    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-running">${ICONS.play} ${runLabel}</span>`;
   } else if (wfIsWaiting) {
-    const waitLabel = wfStatus === 'captcha' ? '⏸ CAPTCHA' : '⏸ Manual Step Required';
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-paused">${waitLabel}</span>`;
+    const waitLabel = wfStatus === 'captcha' || page.type === 'captcha' ? 'CAPTCHA PAUSED' : 'MANUAL ACTION REQUIRED';
+    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-paused">${ICONS.shield} ${waitLabel}</span>`;
   } else if (wfIsPaused) {
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-paused">⏸ Paused</span>`;
+    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-paused">${ICONS.pause} PAUSED</span>`;
   } else {
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-idle">Not Started</span>`;
+    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-idle">NOT STARTED</span>`;
   }
 
   const stepsCompleted = session?.completedSteps || 0;
@@ -1252,7 +1811,7 @@ function renderHomeTab() {
     const isErr = wfIsPaused || wfIsWaiting;
     wfReasonHtml = `<div class="jc-wf-reason ${isErr ? 'wf-error' : ''}">${escapeHtml(session.reason)}</div>`;
   } else if (!session) {
-    wfReasonHtml = `<div style="font-size:12px;color:#94a3b8">Capture a job listing, then start on its application page.</div>`;
+    wfReasonHtml = `<div style="font-size:12px;color:var(--jc-text-secondary)">Capture a job listing, then start on its application page.</div>`;
   }
 
   // Job info (title + company + location, no URL)
@@ -1268,19 +1827,19 @@ function renderHomeTab() {
   // Last error (only when there are errors and not already shown via reason)
   const lastError = session?.errors?.length ? session.errors.at(-1).message : '';
   const wfErrorHtml = lastError && !session.reason?.includes(lastError)
-    ? `<div style="font-size:11px;color:#fbbf24;padding:4px 8px;background:rgba(245,158,11,0.08);border-radius:6px">⚠ ${escapeHtml(lastError)}</div>`
+    ? `<div style="font-size:11px;color:var(--kr-warning);padding:6px 10px;background:rgba(242,184,75,0.08);border-radius:6px;border:1px solid rgba(242,184,75,0.25);">${ICONS.alert} ${escapeHtml(lastError)}</div>`
     : '';
 
   const workflowHtml = `<div class="jc-workflow-card ${wfCardClass}">
     <div class="jc-row">
-      <span class="jc-card-title">Multi-Step Application</span>
+      <span class="jc-card-title">Application Workflow</span>
       ${wfBadgeHtml}
     </div>
     ${wfJobHtml}
-    ${session ? `<div class="jc-wf-step-bar-container"><div class="jc-wf-step-bar ${stepBarClass}" style="width:${stepBarPercent}%"></div></div>` : ''}
+    ${session ? `<div class="jc-wf-step-bar-container"><div class="jc-wf-step-bar ${stepBarClass}" style="transform: scaleX(${stepBarPercent / 100});"></div></div>` : ''}
     ${session ? `<div class="jc-wf-metrics">
-      <div class="jc-wf-metric">📋 <strong>${stepsCompleted}</strong> step${stepsCompleted !== 1 ? 's' : ''} completed</div>
-      <div class="jc-wf-metric">✏️ <strong>${fieldsAnswered}</strong> field${fieldsAnswered !== 1 ? 's' : ''} answered</div>
+      <div class="jc-wf-metric"><strong>${stepsCompleted}</strong> step${stepsCompleted !== 1 ? 's' : ''} completed</div>
+      <div class="jc-wf-metric"><strong>${fieldsAnswered}</strong> field${fieldsAnswered !== 1 ? 's' : ''} answered</div>
     </div>` : ''}
     ${wfReasonHtml}
     ${wfErrorHtml}
@@ -1291,6 +1850,20 @@ function renderHomeTab() {
     </div>
   </div>`;
 
+  let safetyBannerHtml = '';
+  if (['captcha', 'boundary'].includes(page.type)) {
+    safetyBannerHtml = `
+      <div class="jc-safety-banner">
+        <div class="jc-safety-icon">${ICONS.shield}</div>
+        <div class="jc-safety-content">
+          <div class="jc-safety-title">Safety Boundary Paused</div>
+          <div class="jc-safety-desc">${escapeHtml(page.reason || 'Manual interaction or verification required on this page.')}</div>
+        </div>
+        <button class="jc-btn jc-btn-secondary jc-btn-small" id="jc-resume-boundary">Resume</button>
+      </div>
+    `;
+  }
+
   let progressHtml = '';
   if (isAutofilling || autofillProgress.statusText) {
     const percent = autofillProgress.total > 0
@@ -1298,14 +1871,14 @@ function renderHomeTab() {
       : 0;
 
     progressHtml = `
-      <div class="jc-card" style="border-color: #2563eb;">
+      <div class="jc-card" style="border-color: rgba(163, 230, 53, 0.35);">
         <div class="jc-row">
           <span class="jc-card-title">Autofill Progress</span>
-          <span style="font-size: 11px; font-weight: 600; color: #38bdf8;">${autofillProgress.current} / ${autofillProgress.total}</span>
+          <span style="font-family: var(--jc-font-mono); font-size: 11px; font-weight: 600; color: var(--kr-signal);">${autofillProgress.current} / ${autofillProgress.total}</span>
         </div>
-        <div style="font-size: 12px; color: #f8fafc;">${escapeHtml(autofillProgress.statusText)}</div>
+        <div style="font-size: 12px; color: var(--jc-text-primary);">${escapeHtml(autofillProgress.statusText)}</div>
         <div class="jc-progress-bar-container">
-          <div class="jc-progress-bar" style="width: ${percent}%;"></div>
+          <div class="jc-progress-bar" style="transform: scaleX(${percent / 100});"></div>
         </div>
       </div>
     `;
@@ -1316,14 +1889,14 @@ function renderHomeTab() {
     if (lastAiTestResult.ok) {
       testResultHtml = `
         <div class="jc-alert jc-alert-success">
-          <strong>✓ AI Connected</strong> (${lastAiTestResult.latencyMs}ms)<br/>
-          <span style="font-size: 11px; color: #cbd5e1;">Model: ${lastAiTestResult.model}</span>
+          <strong>${ICONS.check} AI Connected</strong> (${lastAiTestResult.latencyMs}ms)<br/>
+          <span style="font-family: var(--jc-font-mono); font-size: 11px; color: var(--jc-text-secondary);">Model: ${lastAiTestResult.model}</span>
         </div>
       `;
     } else {
       testResultHtml = `
         <div class="jc-alert jc-alert-error">
-          <strong>✗ Connection Failed</strong> (${lastAiTestResult.latencyMs}ms)<br/>
+          <strong>${ICONS.x} Connection Failed</strong> (${lastAiTestResult.latencyMs}ms)<br/>
           <span style="font-size: 11px;">${lastAiTestResult.error}</span>
         </div>
       `;
@@ -1332,56 +1905,57 @@ function renderHomeTab() {
 
   const adapter = detectAdapter();
   return `
-    <div class="jc-card">
-      <div class="jc-row">
-        <span class="jc-card-title">Status</span>
-        <span class="jc-badge ${status.badgeClass}">${status.label}</span>
-      </div>
-      <div style="font-size: 12px; color: #94a3b8;">
-        ${status.text}
-      </div>
-      <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
-        Engine: ${adapter.id === 'generic' ? 'generic fallback' : escapeHtml(adapter.label)} adapter
-      </div>
-    </div>
+    ${safetyBannerHtml}
+    ${session ? workflowHtml : ''}
 
     <div class="jc-card">
       <div class="jc-row">
-        <span class="jc-card-title">Page Form Fields</span>
-        <span class="jc-badge jc-badge-blue">${fieldCount + remoteFieldCount} detected</span>
+        <span class="jc-card-title">Form Fields</span>
+        <span class="jc-badge jc-badge-blue">${fieldCount + remoteFieldCount} DETECTED</span>
       </div>
       ${remoteFieldCount ? `
-      <div style="font-size: 11px; color: #94a3b8;">
-        ${fieldCount} here, ${remoteFieldCount} in ${remoteFrameCount} embedded frame${remoteFrameCount === 1 ? '' : 's'}.
+      <div style="font-size: 11px; color: var(--jc-text-secondary);">
+        ${fieldCount} local, ${remoteFieldCount} in ${remoteFrameCount} embedded frame${remoteFrameCount === 1 ? '' : 's'}.
       </div>
       ` : ''}
       <div class="jc-row" style="margin-top: 4px; gap: 8px;">
         <button class="jc-btn jc-btn-large" id="jc-autofill-btn" style="flex: 1;" ${isAutofilling ? 'disabled' : ''}>
-          ${isAutofilling ? '⚡ Filling Fields...' : '⚡ Autofill This Page'}
+          ${isAutofilling ? `${ICONS.play} Filling Fields...` : `${ICONS.play} Autofill This Page`}
         </button>
-        <button class="jc-btn jc-btn-secondary ${isAutofilling ? 'jc-btn-pause-active' : ''}" id="jc-pause-autofill-btn" style="padding: 10px 14px; font-size: 12px;" ${!isAutofilling ? 'disabled' : ''} title="Pause / Stop autofill">
-          ${isAutofilling ? '⏸ Pause' : 'Pause'}
+        <button class="jc-btn jc-btn-secondary ${isAutofilling ? 'jc-btn-pause-active' : ''}" id="jc-pause-autofill-btn" style="padding: 9px 14px; font-size: 12px;" ${!isAutofilling ? 'disabled' : ''} title="Pause / Stop autofill">
+          ${isAutofilling ? `${ICONS.pause} Pause` : 'Pause'}
         </button>
-        <button class="jc-btn jc-btn-secondary" id="jc-rescan-btn" title="Rescan page fields" style="padding: 10px 12px;">🔄</button>
+        <button class="jc-btn jc-btn-secondary" id="jc-rescan-btn" title="Rescan page fields" style="padding: 9px 12px;">${ICONS.refresh}</button>
       </div>
     </div>
 
-    ${workflowHtml}
+    ${!session ? workflowHtml : ''}
     ${progressHtml}
+    ${renderFieldReviewSection()}
 
     <div class="jc-card">
-      <span class="jc-card-title">Context & Connectivity</span>
+      <div class="jc-row">
+        <span class="jc-card-title">System Status</span>
+        <span class="jc-badge ${status.badgeClass}">${status.label}</span>
+      </div>
+      <div style="font-size: 12px; color: var(--jc-text-secondary);">
+        ${status.text}
+      </div>
+      <div class="jc-row" style="margin-top: 6px;">
+        <span class="jc-label">Adapter</span>
+        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${adapter.id === 'generic' ? 'Generic' : escapeHtml(adapter.label)}</span>
+      </div>
       <div class="jc-row">
         <span class="jc-label">Host</span>
-        <span class="jc-val">${currentHost}</span>
+        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${currentHost}</span>
       </div>
       <div class="jc-row">
         <span class="jc-label">Model</span>
-        <span class="jc-val" style="font-family: monospace; font-size: 11px;">${settings.model}</span>
+        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${settings.model}</span>
       </div>
       <div class="jc-row" style="margin-top: 4px;">
         <button class="jc-btn jc-btn-secondary" id="jc-test-ai-btn" style="flex: 1;" ${isAiTesting ? 'disabled' : ''}>
-          ${isAiTesting ? 'Testing...' : 'Test AI Connection'}
+          ${isAiTesting ? 'Testing...' : 'Test Connection'}
         </button>
       </div>
       ${testResultHtml}
@@ -1393,9 +1967,12 @@ function renderHomeTab() {
 function renderProfileTab() {
   const profile = getProfile();
   const sections = PROFILE_SECTIONS.map((section, index) => `
-    <details class="jc-profile-section" ${index === 0 ? 'open' : ''} style="border: 1px solid #334155; border-radius: 10px; padding: 12px;">
-      <summary style="cursor: pointer; font-weight: 600;">${escapeHtml(section.title)}</summary>
-      <p style="font-size: 12px; color: #94a3b8; margin: 8px 0 12px;">${escapeHtml(section.description)}</p>
+    <details class="jc-profile-section" ${index === 0 ? 'open' : ''} style="border: 1px solid var(--jc-border-subtle); border-radius: var(--jc-radius-md); padding: 12px; background: rgba(255,255,255,0.02);">
+      <summary style="cursor: pointer; font-weight: 600; color: var(--jc-text-primary); display: flex; align-items: center; justify-content: space-between;">
+        <span>${escapeHtml(section.title)}</span>
+        <span style="color: var(--jc-text-muted);">${ICONS.chevronDown}</span>
+      </summary>
+      <p style="font-size: 12px; color: var(--jc-text-secondary); margin: 8px 0 12px;">${escapeHtml(section.description)}</p>
       <div style="display: flex; flex-direction: column; gap: 12px;">
         ${section.fields.map(field => {
           const value = String(profile[field.name] || '');
@@ -1414,7 +1991,7 @@ function renderProfileTab() {
 
   return `
     <form id="jc-profile-form" style="display: flex; flex-direction: column; gap: 12px;">
-      <div style="font-size: 12px; color: #94a3b8;">Save common answers once. Explicit answers take priority over background notes.</div>
+      <div style="font-size: 12px; color: var(--jc-text-secondary);">Save common answers once. Explicit answers take priority over background notes.</div>
       <div class="jc-form-group">
         <label>Full Name</label>
         <input class="jc-input" type="text" name="fullName" value="${escapeHtml(profile.fullName)}" placeholder="e.g. Jane Doe" />
@@ -1454,8 +2031,8 @@ function renderProfileTab() {
 
       ${sections}
 
-      <div style="padding: 10px 12px; border-radius: 8px; background: rgba(59,130,246,0.1); font-size: 12px;">
-        <strong>Application source: LinkedIn</strong><br />Used for “How did you hear about us?” If LinkedIn is unavailable, the field is left for review.
+      <div style="padding: 10px 12px; border-radius: var(--jc-radius-sm); background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); font-size: 12px; color: var(--jc-text-secondary);">
+        <strong style="color: var(--jc-text-primary);">Application source: LinkedIn</strong><br />Used for “How did you hear about us?” If LinkedIn is unavailable, the field is left for review.
       </div>
 
       <div class="jc-form-group">
@@ -1489,7 +2066,7 @@ function renderApiKeyGroup() {
           <span class="jc-badge ${keySaved ? 'jc-badge-green' : 'jc-badge-amber'}">${keySaved ? 'Key saved' : 'No key'}</span>
           <button type="button" class="jc-btn jc-btn-secondary" id="jc-open-options" style="flex: 1;">Open extension options</button>
         </div>
-        <span style="font-size: 11px; color: #64748b;">
+        <span style="font-size: 11px; color: var(--jc-text-muted);">
           The key is stored by the extension and never enters this page.
         </span>
       </div>
@@ -1501,9 +2078,9 @@ function renderApiKeyGroup() {
       <label>OpenRouter API Key</label>
       <div class="jc-row">
         <input class="jc-input" id="jc-api-key-input" type="password" autocomplete="off" placeholder="${keySaved ? 'Key saved — enter replacement' : 'sk-or-v1-...'}" />
-        <button type="button" class="jc-btn jc-btn-secondary" id="jc-toggle-key-btn" style="padding: 8px 10px;">👁</button>
+        <button type="button" class="jc-btn jc-btn-secondary" id="jc-toggle-key-btn" style="padding: 8px 10px;">${ICONS.eye}</button>
       </div>
-      <span style="font-size: 11px; color: #64748b;">
+      <span style="font-size: 11px; color: var(--jc-text-muted);">
         Saved key stays in userscript storage. Leave blank to keep it.
       </span>
     </div>
@@ -1537,7 +2114,7 @@ function renderSettingsTab() {
         <div class="jc-toggle-row">
           <div>
             <div class="jc-label">AI Autofill</div>
-            <div style="font-size: 11px; color: #64748b;">Enable AI form filling capabilities</div>
+            <div style="font-size: 11px; color: var(--jc-text-muted);">Enable AI form filling capabilities</div>
           </div>
           <label class="jc-switch">
             <input type="checkbox" name="autofillEnabled" ${settings.autofillEnabled ? 'checked' : ''} />
@@ -1548,7 +2125,7 @@ function renderSettingsTab() {
         <div class="jc-toggle-row">
           <div>
             <div class="jc-label">Overwrite Existing Values</div>
-            <div style="font-size: 11px; color: #64748b;">Overwrite non-empty fields on autofill</div>
+            <div style="font-size: 11px; color: var(--jc-text-muted);">Overwrite non-empty fields on autofill</div>
           </div>
           <label class="jc-switch">
             <input type="checkbox" name="overwriteExisting" ${settings.overwriteExisting ? 'checked' : ''} />
@@ -1559,7 +2136,7 @@ function renderSettingsTab() {
         <div class="jc-toggle-row">
           <div>
             <div class="jc-label">Auto Continue</div>
-            <div style="font-size: 11px; color: #64748b;">Advance to next step on valid page (Phase 3)</div>
+            <div style="font-size: 11px; color: var(--jc-text-muted);">Advance to next step on valid page</div>
           </div>
           <label class="jc-switch">
             <input type="checkbox" name="autoContinue" ${settings.autoContinue ? 'checked' : ''} />
@@ -1570,7 +2147,7 @@ function renderSettingsTab() {
         <div class="jc-toggle-row">
           <div>
             <div class="jc-label">Auto Submit</div>
-            <div style="font-size: 11px; color: #64748b;">Off by default. Submits only when every field is verified, validation is clean, and one Submit control exists — after a cancellable countdown.</div>
+            <div style="font-size: 11px; color: var(--jc-text-muted);">Off by default. Submits only when every field is verified after a cancellable countdown.</div>
           </div>
           <label class="jc-switch">
             <input type="checkbox" name="autoSubmit" ${settings.autoSubmit ? 'checked' : ''} />
@@ -1582,7 +2159,7 @@ function renderSettingsTab() {
       <div class="jc-row" style="margin-top: 4px;">
         <button type="button" class="jc-btn jc-btn-secondary" id="jc-export-data" style="flex: 1;">Export backup JSON</button>
       </div>
-      <p style="font-size: 11px; color: #64748b; margin: 0;">Profile, settings, memory, and job only. The API key is never included.</p>
+      <p style="font-size: 11px; color: var(--jc-text-muted); margin: 0;">Profile, settings, memory, and job only. The API key is never included.</p>
 
       <div class="jc-row">
         <button class="jc-btn" type="submit" style="flex: 1;">Save Settings</button>
@@ -1598,7 +2175,7 @@ function renderDebugTab() {
   const lastPageChange = applicationState?.session?.lastPageChange;
 
   const logsHtml = logs.length === 0
-    ? '<span style="color: #64748b;">No debug logs recorded yet.</span>'
+    ? '<span style="color: var(--jc-text-muted);">No debug logs recorded yet.</span>'
     : logs.slice().reverse().map((l) => {
         const time = l.timestamp.split('T')[1]?.slice(0, 8) || '';
         return `
@@ -1632,7 +2209,7 @@ function renderDebugTab() {
       <div class="jc-row">
         <span class="jc-card-title">Sanitized Settings</span>
       </div>
-      <pre style="margin: 0; font-family: monospace; font-size: 11px; color: #94a3b8; background: #090d16; padding: 8px; border-radius: 6px; overflow-x: auto;">${escapeHtml(JSON.stringify(state.settings, null, 2))}</pre>
+      <pre style="margin: 0; font-family: var(--jc-font-mono); font-size: 11px; color: var(--jc-text-secondary); background: rgba(11, 15, 25, 0.7); padding: 8px; border-radius: var(--jc-radius-sm); overflow-x: auto; border: 1px solid var(--jc-border-subtle);">${escapeHtml(JSON.stringify(state.settings, null, 2))}</pre>
     </div>
 
     <div class="jc-card">
@@ -1640,16 +2217,16 @@ function renderDebugTab() {
         <span class="jc-card-title">Regression Fixture</span>
         <button class="jc-btn jc-btn-secondary" id="jc-capture-fixture" style="padding: 4px 8px; font-size: 10px;">Save page fixture</button>
       </div>
-      <div style="font-size: 11px; color: #64748b;">
+      <div style="font-size: 11px; color: var(--jc-text-muted);">
         Downloads a sanitized copy of this page, including embedded frames, for the
         regression suite. Your answers, scripts, and inline handlers are removed.
       </div>
-      <div style="font-size: 11px; color: #94a3b8;" id="jc-capture-feedback"></div>
+      <div style="font-size: 11px; color: var(--jc-text-secondary);" id="jc-capture-feedback"></div>
     </div>
 
     <div class="jc-card">
       ${lastPageChange ? `<div class="jc-row"><span class="jc-card-title">Last Workflow Change</span></div>
-      <pre style="font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere;">${escapeHtml(JSON.stringify(lastPageChange, null, 2))}</pre>` : ''}
+      <pre style="font-size: 11px; font-family: var(--jc-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--jc-text-secondary); background: rgba(11, 15, 25, 0.7); padding: 8px; border-radius: var(--jc-radius-sm); border: 1px solid var(--jc-border-subtle);">${escapeHtml(JSON.stringify(lastPageChange, null, 2))}</pre>` : ''}
       <div class="jc-row">
         <span class="jc-card-title">Recent Activity Logs (${logs.length})</span>
         <button class="jc-btn jc-btn-secondary" id="jc-clear-logs-btn" style="padding: 4px 8px; font-size: 10px;">Clear</button>
@@ -1667,7 +2244,9 @@ function updatePanelDOM() {
   const container = shadowRootRef.querySelector('.jc-widget-container');
   if (!container) return;
 
+  const settings = getSettings();
   let panelHtml = '';
+
   if (panelVisible) {
     let tabContent = '';
     if (currentTab === 'home') tabContent = renderHomeTab();
@@ -1679,18 +2258,21 @@ function updatePanelDOM() {
       <div class="jc-panel" id="jc-main-panel">
         <div class="jc-header">
           <div class="jc-header-title">
-            <span>✨</span>
-            <span>${APP_NAME}</span>
+            <span class="jc-brand-mark">${ICONS.brandMark}</span>
+            <span>Kareer</span>
             <span class="jc-version-tag">v${APP_VERSION}</span>
           </div>
-          <button class="jc-close-btn" id="jc-close-panel-btn" title="Minimize panel">✕</button>
+          <div class="jc-header-actions">
+            <span class="jc-model-chip" title="${escapeHtml(settings.model)}">${escapeHtml(settings.model)}</span>
+            <button class="jc-close-btn" id="jc-close-panel-btn" title="Minimize panel">${ICONS.x}</button>
+          </div>
         </div>
 
         <div class="jc-nav-tabs">
-          <button class="jc-tab-btn ${currentTab === 'home' ? 'active' : ''}" data-tab="home">Home</button>
-          <button class="jc-tab-btn ${currentTab === 'profile' ? 'active' : ''}" data-tab="profile">Profile</button>
-          <button class="jc-tab-btn ${currentTab === 'settings' ? 'active' : ''}" data-tab="settings">Settings</button>
-          <button class="jc-tab-btn ${currentTab === 'debug' ? 'active' : ''}" data-tab="debug">Debug</button>
+          <button class="jc-tab-btn ${currentTab === 'home' ? 'active' : ''}" data-tab="home">${ICONS.play} Run</button>
+          <button class="jc-tab-btn ${currentTab === 'profile' ? 'active' : ''}" data-tab="profile">${ICONS.user} Profile</button>
+          <button class="jc-tab-btn ${currentTab === 'settings' ? 'active' : ''}" data-tab="settings">${ICONS.settings} Settings</button>
+          <button class="jc-tab-btn ${currentTab === 'debug' ? 'active' : ''}" data-tab="debug">${ICONS.terminal} Debug</button>
         </div>
 
         <div class="jc-content">
@@ -1702,7 +2284,7 @@ function updatePanelDOM() {
 
   setSafeHTML(container, `
     ${panelHtml}
-    ${renderPill()}
+    ${renderHud()}
   `);
 
   attachEventHandlers();
@@ -1724,12 +2306,36 @@ function attachEventHandlers() {
     };
   }
 
-  // Toggle button handler
+  const resumeBoundary = shadowRootRef.querySelector('#jc-resume-boundary');
+  if (resumeBoundary) {
+    resumeBoundary.onclick = () => void applicationEngine?.start();
+  }
+
+  // Toggle button handlers
   const toggleBtn = shadowRootRef.querySelector('#jc-toggle-btn');
   if (toggleBtn) {
     toggleBtn.onclick = () => {
       panelVisible = !panelVisible;
       if (panelVisible) refreshDetectedFields();
+      updatePanelDOM();
+    };
+  }
+
+  const expandBtn = shadowRootRef.querySelector('#jc-hud-expand-btn');
+  if (expandBtn) {
+    expandBtn.onclick = () => {
+      panelVisible = !panelVisible;
+      if (panelVisible) refreshDetectedFields();
+      updatePanelDOM();
+    };
+  }
+
+  // Pebble toggle
+  const pebbleBtn = shadowRootRef.querySelector('#jc-pebble-toggle-btn');
+  if (pebbleBtn) {
+    pebbleBtn.onclick = () => {
+      isPebble = !isPebble;
+      if (isPebble) panelVisible = false;
       updatePanelDOM();
     };
   }
@@ -1755,15 +2361,19 @@ function attachEventHandlers() {
     };
   });
 
-  // Autofill button
+  // Autofill button (in panel)
   const autofillBtn = shadowRootRef.querySelector('#jc-autofill-btn');
   if (autofillBtn) {
-    autofillBtn.onclick = () => {
-      executeAutofillFlow();
-    };
+    autofillBtn.onclick = () => executeAutofillFlow();
   }
 
-  // Autofill pause button
+  // Autofill button (on compact HUD bar)
+  const hudAutofillBtn = shadowRootRef.querySelector('#jc-hud-autofill-btn');
+  if (hudAutofillBtn) {
+    hudAutofillBtn.onclick = () => executeAutofillFlow();
+  }
+
+  // Autofill pause button (in panel)
   const pauseAutofillBtn = shadowRootRef.querySelector('#jc-pause-autofill-btn');
   if (pauseAutofillBtn) {
     pauseAutofillBtn.onclick = () => {
@@ -1771,6 +2381,28 @@ function attachEventHandlers() {
       applicationEngine?.pause();
     };
   }
+
+  // Autofill pause button (on compact HUD bar)
+  const hudPauseBtn = shadowRootRef.querySelector('#jc-hud-pause-btn');
+  if (hudPauseBtn) {
+    hudPauseBtn.onclick = () => {
+      stopAutofillFlow('Autofill paused by user. Progress and filled fields preserved.');
+      applicationEngine?.pause();
+    };
+  }
+
+  // Locate field buttons on Review tab
+  const locateBtns = shadowRootRef.querySelectorAll('.jc-locate-field-btn');
+  locateBtns.forEach((btn) => {
+    btn.onclick = () => {
+      const fieldId = btn.getAttribute('data-field-id');
+      const target = detectedFieldsCache.find((f) => f.id === fieldId);
+      if (target?.element) {
+        scrollToField(target.element);
+        highlightActiveField(target.element);
+      }
+    };
+  });
 
   // Rescan buttons
   const rescanBtn = shadowRootRef.querySelector('#jc-rescan-btn');
@@ -1855,7 +2487,7 @@ function attachEventHandlers() {
     if (toggleKeyBtn && apiKeyInput) {
       toggleKeyBtn.onclick = () => {
         apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
-        toggleKeyBtn.textContent = apiKeyInput.type === 'password' ? '👁' : '🔒';
+        toggleKeyBtn.innerHTML = apiKeyInput.type === 'password' ? ICONS.eye : ICONS.eyeOff;
       };
     }
 

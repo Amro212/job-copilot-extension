@@ -5,6 +5,61 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-20 — Brand Direction Refinement: Restrained Lime (#A3E635) & Graphite Calibration
+
+### Turn changes:
+- `DESIGN.md`:
+  - Updated primary brand signal tokens to `--kr-signal: #A3E635` and `--kr-signal-hover: #B5F04A`, with `--kr-signal-dim: rgba(163, 230, 53, 0.10)`.
+  - Replaced radioactive signal green narrative with a restrained, mature chartreuse flight-deck and developer-tool direction.
+  - Documented strict rules of restraint: lime limited to primary CTA, brand mark, active/running telemetry, progress rail, focus rings, and small indicators.
+  - Mandated no large lime-tinted surfaces; active tabs use lime text, subtle border, or small indicator over graphite, not large flood-fill backgrounds.
+  - Explicitly defined the visual separation between warm brand lime (`#A3E635`) and cool semantic success green (`#52D98C`).
+  - Reaffirmed graphite-dominant button hierarchy and eliminated neon/cyberpunk blur halos.
+- `src/core/ui.js`:
+  - Updated CSS variables `--kr-signal: #A3E635`, `--kr-signal-hover: #B5F04A`, and `--kr-signal-dim: rgba(163, 230, 53, 0.10)`.
+  - Refined `.jc-tab-btn.active` to use a graphite surface (`var(--kr-bg-2)`) with lime text and subtle border (`rgba(163, 230, 53, 0.35)`), removing broad green background fills.
+  - Replaced neon box-shadow halos on `.jc-hud-cta` and `.jc-btn-large` with clean developer-tool drop shadows (`rgba(0, 0, 0, 0.35)`).
+  - Toned down `.jc-status-dot.running` glow and updated `.jc-hud-badge-accent`, `.jc-hud-cta-running`, `.jc-input:focus`, `.jc-btn:focus-visible`, `.jc-workflow-card.wf-running`, and progress card borders to match the calibrated `#A3E635` palette.
+  - Preserved strict semantic colors (`--kr-info`, `--kr-success`, `--kr-warning`, `--kr-danger`) and all automation logic.
+- Current status & next steps: Tests running; verify no visual or functional regressions.
+
+---
+
+## Turn: 2026-09-20 — DESIGN.md Visual Refactor: Kareer Graphite & Signal-Green Technical Instrumentation
+
+### Turn changes:
+- `src/core/ui.js`:
+  - Adopted `DESIGN.md` color system tokens (`--kr-bg-0..3`, `--kr-line`, `--kr-line-strong`, `--kr-text-1..3`, `--kr-signal`, `--kr-signal-hover`, `--kr-signal-dim`, `--kr-info`, `--kr-success`, `--kr-warning`, `--kr-danger`) and radius tokens (`--kr-radius-xs..lg`, `--kr-radius-round`).
+  - Replaced generic cyan/blue AI-SaaS styling and gradients with the graphite + signal-green technical flight deck direction.
+  - Removed sparkle icon as brand identity; introduced geometric vector brand mark (`ICONS.brandMark`) representing document edge and flight heading vector.
+  - Updated HUD and Pebble to use graphite surfaces, signal-green active accents, and the new brand mark.
+  - Renamed `Home` tab to **Run** (`data-tab="home"` preserved for test compatibility).
+  - Rebalanced Run tab hierarchy to make application workflow and primary actions dominant, with thin 2px instrumentation progress rails, uppercase monospace telemetry badges, and quiet context/status surfaces.
+  - Form inputs styled with quiet graphite background, clean border, and signal-green focus ring.
+- `tests/unit/panel.test.js`: Verified panel initialization, tab switching, and HUD render (5/5 pass).
+- Impeccable audit: `npx impeccable detect --json src/core/ui.js` returned 0 antipatterns.
+- Build: Built userscript, Chrome zip, and Firefox xpi at v0.4.23.
+
+---
+
+## Turn: 2026-09-20 — UI Enhancement: Floating HUD/Dock, Pebble Mode, and Impeccable Craft Overhaul
+
+### Turn changes:
+- `PRODUCT.md`: Authored durable product truth record following Impeccable schema 1, defining the dual-target Job Copilot, primary job seeker persona, core principles (local-first, transparent grounding, calm UI), state architecture, and craft floor standards.
+- `.impeccable/config.json`: Initialized Impeccable configuration with `"buildPath": "code"`.
+- `src/core/ui.js`:
+  - Implemented design system tokens (`--jc-*`) with dark mode surfaces, crisp contrast ratios, and tabular numerals.
+  - Replaced legacy pill button with a compact floating HUD / dock (`.jc-hud-bar`) and minimal pebble mode (`.jc-pebble`) supporting drag and dock states.
+  - Added 1-click execution directly from the HUD (`#jc-hud-autofill-btn` / `#jc-hud-pause-btn`), allowing instant autofill without opening the full inspection drawer.
+  - Built comprehensive `renderFieldReviewSection()` in the Home tab for post-scan/fill review, categorizing fields into verified, inferred, and failed with inline badges and click-to-locate buttons (`.jc-locate-field-btn`).
+  - Created an inline SVG icon system (`ICONS`) replacing all unicode emojis with accessible 16×16 vector glyphs.
+  - Replaced layout-thrashing `transition: width` on `.jc-progress-bar` and `.jc-wf-step-bar` with GPU-accelerated `transform: scaleX(...)` and `transform-origin: left center`.
+  - Maintained strict panel invariants: 4 top-level tabs (`home`, `profile`, `settings`, `debug`), single Shadow DOM host, synchronous storage hydration, and host isolation.
+- `tests/unit/panel.test.js`: Verified panel initialization, tab switching, and HUD render (5/5 pass).
+- Impeccable audit: Zero antipatterns detected via `impeccable detect --json src/core/ui.js`.
+
+---
+
 ## Turn: 2026-09-20 — Comprehensive Project Documentation, Licensing, and Security Policy
 
 ### Turn changes:
