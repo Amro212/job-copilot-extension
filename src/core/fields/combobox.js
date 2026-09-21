@@ -61,7 +61,8 @@ export function resolveComboboxParts(element) {
   // Walk past an input carrying role=combobox, but never cross into another field.
   for (let parent = element.parentElement; parent && !parent.matches('body, html, form, main'); parent = parent.parentElement) {
     const others = Array.from(parent.querySelectorAll(`${COMBO}, input:not([type="hidden"]), textarea`))
-      .filter(node => node !== element && !element.contains(node) && !node.contains(element));
+      .filter(node => node !== element && !element.contains(node) && !node.contains(element)
+        && node.getAttribute('aria-hidden') !== 'true');
     if (others.length) break;
     container = parent;
     if (parent.matches('.field, .form-group, [class*="select-shell"], .select__container')) break;

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Greenhouse job-boards regression</title>
+<!-- Captured patterns from https://job-boards.greenhouse.io/smartsheet/jobs/8108099 (2026-09-20).
+     React-select lives in .select-shell with a dummy required overlay input.
+     Location (City) is an async typeahead, not Google Places .pac-container.
+     Selected values are chips; aria-describedby drops the Select... placeholder after commit. -->
+<style>
+  body { font: 16px sans-serif; padding: 24px; }
+  .select { margin: 20px 0; }
+  .remix-css-1a0ro4n-requiredInput { opacity: 0; position: absolute; }
+  [role=option] { padding: 8px; }
+</style>
+<body data-submissions="0">
+<main>
+  <h1>Apply for this job</h1>
+  <form id="application_form">
+    <div class="select" id="location-field">
+      <div class="select__container">
+        <label id="candidate-location-label" for="candidate-location" class="label select__label">Location (City)<span aria-hidden="true">*</span></label>
+        <div class="select-shell remix-css-b62m3t-container">
+          <div>
+            <div class="select__control">
+              <div class="select__value-container">
+                <div class="select__placeholder" id="react-select-candidate-location-placeholder"></div>
+                <div class="select__input-container">
+                  <input class="select__input" id="candidate-location" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="true" aria-labelledby="candidate-location-label" aria-required="true" aria-describedby="react-select-candidate-location-placeholder candidate-location-error" aria-invalid="false">
+                </div>
+              </div>
+            </div>
+          </div>
+          <input required tabindex="-1" aria-hidden="true" class="remix-css-1a0ro4n-requiredInput" value="">
+        </div>
+        <div id="candidate-location-error"></div>
+      </div>
+    </div>
+    <div class="select" id="gender-field">
+      <div class="select__container">
+        <label id="326-label" for="326" class="label select__label">I identify my gender as:<span aria-hidden="true">*</span></label>
+        <div class="select-shell remix-css-b62m3t-container">
+          <div>
+            <div class="select__control">
+              <div class="select__value-container select__value-container--is-multi">
+                <div class="select__placeholder" id="react-select-326-placeholder">Select...</div>
+                <div class="select__input-container">
+                  <input class="select__input" id="326" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="true" aria-labelledby="326-label" aria-required="true" aria-describedby="react-select-326-placeholder 326-error" aria-invalid="false">
+                </div>
+              </div>
+              <div class="select__indicators">
+                <button type="button" class="icon-button" aria-label="Toggle flyout" tabindex="-1"></button>
+              </div>
+            </div>
+          </div>
+          <input required tabindex="-1" aria-hidden="true" class="remix-css-1a0ro4n-requiredInput" value="">
+        </div>
+        <div id="326-error"></div>
+      </div>
+    </div>
+    <button type="submit">Submit application</button>
+  </form>
+</main>
+<script>
+document.querySelector('form').onsubmit = e => { e.preventDefault(); document.body.dataset.submissions = String(+document.body.dataset.submissions + 1); };
+
+const LOCATIONS = [
+  'Toronto, Ontario, Canada',
+  'Toronto, Ohio, United States',
+  'Toronto, Kansas, United States',
+];
+const GENDERS = ['Male', 'Female', "I don't wish to answer"];
+
+function bindSelect({ inputId, menuId, choices, multi, asyncSearch }) {
+  const input = document.getElementById(inputId);
+  const shell = input.closest('.select-shell');
+  const placeholder = shell.querySelector('.select__placeholder');
+  const overlay = shell.querySelector('.remix-css-1a0ro4n-requiredInput');
+  const described = `${placeholder?.id || ''} ${inputId}-error`.trim();
+  input.setAttribute('aria-describedby', described);
+  let menu;
+
+  const close = () => {
+    menu?.remove();
+    menu = null;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-controls');
+  };
+
+  const commit = (label) => {
+    shell.querySelectorAll('.select__single-value, .select__multi-value').forEach(el => el.remove());
+    placeholder?.remove();
+    const chip = document.createElement('div');
+    chip.className = multi ? 'select__multi-value' : 'select__single-value';
+    if (multi) {
+      const text = document.createElement('div');
+      text.className = 'select__multi-value__label';
+      text.textContent = label;
+      chip.append(text);
+    } else {
+      chip.textContent = label;
+    }
+    input.parentElement.before(chip);
+    input.value = '';
+    input.setAttribute('aria-describedby', `${inputId}-error`);
+    overlay?.remove();
+    document.body.setAttribute(`data-${inputId}`, label);
+    close();
+  };
+
+  const open = () => {
+    close();
+    input.setAttribute('aria-expanded', 'true');
+    input.setAttribute('aria-controls', menuId);
+    menu = document.createElement('div');
+    menu.className = 'select__menu';
+    const list = document.createElement('div');
+    list.className = multi ? 'select__menu-list select__menu-list--is-multi' : 'select__menu-list';
+    list.id = menuId;
+    list.setAttribute('role', 'listbox');
+    if (multi) list.setAttribute('aria-multiselectable', 'true');
+    menu.append(list);
+    shell.append(menu);
+    const query = input.value.trim().toLowerCase();
+    const visible = asyncSearch
+      ? (query ? choices.filter(label => label.toLowerCase().includes(query)) : [])
+      : choices;
+    for (const label of visible) {
+      const option = document.createElement('div');
+      option.className = 'select__option';
+      option.setAttribute('role', 'option');
+      option.textContent = label;
+      option.onmousedown = e => e.preventDefault();
+      option.onclick = () => commit(label);
+      list.append(option);
+    }
+  };
+
+  input.addEventListener('mousedown', open);
+  input.addEventListener('click', open);
+  input.addEventListener('input', open);
+  input.addEventListener('focus', open);
+  shell.querySelector('[aria-label="Toggle flyout"]')?.addEventListener('click', open);
+}
+
+bindSelect({ inputId: 'candidate-location', menuId: 'react-select-candidate-location-listbox', choices: LOCATIONS, asyncSearch: true });
+bindSelect({ inputId: '326', menuId: 'react-select-326-listbox', choices: GENDERS, multi: true });
+</script>
+</body>
+</html>

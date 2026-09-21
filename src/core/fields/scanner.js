@@ -12,6 +12,7 @@ let fieldCounter = 0;
 function isVisible(el) {
   if (!el || !(el instanceof HTMLElement)) return false;
   if (el.hidden || el.closest('[hidden]')) return false;
+  if (el.getAttribute('aria-hidden') === 'true') return false;
   if (el.offsetWidth === 0 && el.offsetHeight === 0 && el.getClientRects().length === 0) {
     if (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') {
       return true;

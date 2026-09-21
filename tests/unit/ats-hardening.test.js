@@ -2,7 +2,7 @@ import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { scanFormFields, harvestComboboxOptions } from '../../src/core/fields/scanner.js';
+import { scanFormFields, harvestComboboxOptions, refreshField } from '../../src/core/fields/scanner.js';
 import { normalizeFieldsForAI } from '../../src/core/fields/normalize.js';
 import { fillField } from '../../src/core/fields/fillers.js';
 import { verifyField } from '../../src/core/fields/verify.js';
@@ -13,10 +13,8 @@ import { createFieldAgent } from '../../src/core/agent.js';
 import { inspectValidation } from '../../src/core/validation.js';
 
 let dom;
-function boot(ats) {
-  dom = new JSDOM(readFileSync(new URL(`../../fixtures/${ats}-hardening-fixture.html`, import.meta.url), 'utf8'), {
-    url: `https://jobs.${ats === 'lever' ? 'lever.co' : 'ashbyhq.com'}/example/apply`, runScripts: 'dangerously', pretendToBeVisual: true,
-  });
+function attachDom(html, url) {
+  dom = new JSDOM(html, { url, runScripts: 'dangerously', pretendToBeVisual: true });
   for (const key of ['window', 'document', 'location', 'HTMLElement', 'HTMLInputElement', 'HTMLTextAreaElement', 'HTMLSelectElement', 'Element', 'Event', 'KeyboardEvent', 'MouseEvent', 'MutationObserver']) globalThis[key] = dom.window[key];
   globalThis.CSS = { escape: value => value };
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 200 });
@@ -27,6 +25,20 @@ function boot(ats) {
   globalThis.GM_setValue = (key, value) => values.set(key, structuredClone(value));
   saveProfile({ location: 'Toronto, Ontario, Canada', linkedin: 'https://linkedin.com/in/example', pronouns: 'He/him' });
   saveApiKey('test-key');
+}
+
+function boot(ats) {
+  attachDom(
+    readFileSync(new URL(`../../fixtures/${ats}-hardening-fixture.html`, import.meta.url), 'utf8'),
+    `https://jobs.${ats === 'lever' ? 'lever.co' : 'ashbyhq.com'}/example/apply`,
+  );
+}
+
+function bootGreenhouseJobBoards() {
+  attachDom(
+    readFileSync(new URL('../../fixtures/greenhouse-job-boards-fixture.html', import.meta.url), 'utf8'),
+    'https://job-boards.greenhouse.io/smartsheet/jobs/8108099',
+  );
 }
 afterEach(() => dom?.window.close());
 
@@ -204,6 +216,40 @@ test('Lever does not accept old suggestions before its debounced result refresh'
   input.value = 'Ottawa';
   assert.deepEqual(await waitForComboboxOptions(input, 100), []);
   assert.equal(input.value, 'Ottawa');
+});
+
+test('Greenhouse job-boards Select... placeholder is not a field description', () => {
+  bootGreenhouseJobBoards();
+  const field = scanFormFields().find(f => f.id === '326');
+  assert.ok(field);
+  assert.equal(field.type, 'combobox');
+  assert.equal(field.description, '');
+  assert.equal(scanFormFields().some(f => f.element.getAttribute('aria-hidden') === 'true'), false);
+});
+
+test('Greenhouse job-boards multi-select stays verified after the placeholder drops', async () => {
+  bootGreenhouseJobBoards();
+  const field = scanFormFields().find(f => f.id === '326');
+  await harvestComboboxOptions([field]);
+  assert.deepEqual(field.options.map(o => o.label), ['Male', 'Female', "I don't wish to answer"]);
+  assert.equal(await fillField(field, 'Male'), true);
+  refreshField(field);
+  assert.equal((await verifyField(field, 'Male')).verified, true);
+  assert.equal(document.body.getAttribute('data-326'), 'Male');
+  assert.match(field.element.closest('.select-shell').innerHTML, /select__multi-value__label/);
+});
+
+test('Greenhouse Location (City) typeahead harvests by typing the profile city', async () => {
+  bootGreenhouseJobBoards();
+  const field = scanFormFields().find(f => f.id === 'candidate-location');
+  assert.ok(field);
+  assert.equal(field.type, 'combobox');
+  await harvestComboboxOptions([field]);
+  assert.deepEqual(field.options.map(o => o.label), ['Toronto, Ontario, Canada']);
+  assert.equal(await fillField(field, 'Toronto, Ontario, Canada'), true);
+  refreshField(field);
+  assert.equal((await verifyField(field, 'Toronto, Ontario, Canada')).verified, true);
+  assert.equal(document.body.getAttribute('data-candidate-location'), 'Toronto, Ontario, Canada');
 });
 
 test('unset pronouns override model guesses and partial native options are rejected at AI boundary', async () => {

@@ -5,6 +5,38 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-20 — Greenhouse job-boards false FAILED + Location (City)
+
+### Bugs/findings
+- **Date**: 2026-09-20
+- **Target**: Extension and userscript shared core
+- **Platform/ATS**: Greenhouse `job-boards.greenhouse.io` (Smartsheet `https://job-boards.greenhouse.io/smartsheet/jobs/8108099`)
+- **Symptoms**: Autofill marked React-select fields FAILED while chips were visibly filled (gender, race, veteran, disability, Yes/No questions). Location (City) stayed empty and was correctly reported failed. Debug scans showed `0 owned options`; some fields `committed=true` after fill.
+- **Root-cause analysis**:
+  1. **False FAILED**: job-boards Greenhouse uses React-select in `.select-shell` / `.select__container`, including `select__value-container--is-multi` chips. The combobox's `aria-describedby` points at a `Select...` placeholder. After a successful commit the placeholder is removed, so `extractDescription()` changed from `"Select..."` to `""`. `refreshField()` then treated that as “the question changed” and threw, and the panel recorded FAILED even though the chip was already committed. Country verified because its placeholder is empty.
+  2. **Location miss**: `#candidate-location` is an async React-select typeahead, not classic Places `.pac-container`. Opening it with an empty query yields no options. `isResidenceLabel()` did not match `Location (City)`, so harvest never typed the profile city and fill rejected the answer as outside owned options.
+  3. **Overlay input**: each required select has an `aria-hidden` opacity-0 `required` overlay inside `.select-shell`. Counting it as a sibling `input` stopped the combobox container walk before `.select__menu`.
+- **Resolution**: Ignore React-select placeholders in descriptions; treat `Location (City)` as a residence label; skip `aria-hidden` dummy inputs in scan and combobox ownership; discover `.select__menu` inside `.select-shell`. Classic Places `#job_application_location` path is unchanged.
+- **Fixture**: `fixtures/greenhouse-job-boards-fixture.html` (behavioral reproduction from the live job-boards DOM, not a Debug capture of the live page).
+
+### Turn changes:
+- `src/core/fields/labels.js`: `extractDescription` ignores `.select__placeholder` / `Select...` described-by noise so a committed chip does not look like a new question.
+- `src/core/location.js`: `isResidenceLabel` matches `Location (City)`.
+- `src/core/fields/scanner.js`: `aria-hidden="true"` controls are not visible fields (dummy required overlays).
+- `src/core/fields/combobox.js`: ownership walk ignores `aria-hidden` sibling inputs.
+- `src/core/adapters/greenhouse.js`: `comboboxMenus` returns in-shell `.select__menu` / listbox after Places `.pac-container`.
+- `fixtures/greenhouse-job-boards-fixture.html`, `tests/unit/{ats-hardening,profile}.test.js`, `tests/e2e/ats-hardening.spec.js`: failing tests first, then the job-boards location typeahead and multi-select chip regressions.
+
+### Verification:
+- Unit tests failed first on placeholder description, `refreshField` throw, empty location harvest, and missing Location (City) grounding; then passed after the fix.
+- `npm test`: **206 passed, 0 failed**.
+- `npm run test:e2e`: **48 passed**, including Greenhouse Places location, ordinary React-select, and the new job-boards Location (City) + multi-select spec (both VERIFIED). **2 failed**, same pre-existing Lever LinkedIn-label and cross-frame paginated-search assertions documented in earlier turns; unrelated to this Greenhouse fix.
+
+### Current status:
+job-boards Greenhouse multi-select false negatives and Location (City) typeahead are fixed. Reload the unpacked extension (v0.4.30) before retesting the live Smartsheet application.
+
+---
+
 ## Turn: 2026-09-20 — Official Kareer Branding Assets Integration
 
 ### Turn changes:

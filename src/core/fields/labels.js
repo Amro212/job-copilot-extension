@@ -228,6 +228,13 @@ export function extractOptionLabel(element) {
   return cleanText(element.id || 'Option');
 }
 
+function describedByText(node) {
+  if (!node || node.matches('.select__placeholder, [id$="-placeholder" i]')) return '';
+  const text = cleanText(node.textContent);
+  if (!text || /^(?:select(?:\.{0,3}| one| an? option)?|choose(?: one| an? option)?)$/i.test(text)) return '';
+  return text;
+}
+
 export function extractDescription(element) {
   if (!element || !(element instanceof Element)) return '';
   const metadata = detectAdapter().fieldMetadata?.(element);
@@ -235,11 +242,10 @@ export function extractDescription(element) {
 
   const describedBy = element.getAttribute('aria-describedby');
   if (describedBy) {
-    const ids = describedBy.split(/\s+/);
-    const textParts = ids
+    const textParts = describedBy.split(/\s+/)
       .map((id) => document.getElementById(id))
+      .map(describedByText)
       .filter(Boolean)
-      .map((el) => el.textContent || '')
       .join(' ');
     if (textParts.trim()) {
       return cleanText(textParts);

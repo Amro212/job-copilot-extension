@@ -90,6 +90,22 @@ test('Ashby commits its portal location and visible No button without submission
   await expect(page.locator('body')).toHaveAttribute('data-submissions', '0');
 });
 
+test('Greenhouse harvests job-boards Location (City) and multi-select chips', async ({ jc }) => {
+  await jc.seed({ profile });
+  answerQuestions(jc);
+  const page = await jc.context.newPage();
+  await page.goto(jc.fixtureUrl('greenhouse-job-boards-fixture.html', GREENHOUSE_HOST));
+  await jc.openPanel(page);
+  await page.locator('#jc-autofill-btn').click();
+  await expect(page.locator('#jc-autofill-btn')).toBeEnabled({ timeout: 60000 });
+  await expect(page.locator('body')).toHaveAttribute('data-candidate-location', 'Toronto, Ontario, Canada');
+  await expect(page.locator('body')).toHaveAttribute('data-326', 'Male');
+  await expect(page.locator('#jc-main-panel')).toContainText('2 VERIFIED');
+  await expect(page.locator('#jc-main-panel')).toContainText('0 FAILED');
+  expect(jc.openrouter.requests).toHaveLength(1);
+  await expect(page.locator('body')).toHaveAttribute('data-submissions', '0');
+});
+
 test('Greenhouse harvests and commits ordinary React-select dropdowns', async ({ jc }) => {
   await jc.seed({ profile });
   answerQuestions(jc);

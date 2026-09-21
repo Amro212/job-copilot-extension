@@ -1,6 +1,7 @@
 /**
- * Greenhouse: job-board embeds (often cross-origin) and Places-style location
- * inputs with no combobox ARIA, whose suggestions live in `.pac-container`.
+ * Greenhouse: classic job-board embeds (often cross-origin) with Places `.pac-container`
+ * location inputs, and job-boards.greenhouse.io React-select fields inside `.select-shell`
+ * (including async Location (City) typeaheads and multi-select chips).
  */
 function hostnameOf(loc) {
   return String(loc?.hostname || '');
@@ -42,7 +43,10 @@ export const greenhouseAdapter = {
     const local = parent ? Array.from(parent.querySelectorAll(':scope > .pac-container')) : [];
     if (local.length) return local;
     const next = element.nextElementSibling;
-    return next?.classList?.contains('pac-container') ? [next] : null;
+    if (next?.classList?.contains('pac-container')) return [next];
+    const shell = element.closest('.select-shell, .select__container');
+    const menus = shell ? Array.from(shell.querySelectorAll('.select__menu, :scope [role="listbox"]')) : [];
+    return menus.length ? menus : null;
   },
   comboboxOptionSelector(element) {
     // Places locations and ordinary React-select fields coexist on Greenhouse.

@@ -38,6 +38,15 @@ test('residence grounding recognizes Canadian abbreviations without choosing ano
   assert.equal(ambiguous.answers[0].value, '');
 });
 
+test('Location (City) uses profile location like other residence questions', async () => {
+  saveProfile({ location: 'Toronto, Ontario, Canada' });
+  const { answers } = await generateAutofillAnswers([{
+    fieldId: 'candidate-location', label: 'Location (City)', type: 'combobox',
+    options: [{ label: 'Toronto, Ontario, Canada' }, { label: 'Toronto, Ohio, United States' }],
+  }]);
+  assert.equal(answers[0].value, 'Toronto, Ontario, Canada');
+});
+
 test('explicit current location uses full profile location and rejects other cities', async () => {
   saveProfile({ location: 'London, Ontario, Canada' });
   respond([{ fieldId: 'residence', value: 'London, UK' }]);
