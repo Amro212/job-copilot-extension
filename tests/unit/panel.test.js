@@ -2,6 +2,29 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
+import { summarizeFieldResults } from '../../src/core/ui.js';
+
+test('field report uses current detected fields as its single source of truth', () => {
+  const fields = [
+    { id: 'verified' },
+    { id: 'inferred' },
+    { id: 'skipped' },
+    { id: 'late' },
+  ];
+  const results = new Map([
+    ['verified', { status: 'verified' }],
+    ['inferred', { status: 'inferred', inferred: true }],
+    ['skipped', { status: 'skipped' }],
+    ['no-longer-detected', { status: 'failed' }],
+  ]);
+
+  const report = summarizeFieldResults(fields, results);
+
+  assert.equal(report.total, 4);
+  assert.equal(report.filled, 2);
+  assert.equal(report.failed.length, 0);
+  assert.equal(report.untouched.length, 2);
+});
 
 test('workflow shows verified completion count and retained structural diagnostic', async () => {
   const bundle = await build({ entryPoints: ['src/targets/userscript/entry.js'], bundle: true, format: 'iife', write: false });

@@ -5,6 +5,28 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-20 — Unified autofill field reporting
+
+### Bugs/findings
+- **Date**: 2026-09-20
+- **Target**: Extension and userscript shared panel
+- **Platform/ATS**: Dynamic ATS forms, reported on Greenhouse and Lever
+- **Symptoms**: Completed Autofill Progress used one-off counters and a target snapshot, while Field Verification & Review grouped the latest detected fields from `fieldResultsCache`. Dynamic rescans could therefore show contradictory totals and failure counts. Uploads also made progress stop below its displayed total.
+- **Root-cause analysis**: Reporting had two independent aggregation paths over different field sets. The procedural `filledCount` / `failedCount` values retained attempts for fields no longer present after a rescan; the review correctly described only the current detected form.
+- **Resolution**: Added one `summarizeFieldResults()` aggregation over current detected fields plus cached outcomes. Review badges and completion logging use this report. The progress card now exists only while autofill runs; after completion, the review card becomes the sole status surface and carries the completion note.
+
+### Turn changes
+- `src/core/ui.js`: Removed duplicate outcome counters, added shared current-field summary, synchronized completion totals, and consolidated completed status into Field Verification & Review.
+- `tests/unit/panel.test.js`: Added regression coverage proving stale results for no-longer-detected fields cannot affect current reporting.
+- `tests/e2e/autofill.spec.js`: Updated focused browser coverage to require one completed reporting surface and retain visible failed-field status.
+
+### Verification/status
+- `node --test tests/unit/panel.test.js`: **6 passed, 0 failed**.
+- Focused Playwright test `fills every control type on the generic fixture and verifies the result`: **1 passed, 0 failed** after rebuilding extension artifacts.
+- Full test suites intentionally not run per user request.
+
+---
+
 ## Turn: 2026-09-20 — Greenhouse job-boards false FAILED + Location (City)
 
 ### Bugs/findings

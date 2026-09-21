@@ -1369,8 +1369,6 @@ async function executeAutofillFlow() {
     };
     const allFileFields = detectedFieldsCache.filter(f => f.type === 'file');
     const fileFields = allFileFields.filter(f => isResumeField(f, allFileFields) && shouldFill(f));
-    let filledCount = 0;
-    let failedCount = 0;
     for (const field of fileFields) {
       if (token !== autofillGeneration) return;
       field.element = resolveLiveFileElement(field);
@@ -1383,10 +1381,8 @@ async function executeAutofillFlow() {
       field.element = resolveLiveFileElement(field);
       const verification = didFill ? await verifyField(field, '') : { verified: false, error: 'No stored resume' };
       if (verification.verified) {
-        filledCount++;
         fieldResultsCache.set(field.id, { status: FILL_STATUS.VERIFIED, value: verification.actualValue || '' });
       } else {
-        failedCount++;
         fieldResultsCache.set(field.id, { status: FILL_STATUS.FAILED, value: '', error: verification.error || 'Resume was not attached' });
       }
     }
@@ -1394,8 +1390,6 @@ async function executeAutofillFlow() {
     if (token !== autofillGeneration) return;
     for (const result of remoteUploads) {
       fieldResultsCache.set(result.fieldId, result);
-      if (result.status === FILL_STATUS.VERIFIED) filledCount++;
-      else if (result.status === FILL_STATUS.FAILED) failedCount++;
     }
     // Parsing can populate, clear, add, or replace controls. Choose targets only
     // after it settles, preserving parser/user values unless overwrite is on.
@@ -1475,7 +1469,6 @@ async function executeAutofillFlow() {
         const answer = answersMap.get(field.id);
         if (!answer || answer.value === '' || answer.value === null || answer.value === undefined) {
           if (field.required || field.element?.getAttribute('data-reject-fill') === 'true') {
-            failedCount++;
             fieldResultsCache.set(field.id, {
               status: FILL_STATUS.FAILED,
               value: field.currentValue || '',
@@ -1516,7 +1509,6 @@ async function executeAutofillFlow() {
 
         if (verification.verified) {
           highlightVerifiedField(field.element);
-          filledCount++;
           fieldResultsCache.set(field.id, {
             status: answer.inferred ? FILL_STATUS.INFERRED : FILL_STATUS.VERIFIED,
             value: verification.actualValue || answer.value,
@@ -1531,7 +1523,6 @@ async function executeAutofillFlow() {
           }
         } else {
           highlightFailedField(field.element);
-          failedCount++;
           fieldResultsCache.set(field.id, {
             status: FILL_STATUS.FAILED,
             value: verification.actualValue || '',
@@ -1542,7 +1533,6 @@ async function executeAutofillFlow() {
       } catch (fieldErr) {
         if (token !== autofillGeneration) break;
         logger.error(`Error filling field "${field.label}":`, fieldErr);
-        failedCount++;
         fieldResultsCache.set(field.id, {
           status: FILL_STATUS.FAILED,
           value: '',
@@ -1576,14 +1566,16 @@ async function executeAutofillFlow() {
           label: result.label,
           remote: true,
         });
-        if (result.status === FILL_STATUS.VERIFIED || result.status === FILL_STATUS.INFERRED) filledCount++;
-        else if (result.status === FILL_STATUS.FAILED) failedCount++;
       }
       autofillProgress.current = autofillProgress.total;
     }
 
-    autofillProgress.statusText = `Autofill completed! (${filledCount} filled, ${failedCount} failed)`;
-    logger.info(`Autofill finished: ${filledCount} verified, ${failedCount} failed out of ${aiTargetFields.length + fileFields.length + remoteFields.length} fields.`);
+    refreshDetectedFields();
+    const report = summarizeFieldResults(detectedFieldsCache, fieldResultsCache);
+    autofillProgress.current = report.total;
+    autofillProgress.total = report.total;
+    autofillProgress.statusText = 'Autofill complete. Review field statuses below.';
+    logger.info(`Autofill finished: ${report.filled} filled, ${report.failed.length} failed and ${report.untouched.length} untouched out of ${report.total} current fields.`);
   } catch (err) {
     if (token !== autofillGeneration) return;
     logger.error('Autofill execution failed:', err);
@@ -1731,15 +1723,14 @@ function renderHud() {
   `;
 }
 
-function renderFieldReviewSection() {
-  const fields = detectedFieldsCache;
+export function summarizeFieldResults(fields, results) {
   const verifiedFields = [];
   const inferredFields = [];
   const failedFields = [];
   const untouchedFields = [];
 
   for (const f of fields) {
-    const res = fieldResultsCache.get(f.id);
+    const res = results.get(f.id);
     if (res?.status === FILL_STATUS.VERIFIED) {
       verifiedFields.push({ field: f, result: res });
     } else if (res?.status === FILL_STATUS.INFERRED || res?.inferred) {
@@ -1750,6 +1741,25 @@ function renderFieldReviewSection() {
       untouchedFields.push({ field: f, result: res });
     }
   }
+
+  return {
+    verified: verifiedFields,
+    inferred: inferredFields,
+    failed: failedFields,
+    untouched: untouchedFields,
+    filled: verifiedFields.length + inferredFields.length,
+    total: fields.length,
+  };
+}
+
+function renderFieldReviewSection() {
+  const {
+    verified: verifiedFields,
+    inferred: inferredFields,
+    failed: failedFields,
+    untouched: untouchedFields,
+    total,
+  } = summarizeFieldResults(detectedFieldsCache, fieldResultsCache);
 
   const renderItem = (item, badgeClass, badgeLabel) => {
     const val = item.result?.value ?? item.field.currentValue ?? '';
@@ -1774,8 +1784,9 @@ function renderFieldReviewSection() {
     <div class="jc-card">
       <div class="jc-row">
         <span class="jc-card-title">Field Verification & Review</span>
-        <span class="jc-badge jc-badge-blue">${fields.length} FIELDS</span>
+        <span class="jc-badge jc-badge-blue">${total} FIELDS</span>
       </div>
+      ${!isAutofilling && autofillProgress.statusText ? `<div style="font-size: 12px; color: var(--jc-text-secondary);">${escapeHtml(autofillProgress.statusText)}</div>` : ''}
       <div class="jc-row" style="gap: 6px; flex-wrap: wrap;">
         <span class="jc-badge jc-badge-green">${verifiedFields.length} VERIFIED</span>
         <span class="jc-badge jc-badge-amber">${inferredFields.length} INFERRED</span>
@@ -1783,7 +1794,7 @@ function renderFieldReviewSection() {
         <span class="jc-badge" style="background: var(--kr-bg-3); color: var(--kr-text-3);">${untouchedFields.length} UNTOUCHED</span>
       </div>
       <div class="jc-review-list" style="margin-top: 6px;">
-        ${fields.length === 0 ? '<div style="font-size: 12px; color: var(--jc-text-muted); text-align: center; padding: 12px;">No form fields detected on this page.</div>' : ''}
+        ${total === 0 ? '<div style="font-size: 12px; color: var(--jc-text-muted); text-align: center; padding: 12px;">No form fields detected on this page.</div>' : ''}
         ${failedFields.map(i => renderItem(i, 'jc-badge-red', 'FAILED')).join('')}
         ${inferredFields.map(i => renderItem(i, 'jc-badge-amber', 'INFERRED')).join('')}
         ${verifiedFields.map(i => renderItem(i, 'jc-badge-green', 'VERIFIED')).join('')}
@@ -1893,7 +1904,7 @@ function renderHomeTab() {
   }
 
   let progressHtml = '';
-  if (isAutofilling || autofillProgress.statusText) {
+  if (isAutofilling) {
     const percent = autofillProgress.total > 0
       ? Math.round((autofillProgress.current / autofillProgress.total) * 100)
       : 0;

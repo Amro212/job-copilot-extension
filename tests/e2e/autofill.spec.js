@@ -42,9 +42,10 @@ test.describe('single page autofill', () => {
     // React-style controlled input needs the native setter path to stick.
     await expect(page.locator('#react_sim_input')).not.toHaveValue('');
 
-    // The fixture includes one control that deliberately rejects programmatic
-    // fills, so a single failure here is the expected outcome.
-    await expect(page.locator('#jc-main-panel')).toContainText(/Autofill completed! \(1[0-9] filled, 1 failed\)/);
+    const panel = page.locator('#jc-main-panel');
+    await expect(panel).toContainText('Autofill complete. Review field statuses below.');
+    await expect(panel).not.toContainText('Autofill Progress');
+    await expect(panel).toContainText('1 FAILED');
   });
 
   test('the prompt carries the stored profile and no credentials', async ({ jc }) => {
