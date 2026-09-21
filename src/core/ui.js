@@ -133,12 +133,7 @@ const STYLES = `
   --jc-radius-lg: var(--kr-radius-lg);
   --jc-radius-pill: var(--kr-radius-round);
 
-  font-family: var(--jc-font);
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--jc-text-primary);
   box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
 }
 
 *, *::before, *::after {
@@ -156,6 +151,11 @@ const STYLES = `
   bottom: 20px;
   right: 20px;
   z-index: 2147483646;
+  font-family: var(--jc-font);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--jc-text-primary);
+  -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

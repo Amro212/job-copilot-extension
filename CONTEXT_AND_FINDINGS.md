@@ -830,3 +830,24 @@ Narrative voice prompt updated and verified.
   both local WOFF2 files and OFL license present. Signed Firefox installation was
   not exercised; Chromium real-extension options opening was exercised.
 - Latest build version: 0.4.28. Final unit run: 202 passed, 0 failed.
+
+---
+
+## Turn: 2026-09-20 — Ashby panel typography collapse
+
+### Bugs/findings
+- **Target:** Extension and userscript shared panel on hosted Ashby application pages; reproduced on the supplied 1Password application and compared against the supplied Lever and Greenhouse screenshots.
+- **Symptoms:** Panel text overlaps vertically, workflow title/company lines occupy the same line box, and status/count pills appear flattened on Ashby while the same panel renders normally on Lever and Greenhouse.
+- **Root-cause analysis:** Live-browser inspection of the supplied Ashby URL found that Ashby's production stylesheet globally applies `div { line-height: 0 }`. The panel shadow host is a light-DOM `div`, so it computes to `line-height: 0px`. Normal outer-document rules win over normal `:host` declarations, and the top-level shadow child inherits from that host; therefore `.jc-widget-container` also computed to `0px` despite the panel's `:host { line-height: 1.45 }`. This is a CSS boundary/cascade issue, not an Ashby adapter or data-rendering issue.
+- **Resolution:** Moved the panel typography baseline (`font-family`, `font-size`, `line-height`, color, font smoothing) from `:host` to `.jc-widget-container`, the first element inside the shadow tree. Ashby's page CSS cannot select that element, so internal line boxes and pills retain the intended metrics.
+
+### Turn changes
+- `src/core/ui.js`: Applied the typography baseline to the internal panel container instead of relying on the externally styleable shadow host.
+- `tests/e2e/adapters.spec.js`: Added a real-extension Chromium regression that reproduces Ashby's exact global `div { line-height: 0 }` rule, confirms the host still computes to `0px`, and verifies the internal panel container and badges do not.
+- `package.json`: Normal build advanced the generated artifact version from 0.4.30 to 0.4.31.
+
+### Verification/status
+- Regression test observed failing before the fix: `.jc-widget-container` computed `line-height: 0px`.
+- Targeted real-browser regression passed after the fix: **1 passed**.
+- `npm test`: **207 passed, 0 failed**.
+- Full `npm run test:e2e` was started but stopped at the user's request; manual visual review was explicitly preferred. No full-suite result is claimed.

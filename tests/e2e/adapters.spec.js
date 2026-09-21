@@ -63,6 +63,26 @@ test.describe('ATS adapters', () => {
     await expect(page.locator('.ashby-select-input')).toHaveValue('LinkedIn');
   });
 
+  test('Ashby global div styles do not collapse panel typography', async ({ jc }) => {
+    const page = await jc.context.newPage();
+    await page.goto(jc.fixtureUrl('ashby-application-fixture.html', ASHBY_HOST));
+
+    // Ashby's production stylesheet applies this reset to every light-DOM div,
+    // including the extension's shadow host.
+    await page.addStyleTag({ content: 'div { line-height: 0; }' });
+    await jc.openPanel(page);
+
+    await expect.poll(() => page.locator('#job-copilot-root').evaluate(
+      (host) => getComputedStyle(host).lineHeight,
+    )).toBe('0px');
+    await expect.poll(() => page.locator('.jc-widget-container').evaluate(
+      (container) => parseFloat(getComputedStyle(container).lineHeight),
+    )).toBeGreaterThan(0);
+    await expect.poll(() => page.locator('.jc-badge').first().evaluate(
+      (badge) => parseFloat(getComputedStyle(badge).lineHeight),
+    )).toBeGreaterThan(0);
+  });
+
   test('a site with no adapter still uses the generic engine', async ({ jc }) => {
     await jc.seed({ profile: PROFILE });
     const page = await jc.context.newPage();
