@@ -244,7 +244,7 @@ function stripModelDashes(text) {
 // The host attaches Authorization; core never holds the key.
 const REQUEST_HEADERS = {
   'Content-Type': 'application/json',
-  'HTTP-Referer': 'https://github.com/Amro212/autofill-extension',
+  'HTTP-Referer': 'https://github.com/Amro212/kareer',
   'X-Title': 'Kareer',
 };
 

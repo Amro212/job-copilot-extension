@@ -14,11 +14,16 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ### Turn changes
 - `.impeccable/config.json`: Restored file.
-- `CONTEXT_AND_FINDINGS.md`: Documented verification and code review findings.
+- `README.md`: Replaced static version badge with dynamic Shields.io `package-json` badge reading directly from `Amro212/kareer`.
+- `tools/build.js`: Updated userscript `@namespace`, `@updateURL`, and `@downloadURL` to point to `Amro212/kareer`.
+- `src/core/ai.js`: Updated `HTTP-Referer` request header to `https://github.com/Amro212/kareer`.
+- `SECURITY.md`: Updated vulnerability reporting link to `Amro212/kareer`.
+- `CONTEXT_AND_FINDINGS.md`: Documented verification, code review findings, and URL updates.
 
 ### Verification/status
 - `npm test`: **208 passed, 0 failed**.
 - `npm run test:e2e`: **51 passed, 0 failed** (exit 0, 3.9m across 51 specs).
+- `npm run build`: Clean build at v0.4.34.
 
 ---
 

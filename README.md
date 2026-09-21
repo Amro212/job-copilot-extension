@@ -5,7 +5,7 @@
 **AI-powered job application autofill for Chrome, Firefox, and Tampermonkey.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.21-green.svg)](./package.json)
+[![Version](https://img.shields.io/github/package-json/v/Amro212/kareer?color=green)](./package.json)
 [![Platform: Extension & Userscript](https://img.shields.io/badge/platform-Chrome%20%7C%20Firefox%20%7C%20Tampermonkey-orange.svg)](#installation)
 [![Security: BYOK & Isolated](https://img.shields.io/badge/security-BYOK%20%7C%20Zero%20Telemetry-purple.svg)](./SECURITY.md)
 

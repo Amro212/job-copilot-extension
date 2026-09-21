@@ -62,7 +62,7 @@ Kareer operates as a browser-side productivity assistant, not an automated web s
 We take the security of Kareer seriously. If you discover a security vulnerability or credential leak risk:
 
 1. **Do not disclose publicly**: Please avoid opening public GitHub issues for sensitive security vulnerabilities.
-2. **Submit a Private Report**: Use [GitHub's Private Vulnerability Reporting](https://github.com/Amro212/autofill-extension/security/advisories/new) on the repository.
+2. **Submit a Private Report**: Use [GitHub's Private Vulnerability Reporting](https://github.com/Amro212/kareer/security/advisories/new) on the repository.
 3. **Include Details**:
    - Description of the vulnerability.
    - Steps to reproduce or proof-of-concept.

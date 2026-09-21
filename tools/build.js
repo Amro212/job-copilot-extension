@@ -104,12 +104,12 @@ function prepareVersion() {
 function userscriptBanner(pkg) {
   return `// ==UserScript==
 // @name         Kareer
-// @namespace    https://github.com/Amro212/autofill-extension
+// @namespace    https://github.com/Amro212/kareer
 // @version      ${pkg.version}
 // @description  ${pkg.description}
 // @author       ${pkg.author}
-// @updateURL    https://raw.githubusercontent.com/Amro212/autofill-extension/main/dist/kareer.user.js
-// @downloadURL  https://raw.githubusercontent.com/Amro212/autofill-extension/main/dist/kareer.user.js
+// @updateURL    https://raw.githubusercontent.com/Amro212/kareer/main/dist/kareer.user.js
+// @downloadURL  https://raw.githubusercontent.com/Amro212/kareer/main/dist/kareer.user.js
 // @match        *://*/*
 // @connect      openrouter.ai
 // @grant        GM_getValue
