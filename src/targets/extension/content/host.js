@@ -63,14 +63,14 @@ export function createExtensionHost() {
   function storageSet(key, value) {
     cache.set(key, value);
     sendMessage({ type: MSG.STORAGE_SET, key, value }).catch((err) => {
-      console.error(`[JobCopilot:Storage] Failed to persist "${key}":`, err);
+      console.error(`[Kareer:Storage] Failed to persist "${key}":`, err);
     });
   }
 
   function storageDelete(key) {
     cache.delete(key);
     sendMessage({ type: MSG.STORAGE_DELETE, key }).catch((err) => {
-      console.error(`[JobCopilot:Storage] Failed to delete "${key}":`, err);
+      console.error(`[Kareer:Storage] Failed to delete "${key}":`, err);
     });
   }
 

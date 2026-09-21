@@ -18,7 +18,7 @@ beforeEach(() => {
 });
 
 test('legacy profiles gain unset fields without losing their context', () => {
-  gmSet('jc:profile', { fullName: 'Sample Applicant', resumeContext: 'Detailed history', applicantNotes: 'Personal notes' });
+  gmSet('kr:profile', { fullName: 'Sample Applicant', resumeContext: 'Detailed history', applicantNotes: 'Personal notes' });
   const profile = getProfile();
   assert.equal(profile.workAuthorization, '');
   assert.equal(profile.gender, '');

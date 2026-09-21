@@ -48,7 +48,7 @@ class DebugLogger {
           this.inMemoryLogs = stored;
         }
       } catch (err) {
-        console.error('[JobCopilot:Logger] Error loading stored logs:', err);
+        console.error('[Kareer:Logger] Error loading stored logs:', err);
       }
       this.loaded = true;
     }
@@ -77,11 +77,11 @@ class DebugLogger {
     try {
       saveDebugLogs(this.inMemoryLogs);
     } catch (err) {
-      console.error('[JobCopilot:Logger] Error saving logs:', err);
+      console.error('[Kareer:Logger] Error saving logs:', err);
     }
 
     // Also output to console in development
-    const consoleMsg = `[JobCopilot:${entry.level}] ${entry.message}`;
+    const consoleMsg = `[Kareer:${entry.level}] ${entry.message}`;
     if (level === 'error') {
       console.error(consoleMsg, cleanMeta || '');
     } else if (level === 'warn') {

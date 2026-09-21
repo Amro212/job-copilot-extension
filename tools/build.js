@@ -81,7 +81,7 @@ function prepareVersion() {
     return pkg;
   }
 
-  const userscriptFile = path.join(distDir, 'job-copilot.user.js');
+  const userscriptFile = path.join(distDir, 'kareer.user.js');
   if (cache && cache.hash !== currentHash) {
     const oldVersion = pkg.version;
     pkg.version = incrementVersion(oldVersion, 'patch');
@@ -103,13 +103,13 @@ function prepareVersion() {
 
 function userscriptBanner(pkg) {
   return `// ==UserScript==
-// @name         Job Copilot
+// @name         Kareer
 // @namespace    https://github.com/Amro212/autofill-extension
 // @version      ${pkg.version}
 // @description  ${pkg.description}
 // @author       ${pkg.author}
-// @updateURL    https://raw.githubusercontent.com/Amro212/autofill-extension/main/dist/job-copilot.user.js
-// @downloadURL  https://raw.githubusercontent.com/Amro212/autofill-extension/main/dist/job-copilot.user.js
+// @updateURL    https://raw.githubusercontent.com/Amro212/autofill-extension/main/dist/kareer.user.js
+// @downloadURL  https://raw.githubusercontent.com/Amro212/autofill-extension/main/dist/kareer.user.js
 // @match        *://*/*
 // @connect      openrouter.ai
 // @grant        GM_getValue
@@ -142,7 +142,7 @@ function userscriptOptions(pkg) {
   return {
     ...shared(pkg),
     entryPoints: [path.join(srcDir, 'targets', 'userscript', 'entry.js')],
-    outfile: path.join(distDir, 'job-copilot.user.js'),
+    outfile: path.join(distDir, 'kareer.user.js'),
     format: 'iife',
     banner: { js: userscriptBanner(pkg) },
   };
@@ -241,7 +241,7 @@ async function run() {
       if (job.label.startsWith('extension:')) {
         const browser = job.label.split(':')[1];
         const outDir = path.join(distDir, browser);
-        const zipName = browser === 'firefox' ? 'job-copilot-firefox.xpi' : 'job-copilot-chrome.zip';
+        const zipName = browser === 'firefox' ? 'kareer-firefox.xpi' : 'kareer-chrome.zip';
         zipDirectory(outDir, path.join(distDir, zipName));
         console.log(`[build] packed ${zipName}`);
       }

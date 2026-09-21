@@ -19,7 +19,7 @@ export async function buildSnapshot() {
   }
   return {
     data,
-    hasApiKey: Boolean(all['jc:secrets']?.apiKey),
+    hasApiKey: Boolean(all['kr:secrets']?.apiKey),
   };
 }
 
@@ -35,16 +35,16 @@ export async function applyDelete(key) {
 
 export async function writeSecret(apiKey) {
   const clean = typeof apiKey === 'string' ? apiKey.trim() : '';
-  await area().set({ 'jc:secrets': { apiKey: clean } });
+  await area().set({ 'kr:secrets': { apiKey: clean } });
 }
 
 export async function clearSecret() {
-  await area().remove('jc:secrets');
+  await area().remove('kr:secrets');
 }
 
 export async function readApiKey() {
-  const stored = await area().get('jc:secrets');
-  const key = stored?.['jc:secrets']?.apiKey;
+  const stored = await area().get('kr:secrets');
+  const key = stored?.['kr:secrets']?.apiKey;
   return typeof key === 'string' ? key.trim() : '';
 }
 

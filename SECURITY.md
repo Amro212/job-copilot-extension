@@ -1,6 +1,6 @@
 # Security & Privacy Policy
 
-Job Copilot is designed from the ground up with a **local-first, zero-telemetry, and privacy-preserving** architecture. Because job applications involve sensitive personal data (resumes, work history, contact details) and AI API keys, this document outlines our security model, threat boundaries, and vulnerability reporting procedures.
+Kareer is designed from the ground up with a **local-first, zero-telemetry, and privacy-preserving** architecture. Because job applications involve sensitive personal data (resumes, work history, contact details) and AI API keys, this document outlines our security model, threat boundaries, and vulnerability reporting procedures.
 
 ---
 
@@ -16,7 +16,7 @@ Job Copilot is designed from the ground up with a **local-first, zero-telemetry,
 
 ## 2. Threat Model & Key Isolation
 
-Job Copilot operates on third-party websites (such as ATS portals and employer job boards). To defend against malicious or compromised web pages attempting to steal your credentials:
+Kareer operates on third-party websites (such as ATS portals and employer job boards). To defend against malicious or compromised web pages attempting to steal your credentials:
 
 ### Extension Target (Chrome & Firefox)
 - **Background Worker Dispatch**: All AI API network requests are performed exclusively within the extension's background service worker (`src/targets/extension/background/index.js`).
@@ -49,7 +49,7 @@ The payload contains:
 
 ## 4. Safety Boundaries & Anti-Bot Compliance
 
-Job Copilot operates as a browser-side productivity assistant, not an automated web scraper or stealth bot.
+Kareer operates as a browser-side productivity assistant, not an automated web scraper or stealth bot.
 
 - **No CAPTCHA Bypassing**: The extension does not attempt to solve or bypass CAPTCHAs, Cloudflare turnstiles, or bot detection mechanisms.
 - **No Stealth / Spoofing Logic**: We do not use `chrome.debugger`, CDP, or fingerprint spoofing.
@@ -59,7 +59,7 @@ Job Copilot operates as a browser-side productivity assistant, not an automated 
 
 ## 5. Reporting a Vulnerability
 
-We take the security of Job Copilot seriously. If you discover a security vulnerability or credential leak risk:
+We take the security of Kareer seriously. If you discover a security vulnerability or credential leak risk:
 
 1. **Do not disclose publicly**: Please avoid opening public GitHub issues for sensitive security vulnerabilities.
 2. **Submit a Private Report**: Use [GitHub's Private Vulnerability Reporting](https://github.com/Amro212/autofill-extension/security/advisories/new) on the repository.

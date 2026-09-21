@@ -188,7 +188,7 @@ async function init() {
       options: {
         method: 'POST',
         url: 'https://openrouter.ai/api/v1/chat/completions',
-        headers: { 'Content-Type': 'application/json', 'X-Title': 'Job Copilot' },
+        headers: { 'Content-Type': 'application/json', 'X-Title': 'Kareer' },
         data: JSON.stringify({
           model,
           messages: [{ role: 'user', content: "Ping test. Respond with the single word 'OK'." }],
@@ -229,7 +229,7 @@ async function init() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `job-copilot-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `kareer-backup-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
     flash($('migration-feedback'), 'Exported.');

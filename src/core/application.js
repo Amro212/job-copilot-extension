@@ -523,7 +523,7 @@ export function createApplicationEngine({ answer = generateAutofillAnswers, onCh
       emit();
       const schedule = () => { clearTimeout(timer); timer = setTimeout(() => void tick(), 300); };
       observer = new MutationObserver(mutations => {
-        if (mutations.some(m => !m.target.closest?.('#job-copilot-root,#job-copilot-inline-rewrite'))) schedule();
+        if (mutations.some(m => !m.target.closest?.('#kareer-root,#kareer-inline-rewrite'))) schedule();
       });
       observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
       // A single-page step change may mutate little; the navigation event is the

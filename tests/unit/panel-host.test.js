@@ -24,39 +24,39 @@ test('claimPanelHost claims an empty document for userscript', () => {
   assert.equal(result.status, 'claimed');
   const root = dom.window.document.getElementById(UI_IDS.CONTAINER);
   assert.ok(root);
-  assert.equal(root.getAttribute('data-jc-host'), 'userscript');
+  assert.equal(root.getAttribute('data-kr-host'), 'userscript');
 });
 
 test('userscript yields when extension already owns the panel', () => {
   const existing = dom.window.document.createElement('div');
   existing.id = UI_IDS.CONTAINER;
-  existing.setAttribute('data-jc-host', 'extension');
+  existing.setAttribute('data-kr-host', 'extension');
   dom.window.document.body.append(existing);
 
   const result = claimPanelHost('userscript');
   assert.equal(result.status, 'yield');
   assert.equal(dom.window.document.querySelectorAll(`#${UI_IDS.CONTAINER}`).length, 1);
-  assert.equal(existing.getAttribute('data-jc-host'), 'extension');
+  assert.equal(existing.getAttribute('data-kr-host'), 'extension');
 });
 
 test('extension replaces a userscript panel root', () => {
   const existing = dom.window.document.createElement('div');
   existing.id = UI_IDS.CONTAINER;
-  existing.setAttribute('data-jc-host', 'userscript');
+  existing.setAttribute('data-kr-host', 'userscript');
   dom.window.document.body.append(existing);
 
   const result = claimPanelHost('extension');
   assert.equal(result.status, 'claimed');
   assert.equal(dom.window.document.querySelectorAll(`#${UI_IDS.CONTAINER}`).length, 1);
   const root = dom.window.document.getElementById(UI_IDS.CONTAINER);
-  assert.equal(root.getAttribute('data-jc-host'), 'extension');
+  assert.equal(root.getAttribute('data-kr-host'), 'extension');
   assert.notEqual(root, existing);
 });
 
 test('extension recognizes its own existing root', () => {
   const existing = dom.window.document.createElement('div');
   existing.id = UI_IDS.CONTAINER;
-  existing.setAttribute('data-jc-host', 'extension');
+  existing.setAttribute('data-kr-host', 'extension');
   dom.window.document.body.append(existing);
 
   const result = claimPanelHost('extension');

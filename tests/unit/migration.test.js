@@ -44,7 +44,7 @@ test('exportPayload copies only portable keys and sets kind', () => {
 
 test('importPayload rejects invalid input and returns portable keys only', () => {
   assert.throws(() => importPayload(null), /not a JSON object/i);
-  assert.throws(() => importPayload({ kind: 'other' }), /Not a Job Copilot backup/i);
+  assert.throws(() => importPayload({ kind: 'other' }), /Not a Kareer backup/i);
   assert.throws(() => importPayload({ kind: PAYLOAD_KIND }), /no data section/i);
   assert.throws(
     () => importPayload({ kind: PAYLOAD_KIND, data: { [STORAGE_KEYS.DEBUG]: [] } }),
@@ -62,6 +62,20 @@ test('importPayload rejects invalid input and returns portable keys only', () =>
   assert.equal(entries[STORAGE_KEYS.PROFILE].fullName, 'Bob');
   assert.equal(entries[STORAGE_KEYS.SECRETS], undefined);
   assert.equal(entries.extra, undefined);
+});
+
+test('importPayload accepts legacy job-copilot-backup and remaps jc keys', () => {
+  const entries = importPayload({
+    kind: 'job-copilot-backup',
+    data: {
+      'jc:profile': { fullName: 'Legacy' },
+      'jc:settings': { model: 'openai/gpt-4o', apiKey: 'sk-old' },
+    },
+  });
+  assert.equal(entries[STORAGE_KEYS.PROFILE].fullName, 'Legacy');
+  assert.equal(entries[STORAGE_KEYS.SETTINGS].model, 'openai/gpt-4o');
+  assert.equal(entries[STORAGE_KEYS.SETTINGS].apiKey, undefined);
+  assert.equal(entries['jc:profile'], undefined);
 });
 
 test('importPayload strips apiKey fields from settings', () => {

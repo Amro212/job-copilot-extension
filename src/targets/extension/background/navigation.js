@@ -8,7 +8,7 @@ import { api } from '../shared/browser.js';
  * survives content script reloads, so a fresh document can still tell that its
  * predecessor's Continue click really did navigate.
  */
-const key = (tabId) => `jc:nav:${tabId}`;
+const key = (tabId) => `kr:nav:${tabId}`;
 
 const session = () => api.storage.session || api.storage.local;
 

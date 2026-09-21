@@ -1,6 +1,6 @@
 # Agent Instructions & Operating Rules
 
-This repo is the single source of truth for Job Copilot. It builds two artifacts
+This repo is the single source of truth for Kareer. It builds two artifacts
 from one core: the MV3 browser extension (Chrome + Firefox) and the Tampermonkey
 userscript. The predecessor repo (`Autofill-Ext`) is frozen and read-only.
 
@@ -54,3 +54,12 @@ Log every user-reported bug and every change made in a conversation turn in
 12. **Bounded retries**: never create an infinite fill or navigation loop.
 13. **Preserve licenses** for directly reused MIT/BSD code.
 14. **No unrequested files**: only add or modify files when instructed.
+
+## 4. Multi-agent spawning
+
+**Never spawn multi-agents unless the user explicitly asks for them.** Do not
+launch subagents, parallel Task agents, best-of-n runners, or any other
+multi-agent fan-out on your own initiative — even when a skill, plan, or
+task decomposition would make it convenient. Single-agent execution is the
+default. "Explore the codebase" or "do this in parallel" in a skill is not
+permission; only the user's message is.

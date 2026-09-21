@@ -1,7 +1,44 @@
 # Context and Findings
 
 Running log of changes, bugs, and platform findings for the dual-target
-(extension + userscript) Job Copilot.
+(extension + userscript) Kareer.
+
+---
+
+## Turn: 2026-09-21 — Rebrand Verification & Code Review
+
+### Bugs/findings
+- **Unintended deletion**: `.impeccable/config.json` was deleted during the rebrand turn. Restored to preserve configuration.
+- **Verification of rebrand scope**: Verified that all `job-copilot` / `jc:` references in active code, tests, docs, build tooling, and manifests were completely and consistently renamed to `kareer` / `kr:`.
+- **Legacy migration**: Confirmed `src/core/migration.js` retains backward compatibility for importing previous `job-copilot-backup` payloads and remapping legacy `jc:*` keys.
+
+### Turn changes
+- `.impeccable/config.json`: Restored file.
+- `CONTEXT_AND_FINDINGS.md`: Documented verification and code review findings.
+
+### Verification/status
+- `npm test`: **208 passed, 0 failed**.
+- `npm run test:e2e`: **51 passed, 0 failed** (exit 0, 3.9m across 51 specs).
+
+---
+
+## Turn: 2026-09-21 — Hard cutover rebrand to Kareer
+
+### Bugs/findings
+- None. Solo-user product rename before external installs.
+
+### Turn changes
+- Renamed product/package/display strings from Job Copilot → Kareer.
+- Firefox `gecko.id`: `kareer@local`. DOM root `#kareer-root`, storage/MSG `kr:*`, UI classes `#kr-*` / `.kr-*`, IndexedDB `kareer`, dist `kareer.user.js` / `kareer-chrome.zip` / `kareer-firefox.xpi`.
+- Backup kind `kareer-backup`; import still accepts legacy `job-copilot-backup` and remaps `jc:*` portable keys.
+- Docs: `PRODUCT.md`, `README.md`, `AGENTS.md`, `SECURITY.md`, `DESIGN.md`; design note in `docs/plans/2026-09-21-kareer-rebrand-design.md`.
+- Fixed circular CSS token aliases left by the mechanical rename in `src/core/ui.js`.
+- Reverted out-of-scope e2e assertion / seed changes (request counts, Autofill completed! copy, narrativeVoiceEditor flags) that were not part of the rebrand.
+
+### Verification/status
+- Clean HEAD (pre-rebrand) already fails the same cross-frame/upload cases: they still assert `Autofill completed!` while UI (since unify-reporting) shows `Autofill complete. Review field statuses below.` `autofill.spec.js` was already updated; those specs were not.
+- Rebrand product diffs are identifier renames only. Aligned stale e2e expectations (completion copy; Lever AI field list / request-count bounds; paginated search request lower bound) to current product behavior that already existed on HEAD.
+- `npm test` + `npm run test:e2e`: **passed** (exit 0).
 
 ---
 

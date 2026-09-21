@@ -16,7 +16,7 @@ async function collectDownloads(page, action) {
   const pending = [];
   page.on('download', (download) => {
     pending.push((async () => {
-      const target = path.join(fs.mkdtempSync(path.join(process.env.TEMP || '/tmp', 'jc-dl-')), download.suggestedFilename());
+      const target = path.join(fs.mkdtempSync(path.join(process.env.TEMP || '/tmp', 'kr-dl-')), download.suggestedFilename());
       await download.saveAs(target);
       files.push({ name: download.suggestedFilename(), body: fs.readFileSync(target, 'utf8') });
     })());
@@ -28,17 +28,17 @@ async function collectDownloads(page, action) {
 }
 
 test.describe('fixture capture', () => {
-  test('captures a page and its cross-origin frame as separate sanitized files', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE });
+  test('captures a page and its cross-origin frame as separate sanitized files', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE });
 
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('embedded-host.html'));
-    await jc.openPanel(page);
-    await expect(page.locator('#jc-main-panel')).toContainText('embedded frame', { timeout: 20000 });
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('embedded-host.html'));
+    await kr.openPanel(page);
+    await expect(page.locator('#kr-main-panel')).toContainText('embedded frame', { timeout: 20000 });
 
     // Put real-looking applicant data into the embedded form first, so the
     // capture has something it must strip.
-    const frame = page.frameLocator('iframe[src*="embed.jobcopilot.test"]');
+    const frame = page.frameLocator('iframe[src*="embed.kareer.test"]');
     await frame.locator('#name').fill('Amrit Kaur Singh');
     await frame.locator('#email').fill('amrit.singh@example.com');
     await frame.locator('#why').fill('Shipped payments systems at scale.');
@@ -46,11 +46,11 @@ test.describe('fixture capture', () => {
     await page.locator('[data-tab=debug]').click();
 
     const files = await collectDownloads(page, async () => {
-      await page.locator('#jc-capture-fixture').click();
+      await page.locator('#kr-capture-fixture').click();
     });
 
     expect(files.length).toBe(2);
-    await expect(page.locator('#jc-capture-feedback')).toContainText('Saved 2 files');
+    await expect(page.locator('#kr-capture-feedback')).toContainText('Saved 2 files');
 
     const host = files.find((file) => !file.name.includes('frame1'));
     const embed = files.find((file) => file.name.includes('frame1'));
@@ -66,25 +66,25 @@ test.describe('fixture capture', () => {
       for (const secret of ['Amrit Kaur Singh', 'amrit.singh@example.com', 'Shipped payments systems']) {
         expect(file.body, `${secret} leaked into ${file.name}`).not.toContain(secret);
       }
-      expect(file.body).not.toContain('job-copilot-root');
-      expect(file.body).toContain('Job Copilot captured fixture');
+      expect(file.body).not.toContain('kareer-root');
+      expect(file.body).toContain('Kareer captured fixture');
     }
 
     // The host file points at the frame file rather than the live origin.
     expect(host.body).toContain(embed.name);
-    expect(host.body).toContain('data-jc-original-host="embed.jobcopilot.test"');
+    expect(host.body).toContain('data-kr-original-host="embed.kareer.test"');
   });
 
-  test('a captured fixture replays through the field engine', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE });
+  test('a captured fixture replays through the field engine', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE });
 
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase2-form-fixture.html'));
-    await jc.openPanel(page);
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase2-form-fixture.html'));
+    await kr.openPanel(page);
     await page.locator('[data-tab=debug]').click();
 
     const files = await collectDownloads(page, async () => {
-      await page.locator('#jc-capture-fixture').click();
+      await page.locator('#kr-capture-fixture').click();
     });
     expect(files.length).toBe(1);
 
@@ -94,11 +94,11 @@ test.describe('fixture capture', () => {
     fs.writeFileSync(replayPath, files[0].body, 'utf8');
 
     try {
-      const replay = await jc.context.newPage();
-      await replay.goto(jc.fixtureUrl(replayName));
-      await jc.openPanel(replay);
+      const replay = await kr.context.newPage();
+      await replay.goto(kr.fixtureUrl(replayName));
+      await kr.openPanel(replay);
       // The original page reports 18 detected fields; a lossless capture matches.
-      await expect(replay.locator('#jc-main-panel .jc-badge-blue').first()).toHaveText('18 detected', { timeout: 20000 });
+      await expect(replay.locator('#kr-main-panel .kr-badge-blue').first()).toHaveText('18 detected', { timeout: 20000 });
     } finally {
       fs.rmSync(replayPath, { force: true });
     }

@@ -102,36 +102,13 @@ const STYLES = `
 :host {
   all: initial;
   ${TOKENS}
-  /* Aliased internal tokens */
-  --jc-font: var(--kr-font);
-  --jc-font-mono: var(--kr-font-mono);
-  --jc-bg-base: var(--kr-bg-0);
-  --jc-bg-surface: var(--kr-bg-1);
-  --jc-bg-surface-glass: rgba(13, 17, 23, 0.97);
-  --jc-bg-elevated: var(--kr-bg-2);
-  --jc-bg-hover: var(--kr-bg-3);
-  --jc-bg-subtle: rgba(255, 255, 255, 0.03);
-  --jc-border-subtle: var(--kr-line);
-  --jc-border-hover: var(--kr-line-strong);
-  --jc-border-active: var(--kr-signal);
-  --jc-text-primary: var(--kr-text-1);
-  --jc-text-secondary: var(--kr-text-2);
-  --jc-text-muted: var(--kr-text-3);
-  --jc-accent: var(--kr-signal);
-  --jc-accent-primary: var(--kr-signal);
-  --jc-accent-primary-hover: var(--kr-signal-hover);
-  --jc-success: var(--kr-success);
-  --jc-success-bg: rgba(82, 217, 140, 0.12);
-  --jc-warning: var(--kr-warning);
-  --jc-warning-bg: rgba(242, 184, 75, 0.12);
-  --jc-danger: var(--kr-danger);
-  --jc-danger-bg: rgba(240, 106, 106, 0.12);
-  --jc-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --jc-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.025);
-  --jc-radius-sm: var(--kr-radius-sm);
-  --jc-radius-md: var(--kr-radius-md);
-  --jc-radius-lg: var(--kr-radius-lg);
-  --jc-radius-pill: var(--kr-radius-round);
+  --kr-bg-surface-glass: rgba(13, 17, 23, 0.97);
+  --kr-bg-subtle: rgba(255, 255, 255, 0.03);
+  --kr-success-bg: rgba(82, 217, 140, 0.12);
+  --kr-warning-bg: rgba(242, 184, 75, 0.12);
+  --kr-danger-bg: rgba(240, 106, 106, 0.12);
+  --kr-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --kr-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.025);
 
   box-sizing: border-box;
 }
@@ -146,15 +123,15 @@ const STYLES = `
 }
 
 /* Container & Dock/HUD */
-.jc-widget-container {
+.kr-widget-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 2147483646;
-  font-family: var(--jc-font);
+  font-family: var(--kr-font);
   font-size: 13px;
   line-height: 1.45;
-  color: var(--jc-text-primary);
+  color: var(--kr-text-1);
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
@@ -164,14 +141,14 @@ const STYLES = `
 }
 
 /* Floating Pebble (ultra-compact minimize) */
-.jc-pebble {
+.kr-pebble {
   pointer-events: auto;
   width: 40px;
   height: 40px;
   border-radius: var(--kr-radius-md);
   background: var(--kr-bg-1);
   border: 1px solid var(--kr-line);
-  box-shadow: var(--jc-shadow-lg);
+  box-shadow: var(--kr-shadow-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,19 +158,19 @@ const STYLES = `
   position: relative;
 }
 
-.jc-pebble svg {
+.kr-pebble svg {
   width: 20px;
   height: 20px;
   display: block;
 }
 
-.jc-pebble:hover {
+.kr-pebble:hover {
   transform: translateY(-1px);
   border-color: var(--kr-line-strong);
   background: var(--kr-bg-2);
 }
 
-.jc-pebble-dot {
+.kr-pebble-dot {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -204,7 +181,7 @@ const STYLES = `
 }
 
 /* Compact HUD Bar */
-.jc-hud-bar {
+.kr-hud-bar {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -218,11 +195,11 @@ const STYLES = `
   user-select: none;
 }
 
-.jc-hud-bar:hover {
+.kr-hud-bar:hover {
   border-color: var(--kr-line-strong);
 }
 
-.jc-hud-brand {
+.kr-hud-brand {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -230,7 +207,7 @@ const STYLES = `
   padding-right: 4px;
 }
 
-.jc-hud-title {
+.kr-hud-title {
   font-weight: 650;
   font-size: 13px;
   letter-spacing: -0.01em;
@@ -240,19 +217,19 @@ const STYLES = `
   gap: 6px;
 }
 
-.jc-hud-brand-mark {
+.kr-hud-brand-mark {
   color: var(--kr-signal);
   display: flex;
   align-items: center;
 }
 
-.jc-hud-brand-mark svg {
+.kr-hud-brand-mark svg {
   width: 14px;
   height: 14px;
   display: block;
 }
 
-.jc-status-dot {
+.kr-status-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -261,29 +238,29 @@ const STYLES = `
   flex-shrink: 0;
 }
 
-.jc-status-dot.no-key {
+.kr-status-dot.no-key {
   background: var(--kr-warning);
   box-shadow: 0 0 6px rgba(242, 184, 75, 0.6);
 }
 
-.jc-status-dot.error {
+.kr-status-dot.error {
   background: var(--kr-danger);
   box-shadow: 0 0 6px rgba(240, 106, 106, 0.6);
 }
 
-.jc-status-dot.running {
+.kr-status-dot.running {
   background: var(--kr-signal);
   box-shadow: 0 0 4px rgba(163, 230, 53, 0.4);
-  animation: jc-pulse-dot 1.5s ease-in-out infinite;
+  animation: kr-pulse-dot 1.5s ease-in-out infinite;
 }
 
-@keyframes jc-pulse-dot {
+@keyframes kr-pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.85); }
 }
 
-.jc-hud-badge {
-  font-family: var(--jc-font-mono);
+.kr-hud-badge {
+  font-family: var(--kr-font-mono);
   font-size: 10px;
   font-weight: 600;
   padding: 2px 6px;
@@ -297,14 +274,14 @@ const STYLES = `
   gap: 4px;
 }
 
-.jc-hud-badge-accent {
+.kr-hud-badge-accent {
   background: var(--kr-bg-2);
   color: var(--kr-signal);
   border-color: rgba(163, 230, 53, 0.35);
 }
 
-.jc-hud-adapter {
-  font-family: var(--jc-font-mono);
+.kr-hud-adapter {
+  font-family: var(--kr-font-mono);
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -316,7 +293,7 @@ const STYLES = `
   border: 1px solid var(--kr-line);
 }
 
-.jc-hud-cta {
+.kr-hud-cta {
   background: var(--kr-signal);
   color: #0A0D10;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -333,36 +310,36 @@ const STYLES = `
   white-space: nowrap;
 }
 
-.jc-hud-cta:hover {
+.kr-hud-cta:hover {
   background: var(--kr-signal-hover);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
   transform: translateY(-1px);
 }
 
-.jc-hud-cta:active {
+.kr-hud-cta:active {
   transform: translateY(0);
 }
 
-.jc-hud-cta:disabled {
+.kr-hud-cta:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.jc-hud-cta-running {
+.kr-hud-cta-running {
   background: var(--kr-bg-2);
   color: var(--kr-signal);
   border: 1px solid rgba(163, 230, 53, 0.4);
   box-shadow: none;
 }
 
-.jc-hud-cta-running:hover {
+.kr-hud-cta-running:hover {
   background: var(--kr-bg-3);
   box-shadow: none;
 }
 
-.jc-hud-icon-btn {
+.kr-hud-icon-btn {
   background: transparent;
   border: 1px solid transparent;
   color: var(--kr-text-2);
@@ -377,14 +354,14 @@ const STYLES = `
   transition: all 0.15s ease;
 }
 
-.jc-hud-icon-btn:hover {
+.kr-hud-icon-btn:hover {
   background: var(--kr-bg-3);
   color: var(--kr-text-1);
   border-color: var(--kr-line);
 }
 
 /* Inspection Drawer / Panel */
-.jc-panel {
+.kr-panel {
   pointer-events: auto;
   width: 460px;
   max-width: calc(100vw - 40px);
@@ -397,10 +374,10 @@ const STYLES = `
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: jc-slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: kr-slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes jc-slide-up {
+@keyframes kr-slide-up {
   from {
     opacity: 0;
     transform: translateY(10px) scale(0.99);
@@ -412,7 +389,7 @@ const STYLES = `
 }
 
 /* Panel Header */
-.jc-header {
+.kr-header {
   padding: 12px 16px;
   background: var(--kr-bg-1);
   border-bottom: 1px solid var(--kr-line);
@@ -421,7 +398,7 @@ const STYLES = `
   justify-content: space-between;
 }
 
-.jc-header-title {
+.kr-header-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -431,20 +408,20 @@ const STYLES = `
   color: var(--kr-text-1);
 }
 
-.jc-brand-mark {
+.kr-brand-mark {
   color: var(--kr-signal);
   display: flex;
   align-items: center;
 }
 
-.jc-brand-mark svg {
+.kr-brand-mark svg {
   width: 15px;
   height: 15px;
   display: block;
 }
 
-.jc-version-tag {
-  font-family: var(--jc-font-mono);
+.kr-version-tag {
+  font-family: var(--kr-font-mono);
   background: var(--kr-bg-2);
   color: var(--kr-text-3);
   font-size: 10px;
@@ -454,8 +431,8 @@ const STYLES = `
   border: 1px solid var(--kr-line);
 }
 
-.jc-model-chip {
-  font-family: var(--jc-font-mono);
+.kr-model-chip {
+  font-family: var(--kr-font-mono);
   font-size: 10px;
   color: var(--kr-text-2);
   background: var(--kr-bg-2);
@@ -468,13 +445,13 @@ const STYLES = `
   white-space: nowrap;
 }
 
-.jc-header-actions {
+.kr-header-actions {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.jc-close-btn {
+.kr-close-btn {
   background: transparent;
   border: 1px solid transparent;
   color: var(--kr-text-2);
@@ -487,14 +464,14 @@ const STYLES = `
   transition: all 0.15s ease;
 }
 
-.jc-close-btn:hover {
+.kr-close-btn:hover {
   background: var(--kr-bg-3);
   color: var(--kr-text-1);
   border-color: var(--kr-line);
 }
 
 /* Nav Tabs */
-.jc-nav-tabs {
+.kr-nav-tabs {
   display: flex;
   gap: 4px;
   background: var(--kr-bg-1);
@@ -502,7 +479,7 @@ const STYLES = `
   padding: 6px 12px;
 }
 
-.jc-tab-btn {
+.kr-tab-btn {
   flex: 1;
   background: transparent;
   border: 1px solid transparent;
@@ -520,12 +497,12 @@ const STYLES = `
   user-select: none;
 }
 
-.jc-tab-btn:hover {
+.kr-tab-btn:hover {
   color: var(--kr-text-1);
   background: var(--kr-bg-2);
 }
 
-.jc-tab-btn.active {
+.kr-tab-btn.active {
   color: var(--kr-signal);
   background: var(--kr-bg-2);
   border-color: rgba(163, 230, 53, 0.35);
@@ -533,7 +510,7 @@ const STYLES = `
 }
 
 /* Content Area */
-.jc-content {
+.kr-content {
   flex: 1;
   overflow-y: auto;
   padding: 14px;
@@ -543,19 +520,19 @@ const STYLES = `
   background: var(--kr-bg-0);
 }
 
-.jc-content::-webkit-scrollbar {
+.kr-content::-webkit-scrollbar {
   width: 4px;
 }
-.jc-content::-webkit-scrollbar-track {
+.kr-content::-webkit-scrollbar-track {
   background: transparent;
 }
-.jc-content::-webkit-scrollbar-thumb {
+.kr-content::-webkit-scrollbar-thumb {
   background: var(--kr-line);
   border-radius: 2px;
 }
 
 /* Card Surface */
-.jc-card {
+.kr-card {
   background: var(--kr-bg-2);
   border: 1px solid var(--kr-line);
   border-radius: var(--kr-radius-md);
@@ -566,11 +543,11 @@ const STYLES = `
   transition: border-color 0.15s ease;
 }
 
-.jc-card:hover {
+.kr-card:hover {
   border-color: var(--kr-line-strong);
 }
 
-.jc-card-title {
+.kr-card-title {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -581,20 +558,20 @@ const STYLES = `
   gap: 6px;
 }
 
-.jc-row {
+.kr-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.jc-label {
+.kr-label {
   font-size: 12px;
   color: var(--kr-text-2);
   font-weight: 500;
 }
 
-.jc-val {
+.kr-val {
   font-size: 12px;
   color: var(--kr-text-1);
   font-weight: 600;
@@ -602,13 +579,13 @@ const STYLES = `
 }
 
 /* Form Controls */
-.jc-form-group {
+.kr-form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.jc-form-group label {
+.kr-form-group label {
   font-size: 11px;
   font-weight: 600;
   color: var(--kr-text-2);
@@ -616,7 +593,7 @@ const STYLES = `
   letter-spacing: 0.04em;
 }
 
-.jc-input, .jc-select, .jc-textarea {
+.kr-input, .kr-select, .kr-textarea {
   width: 100%;
   background: var(--kr-bg-1);
   border: 1px solid var(--kr-line);
@@ -630,18 +607,18 @@ const STYLES = `
   caret-color: var(--kr-signal);
 }
 
-.jc-input:focus, .jc-select:focus, .jc-textarea:focus {
+.kr-input:focus, .kr-select:focus, .kr-textarea:focus {
   border-color: var(--kr-signal);
   box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.2);
 }
 
-.jc-textarea {
+.kr-textarea {
   min-height: 70px;
   resize: vertical;
 }
 
 /* Buttons */
-.jc-btn {
+.kr-btn {
   background: var(--kr-signal);
   color: #0A0D10;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -658,27 +635,27 @@ const STYLES = `
   white-space: nowrap;
 }
 
-.jc-btn:hover {
+.kr-btn:hover {
   background: var(--kr-signal-hover);
   transform: translateY(-1px);
 }
 
-.jc-btn:active {
+.kr-btn:active {
   transform: translateY(0);
 }
 
-.jc-btn:focus-visible {
+.kr-btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.35);
 }
 
-.jc-btn:disabled {
+.kr-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
 }
 
-.jc-btn-large {
+.kr-btn-large {
   padding: 9px 16px;
   font-size: 13px;
   background: var(--kr-signal);
@@ -686,32 +663,32 @@ const STYLES = `
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-.jc-btn-large:hover {
+.kr-btn-large:hover {
   background: var(--kr-signal-hover);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
-.jc-btn-secondary {
+.kr-btn-secondary {
   background: var(--kr-bg-2);
   color: var(--kr-text-1);
   border: 1px solid var(--kr-line);
   font-weight: 500;
 }
 
-.jc-btn-secondary:hover {
+.kr-btn-secondary:hover {
   background: var(--kr-bg-3);
   border-color: var(--kr-line-strong);
   color: var(--kr-text-1);
 }
 
-.jc-btn-small {
+.kr-btn-small {
   padding: 4px 8px;
   font-size: 11px;
   border-radius: var(--kr-radius-xs);
 }
 
 /* Toggles & Switches */
-.jc-toggle-row {
+.kr-toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -719,11 +696,11 @@ const STYLES = `
   border-bottom: 1px solid var(--kr-line);
 }
 
-.jc-toggle-row:last-child {
+.kr-toggle-row:last-child {
   border-bottom: none;
 }
 
-.jc-switch {
+.kr-switch {
   position: relative;
   display: inline-block;
   width: 34px;
@@ -731,13 +708,13 @@ const STYLES = `
   flex-shrink: 0;
 }
 
-.jc-switch input {
+.kr-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.jc-slider {
+.kr-slider {
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -746,7 +723,7 @@ const STYLES = `
   border-radius: var(--kr-radius-round);
 }
 
-.jc-slider:before {
+.kr-slider:before {
   position: absolute;
   content: "";
   height: 12px;
@@ -758,23 +735,23 @@ const STYLES = `
   border-radius: 50%;
 }
 
-input:checked + .jc-slider {
+input:checked + .kr-slider {
   background-color: var(--kr-signal);
 }
 
-input:checked + .jc-slider:before {
+input:checked + .kr-slider:before {
   transform: translateX(16px);
   background-color: #0A0D10;
 }
 
 /* Badges & Chips */
-.jc-badge {
+.kr-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 2px 6px;
   border-radius: var(--kr-radius-xs);
-  font-family: var(--jc-font-mono);
+  font-family: var(--kr-font-mono);
   font-size: 10px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -782,52 +759,52 @@ input:checked + .jc-slider:before {
   letter-spacing: 0.04em;
 }
 
-.jc-badge-green {
+.kr-badge-green {
   background: rgba(82, 217, 140, 0.12);
   color: var(--kr-success);
   border: 1px solid rgba(82, 217, 140, 0.3);
 }
 
-.jc-badge-amber {
+.kr-badge-amber {
   background: rgba(242, 184, 75, 0.12);
   color: var(--kr-warning);
   border: 1px solid rgba(242, 184, 75, 0.3);
 }
 
-.jc-badge-red {
+.kr-badge-red {
   background: rgba(240, 106, 106, 0.12);
   color: var(--kr-danger);
   border: 1px solid rgba(240, 106, 106, 0.3);
 }
 
-.jc-badge-blue {
+.kr-badge-blue {
   background: rgba(98, 200, 255, 0.12);
   color: var(--kr-info);
   border: 1px solid rgba(98, 200, 255, 0.3);
 }
 
 /* Alerts & Banners */
-.jc-alert {
+.kr-alert {
   padding: 10px 12px;
   border-radius: var(--kr-radius-sm);
   font-size: 12px;
   line-height: 1.4;
 }
 
-.jc-alert-success {
+.kr-alert-success {
   background: rgba(82, 217, 140, 0.1);
   border: 1px solid rgba(82, 217, 140, 0.3);
   color: #a7f3d0;
 }
 
-.jc-alert-error {
+.kr-alert-error {
   background: rgba(240, 106, 106, 0.1);
   border: 1px solid rgba(240, 106, 106, 0.3);
   color: #fecaca;
 }
 
 /* Safety Boundary Card */
-.jc-safety-banner {
+.kr-safety-banner {
   background: rgba(242, 184, 75, 0.08);
   border: 1px solid rgba(242, 184, 75, 0.3);
   border-radius: var(--kr-radius-md);
@@ -837,33 +814,33 @@ input:checked + .jc-slider:before {
   gap: 10px;
 }
 
-.jc-safety-icon {
+.kr-safety-icon {
   color: var(--kr-warning);
   flex-shrink: 0;
   margin-top: 2px;
 }
 
-.jc-safety-content {
+.kr-safety-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.jc-safety-title {
+.kr-safety-title {
   font-size: 12px;
   font-weight: 650;
   color: var(--kr-warning);
 }
 
-.jc-safety-desc {
+.kr-safety-desc {
   font-size: 11px;
   color: var(--kr-text-2);
   line-height: 1.4;
 }
 
 /* Progress Bars */
-.jc-progress-bar-container {
+.kr-progress-bar-container {
   width: 100%;
   height: 2px;
   background: var(--kr-line);
@@ -871,7 +848,7 @@ input:checked + .jc-slider:before {
   overflow: hidden;
 }
 
-.jc-progress-bar {
+.kr-progress-bar {
   width: 100%;
   height: 100%;
   background: var(--kr-signal);
@@ -881,7 +858,7 @@ input:checked + .jc-slider:before {
 }
 
 /* Workflow Card */
-.jc-workflow-card {
+.kr-workflow-card {
   background: var(--kr-bg-2);
   border: 1px solid var(--kr-line);
   border-radius: var(--kr-radius-md);
@@ -892,28 +869,28 @@ input:checked + .jc-slider:before {
   transition: all 0.15s ease;
 }
 
-.jc-workflow-card.wf-running {
+.kr-workflow-card.wf-running {
   border-color: rgba(163, 230, 53, 0.35);
   background: var(--kr-bg-2);
 }
 
-.jc-workflow-card.wf-paused {
+.kr-workflow-card.wf-paused {
   border-color: rgba(242, 184, 75, 0.35);
   background: rgba(242, 184, 75, 0.03);
 }
 
-.jc-workflow-card.wf-done {
+.kr-workflow-card.wf-done {
   border-color: rgba(82, 217, 140, 0.35);
   background: rgba(82, 217, 140, 0.03);
 }
 
-.jc-wf-badge {
+.kr-wf-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 2px 7px;
   border-radius: var(--kr-radius-xs);
-  font-family: var(--jc-font-mono);
+  font-family: var(--kr-font-mono);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -921,50 +898,50 @@ input:checked + .jc-slider:before {
   white-space: nowrap;
 }
 
-.jc-wf-badge-running {
+.kr-wf-badge-running {
   background: var(--kr-signal-dim);
   color: var(--kr-signal);
   border: 1px solid rgba(163, 230, 53, 0.35);
-  animation: jc-pulse-badge 1.8s ease-in-out infinite;
+  animation: kr-pulse-badge 1.8s ease-in-out infinite;
 }
 
-.jc-wf-badge-paused {
+.kr-wf-badge-paused {
   background: rgba(242, 184, 75, 0.12);
   color: var(--kr-warning);
   border: 1px solid rgba(242, 184, 75, 0.35);
 }
 
-.jc-wf-badge-done {
+.kr-wf-badge-done {
   background: rgba(82, 217, 140, 0.12);
   color: var(--kr-success);
   border: 1px solid rgba(82, 217, 140, 0.35);
 }
 
-.jc-wf-badge-idle {
+.kr-wf-badge-idle {
   background: var(--kr-bg-3);
   color: var(--kr-text-3);
   border: 1px solid var(--kr-line);
 }
 
-@keyframes jc-pulse-badge {
+@keyframes kr-pulse-badge {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
 
-.jc-wf-job-title {
+.kr-wf-job-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--kr-text-1);
   line-height: 1.3;
 }
 
-.jc-wf-job-company {
+.kr-wf-job-company {
   font-size: 12px;
   color: var(--kr-text-2);
   font-weight: 400;
 }
 
-.jc-wf-reason {
+.kr-wf-reason {
   font-size: 12px;
   color: var(--kr-text-2);
   line-height: 1.4;
@@ -974,33 +951,33 @@ input:checked + .jc-slider:before {
   border: 1px solid var(--kr-line);
 }
 
-.jc-wf-reason.wf-error {
+.kr-wf-reason.wf-error {
   border-color: rgba(242, 184, 75, 0.3);
   color: var(--kr-warning);
   background: rgba(242, 184, 75, 0.06);
 }
 
-.jc-wf-metrics {
+.kr-wf-metrics {
   display: flex;
   gap: 16px;
   font-size: 11px;
-  font-family: var(--jc-font-mono);
+  font-family: var(--kr-font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-.jc-wf-metric {
+.kr-wf-metric {
   display: flex;
   align-items: center;
   gap: 5px;
   color: var(--kr-text-2);
 }
 
-.jc-wf-metric strong {
+.kr-wf-metric strong {
   color: var(--kr-text-1);
   font-weight: 600;
 }
 
-.jc-wf-step-bar-container {
+.kr-wf-step-bar-container {
   width: 100%;
   height: 2px;
   background: var(--kr-line);
@@ -1008,7 +985,7 @@ input:checked + .jc-slider:before {
   overflow: hidden;
 }
 
-.jc-wf-step-bar {
+.kr-wf-step-bar {
   width: 100%;
   height: 100%;
   background: var(--kr-signal);
@@ -1018,49 +995,49 @@ input:checked + .jc-slider:before {
   min-width: 0;
 }
 
-.jc-wf-step-bar.wf-pulse {
-  animation: jc-bar-pulse 1.5s ease-in-out infinite;
+.kr-wf-step-bar.wf-pulse {
+  animation: kr-bar-pulse 1.5s ease-in-out infinite;
 }
 
-.jc-wf-step-bar.wf-done {
+.kr-wf-step-bar.wf-done {
   background: var(--kr-success);
 }
 
-@keyframes jc-bar-pulse {
+@keyframes kr-bar-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
-.jc-wf-actions {
+.kr-wf-actions {
   display: flex;
   gap: 8px;
   margin-top: 2px;
 }
 
-.jc-wf-actions .jc-btn {
+.kr-wf-actions .kr-btn {
   flex: 1;
   padding: 7px 12px;
   font-size: 12px;
 }
 
-.jc-wf-actions .jc-btn:first-child {
+.kr-wf-actions .kr-btn:first-child {
   flex: 0 0 auto;
 }
 
-.jc-btn-pause-active {
+.kr-btn-pause-active {
   background: rgba(242, 184, 75, 0.12) !important;
   color: var(--kr-warning) !important;
   border-color: rgba(242, 184, 75, 0.45) !important;
 }
 
 /* Review Tab Surface */
-.jc-review-list {
+.kr-review-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.jc-review-item {
+.kr-review-item {
   background: var(--kr-bg-1);
   border: 1px solid var(--kr-line);
   border-radius: var(--kr-radius-sm);
@@ -1072,12 +1049,12 @@ input:checked + .jc-slider:before {
   transition: border-color 0.15s ease;
 }
 
-.jc-review-item:hover {
+.kr-review-item:hover {
   border-color: var(--kr-line-strong);
   background: var(--kr-bg-2);
 }
 
-.jc-review-info {
+.kr-review-info {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -1085,7 +1062,7 @@ input:checked + .jc-slider:before {
   gap: 2px;
 }
 
-.jc-review-label {
+.kr-review-label {
   font-size: 12px;
   font-weight: 500;
   color: var(--kr-text-1);
@@ -1094,16 +1071,16 @@ input:checked + .jc-slider:before {
   text-overflow: ellipsis;
 }
 
-.jc-review-value {
+.kr-review-value {
   font-size: 11px;
   color: var(--kr-text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: var(--jc-font-mono);
+  font-family: var(--kr-font-mono);
 }
 
-.jc-review-meta {
+.kr-review-meta {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1111,72 +1088,72 @@ input:checked + .jc-slider:before {
 }
 
 /* Logs & Telemetry */
-.jc-log-box {
+.kr-log-box {
   background: var(--kr-bg-0);
   border: 1px solid var(--kr-line);
   border-radius: var(--kr-radius-sm);
   padding: 8px;
   max-height: 180px;
   overflow-y: auto;
-  font-family: var(--jc-font-mono);
+  font-family: var(--kr-font-mono);
   font-size: 11px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.jc-log-item {
+.kr-log-item {
   line-height: 1.35;
   word-break: break-all;
 }
 
-.jc-log-time {
+.kr-log-time {
   color: var(--kr-text-3);
   margin-right: 4px;
 }
 
-.jc-log-level-INFO { color: var(--kr-info); }
-.jc-log-level-WARN { color: var(--kr-warning); }
-.jc-log-level-ERROR { color: var(--kr-danger); }
-.jc-log-level-DEBUG { color: var(--kr-text-3); }
+.kr-log-level-INFO { color: var(--kr-info); }
+.kr-log-level-WARN { color: var(--kr-warning); }
+.kr-log-level-ERROR { color: var(--kr-danger); }
+.kr-log-level-DEBUG { color: var(--kr-text-3); }
 
-.jc-save-feedback {
+.kr-save-feedback {
   font-size: 11px;
   color: var(--kr-success);
   display: none;
 }
 
 /* Shared typography and compact, keyboard-accessible instrument surfaces. */
-button, input, select, textarea { font-family: var(--jc-font); }
+button, input, select, textarea { font-family: var(--kr-font); }
 button svg { flex-shrink: 0; }
 :host { color-scheme: dark; }
 :focus-visible { outline: 2px solid var(--kr-signal); outline-offset: 3px; }
-.jc-hud-brand { border: 0; background: transparent; color: inherit; font: inherit; }
-.jc-hud-expanded .jc-hud-cta { background: var(--kr-bg-2); color: var(--kr-text-1); border-color: var(--kr-line); }
-.jc-hud-adapter { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.jc-panel { background: var(--kr-bg-1); }
-.jc-header, .jc-header-actions, .jc-row > *, .jc-wf-actions > * { min-width: 0; }
-.jc-val { text-align: right; overflow-wrap: anywhere; word-break: normal; }
-.jc-label { flex-shrink: 0; }
-.jc-content { scrollbar-color: var(--kr-line-strong) var(--kr-bg-0); scrollbar-width: thin; }
-.jc-card-title { font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--kr-text-1); }
-.jc-form-group label { text-transform: none; letter-spacing: 0; font-size: 12px; }
-.jc-review-value { font-family: var(--jc-font); }
-.jc-review-item { background: transparent; border: 0; border-bottom: 1px solid var(--kr-line); border-radius: 0; padding: 10px 0; }
-.jc-review-item:last-child { border-bottom: 0; }
-.jc-tab-btn[data-tab="debug"] { flex: .8; margin-left: 8px; border-left-color: var(--kr-line); border-radius: 0; }
-.jc-wf-actions { flex-wrap: wrap; }
-.jc-wf-actions .jc-btn { flex: 1 1 auto; }
-#jc-model-select, #jc-custom-model-input { font-family: var(--jc-font-mono); }
+.kr-hud-brand { border: 0; background: transparent; color: inherit; font: inherit; }
+.kr-hud-expanded .kr-hud-cta { background: var(--kr-bg-2); color: var(--kr-text-1); border-color: var(--kr-line); }
+.kr-hud-adapter { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kr-panel { background: var(--kr-bg-1); }
+.kr-header, .kr-header-actions, .kr-row > *, .kr-wf-actions > * { min-width: 0; }
+.kr-val { text-align: right; overflow-wrap: anywhere; word-break: normal; }
+.kr-label { flex-shrink: 0; }
+.kr-content { scrollbar-color: var(--kr-line-strong) var(--kr-bg-0); scrollbar-width: thin; }
+.kr-card-title { font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--kr-text-1); }
+.kr-form-group label { text-transform: none; letter-spacing: 0; font-size: 12px; }
+.kr-review-value { font-family: var(--kr-font); }
+.kr-review-item { background: transparent; border: 0; border-bottom: 1px solid var(--kr-line); border-radius: 0; padding: 10px 0; }
+.kr-review-item:last-child { border-bottom: 0; }
+.kr-tab-btn[data-tab="debug"] { flex: .8; margin-left: 8px; border-left-color: var(--kr-line); border-radius: 0; }
+.kr-wf-actions { flex-wrap: wrap; }
+.kr-wf-actions .kr-btn { flex: 1 1 auto; }
+#kr-model-select, #kr-custom-model-input { font-family: var(--kr-font-mono); }
 @media (max-width: 520px) {
-  .jc-widget-container { right: 12px; bottom: 12px; }
-  .jc-panel { max-width: calc(100vw - 24px); }
-  .jc-hud-bar { gap: 4px; padding-left: 8px; max-width: calc(100vw - 24px); }
-  .jc-hud-adapter { max-width: 64px; }
-  .jc-hud-title { font-size: 12px; }
-  .jc-content { padding: 10px; }
-  .jc-card { padding: 10px; }
-  .jc-btn { padding-left: 10px; padding-right: 10px; }
+  .kr-widget-container { right: 12px; bottom: 12px; }
+  .kr-panel { max-width: calc(100vw - 24px); }
+  .kr-hud-bar { gap: 4px; padding-left: 8px; max-width: calc(100vw - 24px); }
+  .kr-hud-adapter { max-width: 64px; }
+  .kr-hud-title { font-size: 12px; }
+  .kr-content { padding: 10px; }
+  .kr-card { padding: 10px; }
+  .kr-btn { padding-left: 10px; padding-right: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -1199,7 +1176,7 @@ function getTrustedHTML(htmlString) {
   if (typeof window !== 'undefined' && window.trustedTypes && typeof window.trustedTypes.createPolicy === 'function') {
     if (!ttPolicy) {
       try {
-        ttPolicy = window.trustedTypes.createPolicy('job-copilot-ui', {
+        ttPolicy = window.trustedTypes.createPolicy('kareer-ui', {
           createHTML: (s) => s,
         });
       } catch {
@@ -1224,7 +1201,7 @@ function setSafeHTML(element, htmlString) {
       const doc = parser.parseFromString(htmlString, 'text/html');
       element.replaceChildren(...doc.body.childNodes);
     } catch (parseErr) {
-      console.warn('[JobCopilot:UI] Fallback HTML assignment failed:', parseErr);
+      console.warn('[Kareer:UI] Fallback HTML assignment failed:', parseErr);
     }
   }
 }
@@ -1234,7 +1211,7 @@ function getStatusInfo() {
     return {
       label: 'No API Key',
       dotClass: 'no-key',
-      badgeClass: 'jc-badge-amber',
+      badgeClass: 'kr-badge-amber',
       text: 'Configure your OpenRouter API key in Settings.',
     };
   }
@@ -1242,14 +1219,14 @@ function getStatusInfo() {
     return {
       label: 'API Error',
       dotClass: 'error',
-      badgeClass: 'jc-badge-red',
+      badgeClass: 'kr-badge-red',
       text: lastAiTestResult.error || 'OpenRouter connection failed',
     };
   }
   return {
     label: 'Ready',
     dotClass: '',
-    badgeClass: 'jc-badge-green',
+    badgeClass: 'kr-badge-green',
     text: 'Connected and ready for action.',
   };
 }
@@ -1591,7 +1568,7 @@ async function executeAutofillFlow() {
 }
 
 export function exportUserBackup() {
-  const fileName = `job-copilot-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const fileName = `kareer-backup-${new Date().toISOString().slice(0, 10)}.json`;
   downloadText(
     fileName,
     JSON.stringify(exportPayload(collectPortableData()), null, 2),
@@ -1617,7 +1594,7 @@ function downloadText(fileName, text, type = 'text/html') {
  * capture themselves because their documents are unreachable from here.
  */
 async function saveFixtureSnapshot() {
-  const feedback = shadowRootRef?.querySelector('#jc-capture-feedback');
+  const feedback = shadowRootRef?.querySelector('#kr-capture-feedback');
   const report = (text) => { if (feedback) feedback.textContent = text; };
 
   try {
@@ -1652,8 +1629,8 @@ function renderHud() {
   if (isPebble) {
     const pebbleDotClass = isAutofilling || wfIsRunning ? 'running' : status.dotClass;
     return `
-      <button type="button" class="jc-pebble" id="jc-pebble-toggle-btn" title="Expand Kareer">
-        <div class="jc-status-dot ${pebbleDotClass} jc-pebble-dot"></div>
+      <button type="button" class="kr-pebble" id="kr-pebble-toggle-btn" title="Expand Kareer">
+        <div class="kr-status-dot ${pebbleDotClass} kr-pebble-dot"></div>
         ${ICONS.brandMark}
       </button>
     `;
@@ -1661,40 +1638,40 @@ function renderHud() {
 
   const dotClass = isAutofilling || wfIsRunning ? 'running' : status.dotClass;
   const countBadge = fieldCount > 0
-    ? `<span class="jc-hud-badge jc-hud-badge-accent">${fieldCount}</span>`
+    ? `<span class="kr-hud-badge kr-hud-badge-accent">${fieldCount}</span>`
     : '';
 
   let ctaContent = '';
   if (isAutofilling) {
     ctaContent = `
-      <button class="jc-hud-cta jc-hud-cta-running" id="jc-hud-autofill-btn" title="Autofill in progress">
+      <button class="kr-hud-cta kr-hud-cta-running" id="kr-hud-autofill-btn" title="Autofill in progress">
         ${ICONS.play}
         <span>${autofillProgress.current}/${autofillProgress.total || fieldCount}</span>
       </button>
-      <button class="jc-hud-icon-btn" id="jc-hud-pause-btn" title="Pause autofill">
+      <button class="kr-hud-icon-btn" id="kr-hud-pause-btn" title="Pause autofill">
         ${ICONS.pause}
       </button>
     `;
   } else if (wfIsRunning) {
     ctaContent = `
-      <button class="jc-hud-cta jc-hud-cta-running" id="jc-hud-autofill-btn" title="Workflow running">
+      <button class="kr-hud-cta kr-hud-cta-running" id="kr-hud-autofill-btn" title="Workflow running">
         ${ICONS.play}
         <span>Running...</span>
       </button>
-      <button class="jc-hud-icon-btn" id="jc-hud-pause-btn" title="Pause workflow">
+      <button class="kr-hud-icon-btn" id="kr-hud-pause-btn" title="Pause workflow">
         ${ICONS.pause}
       </button>
     `;
   } else if (wfIsWaiting) {
     ctaContent = `
-      <button class="jc-hud-cta" id="jc-hud-autofill-btn" style="background: rgba(242, 184, 75, 0.15); color: #F2B84B; border: 1px solid rgba(242, 184, 75, 0.4);" title="Action required on page">
+      <button class="kr-hud-cta" id="kr-hud-autofill-btn" style="background: rgba(242, 184, 75, 0.15); color: #F2B84B; border: 1px solid rgba(242, 184, 75, 0.4);" title="Action required on page">
         ${ICONS.shield}
         <span>Action Required</span>
       </button>
     `;
   } else {
     ctaContent = `
-      <button class="jc-hud-cta" id="jc-hud-autofill-btn" ${fieldCount === 0 ? 'disabled' : ''} title="Autofill fields on this page">
+      <button class="kr-hud-cta" id="kr-hud-autofill-btn" ${fieldCount === 0 ? 'disabled' : ''} title="Autofill fields on this page">
         ${ICONS.play}
         <span>Autofill</span>
       </button>
@@ -1702,21 +1679,21 @@ function renderHud() {
   }
 
   return `
-    <div class="jc-hud-bar ${panelVisible ? 'jc-hud-expanded' : ''}" id="jc-hud">
-      <button type="button" class="jc-hud-brand" id="jc-toggle-btn" aria-expanded="${panelVisible}" title="${panelVisible ? 'Collapse panel' : 'Open Kareer Inspector'}">
-        <div class="jc-status-dot ${dotClass}"></div>
-        <div class="jc-hud-title">
-          <span class="jc-hud-brand-mark">${ICONS.brandMark}</span>
+    <div class="kr-hud-bar ${panelVisible ? 'kr-hud-expanded' : ''}" id="kr-hud">
+      <button type="button" class="kr-hud-brand" id="kr-toggle-btn" aria-expanded="${panelVisible}" title="${panelVisible ? 'Collapse panel' : 'Open Kareer Inspector'}">
+        <div class="kr-status-dot ${dotClass}"></div>
+        <div class="kr-hud-title">
+          <span class="kr-hud-brand-mark">${ICONS.brandMark}</span>
           <span>${VISUAL_NAME}</span>
         </div>
-        <span class="jc-hud-adapter">${escapeHtml(adapter.id === 'generic' ? 'Generic' : adapter.label)}</span>
+        <span class="kr-hud-adapter">${escapeHtml(adapter.id === 'generic' ? 'Generic' : adapter.label)}</span>
         ${countBadge}
       </button>
       ${ctaContent}
-      <button class="jc-hud-icon-btn" id="jc-hud-expand-btn" title="${panelVisible ? 'Collapse panel' : 'Open Inspector'}">
+      <button class="kr-hud-icon-btn" id="kr-hud-expand-btn" title="${panelVisible ? 'Collapse panel' : 'Open Inspector'}">
         ${panelVisible ? ICONS.minimize : ICONS.maximize}
       </button>
-      <button class="jc-hud-icon-btn" id="jc-pebble-toggle-btn" title="Minimize to pebble">
+      <button class="kr-hud-icon-btn" id="kr-pebble-toggle-btn" title="Minimize to pebble">
         ${ICONS.x}
       </button>
     </div>
@@ -1765,14 +1742,14 @@ function renderFieldReviewSection() {
     const val = item.result?.value ?? item.field.currentValue ?? '';
     const displayVal = val !== '' ? String(val) : 'Empty';
     return `
-      <div class="jc-review-item">
-        <div class="jc-review-info">
-          <div class="jc-review-label">${escapeHtml(item.field.label || item.field.id)}</div>
-          <div class="jc-review-value" title="${escapeHtml(displayVal)}">${escapeHtml(displayVal)}</div>
+      <div class="kr-review-item">
+        <div class="kr-review-info">
+          <div class="kr-review-label">${escapeHtml(item.field.label || item.field.id)}</div>
+          <div class="kr-review-value" title="${escapeHtml(displayVal)}">${escapeHtml(displayVal)}</div>
         </div>
-        <div class="jc-review-meta">
-          <span class="jc-badge ${badgeClass}">${badgeLabel}</span>
-          <button type="button" class="jc-btn jc-btn-secondary jc-btn-small jc-locate-field-btn" data-field-id="${escapeHtml(item.field.id)}" title="Scroll to and highlight field">
+        <div class="kr-review-meta">
+          <span class="kr-badge ${badgeClass}">${badgeLabel}</span>
+          <button type="button" class="kr-btn kr-btn-secondary kr-btn-small kr-locate-field-btn" data-field-id="${escapeHtml(item.field.id)}" title="Scroll to and highlight field">
             ${ICONS.locate}
           </button>
         </div>
@@ -1781,23 +1758,23 @@ function renderFieldReviewSection() {
   };
 
   return `
-    <div class="jc-card">
-      <div class="jc-row">
-        <span class="jc-card-title">Field Verification & Review</span>
-        <span class="jc-badge jc-badge-blue">${total} FIELDS</span>
+    <div class="kr-card">
+      <div class="kr-row">
+        <span class="kr-card-title">Field Verification & Review</span>
+        <span class="kr-badge kr-badge-blue">${total} FIELDS</span>
       </div>
-      ${!isAutofilling && autofillProgress.statusText ? `<div style="font-size: 12px; color: var(--jc-text-secondary);">${escapeHtml(autofillProgress.statusText)}</div>` : ''}
-      <div class="jc-row" style="gap: 6px; flex-wrap: wrap;">
-        <span class="jc-badge jc-badge-green">${verifiedFields.length} VERIFIED</span>
-        <span class="jc-badge jc-badge-amber">${inferredFields.length} INFERRED</span>
-        <span class="jc-badge jc-badge-red">${failedFields.length} FAILED</span>
-        <span class="jc-badge" style="background: var(--kr-bg-3); color: var(--kr-text-3);">${untouchedFields.length} UNTOUCHED</span>
+      ${!isAutofilling && autofillProgress.statusText ? `<div style="font-size: 12px; color: var(--kr-text-2);">${escapeHtml(autofillProgress.statusText)}</div>` : ''}
+      <div class="kr-row" style="gap: 6px; flex-wrap: wrap;">
+        <span class="kr-badge kr-badge-green">${verifiedFields.length} VERIFIED</span>
+        <span class="kr-badge kr-badge-amber">${inferredFields.length} INFERRED</span>
+        <span class="kr-badge kr-badge-red">${failedFields.length} FAILED</span>
+        <span class="kr-badge" style="background: var(--kr-bg-3); color: var(--kr-text-3);">${untouchedFields.length} UNTOUCHED</span>
       </div>
-      <div class="jc-review-list" style="margin-top: 6px;">
-        ${total === 0 ? '<div style="font-size: 12px; color: var(--jc-text-muted); text-align: center; padding: 12px;">No form fields detected on this page.</div>' : ''}
-        ${failedFields.map(i => renderItem(i, 'jc-badge-red', 'FAILED')).join('')}
-        ${inferredFields.map(i => renderItem(i, 'jc-badge-amber', 'INFERRED')).join('')}
-        ${verifiedFields.map(i => renderItem(i, 'jc-badge-green', 'VERIFIED')).join('')}
+      <div class="kr-review-list" style="margin-top: 6px;">
+        ${total === 0 ? '<div style="font-size: 12px; color: var(--kr-text-3); text-align: center; padding: 12px;">No form fields detected on this page.</div>' : ''}
+        ${failedFields.map(i => renderItem(i, 'kr-badge-red', 'FAILED')).join('')}
+        ${inferredFields.map(i => renderItem(i, 'kr-badge-amber', 'INFERRED')).join('')}
+        ${verifiedFields.map(i => renderItem(i, 'kr-badge-green', 'VERIFIED')).join('')}
         ${untouchedFields.map(i => renderItem(i, '', 'UNTOUCHED')).join('')}
       </div>
     </div>
@@ -1824,17 +1801,17 @@ function renderHomeTab() {
   let wfBadgeHtml;
   if (wfIsDone) {
     const doneLabel = wfStatus === 'confirmation' ? 'SUBMITTED' : 'READY FOR REVIEW';
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-done">${ICONS.check} ${doneLabel}</span>`;
+    wfBadgeHtml = `<span class="kr-wf-badge kr-wf-badge-done">${ICONS.check} ${doneLabel}</span>`;
   } else if (wfIsRunning) {
     const runLabel = wfStatus === 'submitting' ? 'SUBMITTING' : 'RUNNING';
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-running">${ICONS.play} ${runLabel}</span>`;
+    wfBadgeHtml = `<span class="kr-wf-badge kr-wf-badge-running">${ICONS.play} ${runLabel}</span>`;
   } else if (wfIsWaiting) {
     const waitLabel = wfStatus === 'captcha' || page.type === 'captcha' ? 'CAPTCHA PAUSED' : 'MANUAL ACTION REQUIRED';
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-paused">${ICONS.shield} ${waitLabel}</span>`;
+    wfBadgeHtml = `<span class="kr-wf-badge kr-wf-badge-paused">${ICONS.shield} ${waitLabel}</span>`;
   } else if (wfIsPaused) {
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-paused">${ICONS.pause} PAUSED</span>`;
+    wfBadgeHtml = `<span class="kr-wf-badge kr-wf-badge-paused">${ICONS.pause} PAUSED</span>`;
   } else {
-    wfBadgeHtml = `<span class="jc-wf-badge jc-wf-badge-idle">NOT STARTED</span>`;
+    wfBadgeHtml = `<span class="kr-wf-badge kr-wf-badge-idle">NOT STARTED</span>`;
   }
 
   const stepsCompleted = session?.completedSteps || 0;
@@ -1848,9 +1825,9 @@ function renderHomeTab() {
   let wfReasonHtml = '';
   if (session && session.reason) {
     const isErr = wfIsPaused || wfIsWaiting;
-    wfReasonHtml = `<div class="jc-wf-reason ${isErr ? 'wf-error' : ''}">${escapeHtml(session.reason)}</div>`;
+    wfReasonHtml = `<div class="kr-wf-reason ${isErr ? 'wf-error' : ''}">${escapeHtml(session.reason)}</div>`;
   } else if (!session) {
-    wfReasonHtml = `<div style="font-size:12px;color:var(--jc-text-secondary)">Capture a job listing, then start on its application page.</div>`;
+    wfReasonHtml = `<div style="font-size:12px;color:var(--kr-text-2)">Capture a job listing, then start on its application page.</div>`;
   }
 
   // Job info (title + company + location, no URL)
@@ -1858,8 +1835,8 @@ function renderHomeTab() {
   if (job) {
     const companyText = (job.company || 'Company unknown') + (job.companyUncertain ? ' (uncertain)' : '');
     wfJobHtml = `<div>
-      <div class="jc-wf-job-title">${escapeHtml(job.title)}</div>
-      <div class="jc-wf-job-company">${escapeHtml(companyText)}${job.location ? ` · ${escapeHtml(job.location)}` : ''}</div>
+      <div class="kr-wf-job-title">${escapeHtml(job.title)}</div>
+      <div class="kr-wf-job-company">${escapeHtml(companyText)}${job.location ? ` · ${escapeHtml(job.location)}` : ''}</div>
     </div>`;
   }
 
@@ -1869,36 +1846,36 @@ function renderHomeTab() {
     ? `<div style="font-size:11px;color:var(--kr-warning);padding:6px 10px;background:rgba(242,184,75,0.08);border-radius:6px;border:1px solid rgba(242,184,75,0.25);">${ICONS.alert} ${escapeHtml(lastError)}</div>`
     : '';
 
-  const workflowHtml = `<div class="jc-workflow-card ${wfCardClass}">
-    <div class="jc-row">
-      <span class="jc-card-title">Application Workflow</span>
+  const workflowHtml = `<div class="kr-workflow-card ${wfCardClass}">
+    <div class="kr-row">
+      <span class="kr-card-title">Application Workflow</span>
       ${wfBadgeHtml}
     </div>
     ${wfJobHtml}
-    ${session ? `<div class="jc-wf-step-bar-container"><div class="jc-wf-step-bar ${stepBarClass}" style="transform: scaleX(${stepBarPercent / 100});"></div></div>` : ''}
-    ${session ? `<div class="jc-wf-metrics">
-      <div class="jc-wf-metric"><strong>${stepsCompleted}</strong> step${stepsCompleted !== 1 ? 's' : ''} completed</div>
-      <div class="jc-wf-metric"><strong>${fieldsAnswered}</strong> field${fieldsAnswered !== 1 ? 's' : ''} answered</div>
+    ${session ? `<div class="kr-wf-step-bar-container"><div class="kr-wf-step-bar ${stepBarClass}" style="transform: scaleX(${stepBarPercent / 100});"></div></div>` : ''}
+    ${session ? `<div class="kr-wf-metrics">
+      <div class="kr-wf-metric"><strong>${stepsCompleted}</strong> step${stepsCompleted !== 1 ? 's' : ''} completed</div>
+      <div class="kr-wf-metric"><strong>${fieldsAnswered}</strong> field${fieldsAnswered !== 1 ? 's' : ''} answered</div>
     </div>` : ''}
     ${wfReasonHtml}
     ${wfErrorHtml}
-    <div class="jc-wf-actions">
-      <button class="jc-btn jc-btn-secondary" id="jc-capture-job" ${isAutofilling || applicationEngine?.busy ? 'disabled' : ''}>Capture Job</button>
-      <button class="jc-btn ${!session || wfIsRunning || wfIsDone || wfIsWaiting || isAutofilling ? 'jc-btn-secondary' : ''}" id="jc-start-application" ${isAutofilling || applicationEngine?.busy ? 'disabled' : ''}>${session ? 'Start / Resume' : 'Start Application'}</button>
-      <button class="jc-btn jc-btn-secondary ${wfIsRunning ? 'jc-btn-pause-active' : ''}" id="jc-pause-application">Pause</button>
+    <div class="kr-wf-actions">
+      <button class="kr-btn kr-btn-secondary" id="kr-capture-job" ${isAutofilling || applicationEngine?.busy ? 'disabled' : ''}>Capture Job</button>
+      <button class="kr-btn ${!session || wfIsRunning || wfIsDone || wfIsWaiting || isAutofilling ? 'kr-btn-secondary' : ''}" id="kr-start-application" ${isAutofilling || applicationEngine?.busy ? 'disabled' : ''}>${session ? 'Start / Resume' : 'Start Application'}</button>
+      <button class="kr-btn kr-btn-secondary ${wfIsRunning ? 'kr-btn-pause-active' : ''}" id="kr-pause-application">Pause</button>
     </div>
   </div>`;
 
   let safetyBannerHtml = '';
   if (['captcha', 'boundary'].includes(page.type)) {
     safetyBannerHtml = `
-      <div class="jc-safety-banner">
-        <div class="jc-safety-icon">${ICONS.shield}</div>
-        <div class="jc-safety-content">
-          <div class="jc-safety-title">Safety Boundary Paused</div>
-          <div class="jc-safety-desc">${escapeHtml(page.reason || 'Manual interaction or verification required on this page.')}</div>
+      <div class="kr-safety-banner">
+        <div class="kr-safety-icon">${ICONS.shield}</div>
+        <div class="kr-safety-content">
+          <div class="kr-safety-title">Safety Boundary Paused</div>
+          <div class="kr-safety-desc">${escapeHtml(page.reason || 'Manual interaction or verification required on this page.')}</div>
         </div>
-        <button class="jc-btn jc-btn-secondary jc-btn-small" id="jc-resume-boundary">Resume</button>
+        <button class="kr-btn kr-btn-secondary kr-btn-small" id="kr-resume-boundary">Resume</button>
       </div>
     `;
   }
@@ -1910,14 +1887,14 @@ function renderHomeTab() {
       : 0;
 
     progressHtml = `
-      <div class="jc-card" style="border-color: rgba(163, 230, 53, 0.35);">
-        <div class="jc-row">
-          <span class="jc-card-title">Autofill Progress</span>
-          <span style="font-family: var(--jc-font-mono); font-size: 11px; font-weight: 600; color: var(--kr-signal);">${autofillProgress.current} / ${autofillProgress.total}</span>
+      <div class="kr-card" style="border-color: rgba(163, 230, 53, 0.35);">
+        <div class="kr-row">
+          <span class="kr-card-title">Autofill Progress</span>
+          <span style="font-family: var(--kr-font-mono); font-size: 11px; font-weight: 600; color: var(--kr-signal);">${autofillProgress.current} / ${autofillProgress.total}</span>
         </div>
-        <div style="font-size: 12px; color: var(--jc-text-primary);">${escapeHtml(autofillProgress.statusText)}</div>
-        <div class="jc-progress-bar-container">
-          <div class="jc-progress-bar" style="transform: scaleX(${percent / 100});"></div>
+        <div style="font-size: 12px; color: var(--kr-text-1);">${escapeHtml(autofillProgress.statusText)}</div>
+        <div class="kr-progress-bar-container">
+          <div class="kr-progress-bar" style="transform: scaleX(${percent / 100});"></div>
         </div>
       </div>
     `;
@@ -1927,14 +1904,14 @@ function renderHomeTab() {
   if (lastAiTestResult) {
     if (lastAiTestResult.ok) {
       testResultHtml = `
-        <div class="jc-alert jc-alert-success">
+        <div class="kr-alert kr-alert-success">
           <strong>${ICONS.check} AI Connected</strong> (${lastAiTestResult.latencyMs}ms)<br/>
-          <span style="font-family: var(--jc-font-mono); font-size: 11px; color: var(--jc-text-secondary);">Model: ${lastAiTestResult.model}</span>
+          <span style="font-family: var(--kr-font-mono); font-size: 11px; color: var(--kr-text-2);">Model: ${lastAiTestResult.model}</span>
         </div>
       `;
     } else {
       testResultHtml = `
-        <div class="jc-alert jc-alert-error">
+        <div class="kr-alert kr-alert-error">
           <strong>${ICONS.x} Connection Failed</strong> (${lastAiTestResult.latencyMs}ms)<br/>
           <span style="font-size: 11px;">${lastAiTestResult.error}</span>
         </div>
@@ -1947,24 +1924,24 @@ function renderHomeTab() {
     ${safetyBannerHtml}
     ${session ? workflowHtml : ''}
 
-    <div class="jc-card">
-      <div class="jc-row">
-        <span class="jc-card-title">Form Fields</span>
-        <span class="jc-badge jc-badge-blue" style="text-transform: uppercase;">${fieldCount + remoteFieldCount} detected</span>
+    <div class="kr-card">
+      <div class="kr-row">
+        <span class="kr-card-title">Form Fields</span>
+        <span class="kr-badge kr-badge-blue" style="text-transform: uppercase;">${fieldCount + remoteFieldCount} detected</span>
       </div>
       ${remoteFieldCount ? `
-      <div style="font-size: 11px; color: var(--jc-text-secondary);">
+      <div style="font-size: 11px; color: var(--kr-text-2);">
         ${fieldCount} here, ${remoteFieldCount} in ${remoteFrameCount} embedded frame${remoteFrameCount === 1 ? '' : 's'}.
       </div>
       ` : ''}
-      <div class="jc-row" style="margin-top: 4px; gap: 8px;">
-        <button class="jc-btn jc-btn-large ${session ? 'jc-btn-secondary' : ''}" id="jc-autofill-btn" style="flex: 1;" ${isAutofilling ? 'disabled' : ''}>
+      <div class="kr-row" style="margin-top: 4px; gap: 8px;">
+        <button class="kr-btn kr-btn-large ${session ? 'kr-btn-secondary' : ''}" id="kr-autofill-btn" style="flex: 1;" ${isAutofilling ? 'disabled' : ''}>
           ${isAutofilling ? `${ICONS.play} Filling Fields...` : `${ICONS.play} Autofill This Page`}
         </button>
-        <button class="jc-btn jc-btn-secondary ${isAutofilling ? 'jc-btn-pause-active' : ''}" id="jc-pause-autofill-btn" style="padding: 9px 14px; font-size: 12px;" ${!isAutofilling ? 'disabled' : ''} title="Pause / Stop autofill">
+        <button class="kr-btn kr-btn-secondary ${isAutofilling ? 'kr-btn-pause-active' : ''}" id="kr-pause-autofill-btn" style="padding: 9px 14px; font-size: 12px;" ${!isAutofilling ? 'disabled' : ''} title="Pause / Stop autofill">
           ${isAutofilling ? `${ICONS.pause} Pause` : 'Pause'}
         </button>
-        <button class="jc-btn jc-btn-secondary" id="jc-rescan-btn" title="Rescan page fields" style="padding: 9px 12px;">${ICONS.refresh}</button>
+        <button class="kr-btn kr-btn-secondary" id="kr-rescan-btn" title="Rescan page fields" style="padding: 9px 12px;">${ICONS.refresh}</button>
       </div>
     </div>
 
@@ -1972,28 +1949,28 @@ function renderHomeTab() {
     ${progressHtml}
     ${renderFieldReviewSection()}
 
-    <div class="jc-card">
-      <div class="jc-row">
-        <span class="jc-card-title">System Status</span>
-        <span class="jc-badge ${status.badgeClass}">${status.label}</span>
+    <div class="kr-card">
+      <div class="kr-row">
+        <span class="kr-card-title">System Status</span>
+        <span class="kr-badge ${status.badgeClass}">${status.label}</span>
       </div>
-      <div style="font-size: 12px; color: var(--jc-text-secondary);">
+      <div style="font-size: 12px; color: var(--kr-text-2);">
         ${status.text}
       </div>
-      <div class="jc-row" style="margin-top: 6px;">
-        <span class="jc-label">Adapter</span>
-        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${adapter.id === 'generic' ? 'generic fallback' : `${escapeHtml(adapter.label)} adapter`}</span>
+      <div class="kr-row" style="margin-top: 6px;">
+        <span class="kr-label">Adapter</span>
+        <span class="kr-val" style="font-family: var(--kr-font-mono); font-size: 11px;">${adapter.id === 'generic' ? 'generic fallback' : `${escapeHtml(adapter.label)} adapter`}</span>
       </div>
-      <div class="jc-row">
-        <span class="jc-label">Host</span>
-        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${currentHost}</span>
+      <div class="kr-row">
+        <span class="kr-label">Host</span>
+        <span class="kr-val" style="font-family: var(--kr-font-mono); font-size: 11px;">${currentHost}</span>
       </div>
-      <div class="jc-row">
-        <span class="jc-label">Model</span>
-        <span class="jc-val" style="font-family: var(--jc-font-mono); font-size: 11px;">${settings.model}</span>
+      <div class="kr-row">
+        <span class="kr-label">Model</span>
+        <span class="kr-val" style="font-family: var(--kr-font-mono); font-size: 11px;">${settings.model}</span>
       </div>
-      <div class="jc-row" style="margin-top: 4px;">
-        <button class="jc-btn jc-btn-secondary" id="jc-test-ai-btn" style="flex: 1;" ${isAiTesting ? 'disabled' : ''}>
+      <div class="kr-row" style="margin-top: 4px;">
+        <button class="kr-btn kr-btn-secondary" id="kr-test-ai-btn" style="flex: 1;" ${isAiTesting ? 'disabled' : ''}>
           ${isAiTesting ? 'Testing...' : 'Test Connection'}
         </button>
       </div>
@@ -2006,87 +1983,87 @@ function renderHomeTab() {
 function renderProfileTab() {
   const profile = getProfile();
   const sections = PROFILE_SECTIONS.map((section, index) => `
-    <details class="jc-profile-section" ${index === 0 ? 'open' : ''} style="border: 1px solid var(--jc-border-subtle); border-radius: var(--jc-radius-md); padding: 12px; background: rgba(255,255,255,0.02);">
-      <summary style="cursor: pointer; font-weight: 600; color: var(--jc-text-primary); display: flex; align-items: center; justify-content: space-between;">
+    <details class="kr-profile-section" ${index === 0 ? 'open' : ''} style="border: 1px solid var(--kr-line); border-radius: var(--kr-radius-md); padding: 12px; background: rgba(255,255,255,0.02);">
+      <summary style="cursor: pointer; font-weight: 600; color: var(--kr-text-1); display: flex; align-items: center; justify-content: space-between;">
         <span>${escapeHtml(section.title)}</span>
-        <span style="color: var(--jc-text-muted);">${ICONS.chevronDown}</span>
+        <span style="color: var(--kr-text-3);">${ICONS.chevronDown}</span>
       </summary>
-      <p style="font-size: 12px; color: var(--jc-text-secondary); margin: 8px 0 12px;">${escapeHtml(section.description)}</p>
+      <p style="font-size: 12px; color: var(--kr-text-2); margin: 8px 0 12px;">${escapeHtml(section.description)}</p>
       <div style="display: flex; flex-direction: column; gap: 12px;">
         ${section.fields.map(field => {
           const value = String(profile[field.name] || '');
-          const id = `jc-profile-${field.name}`;
+          const id = `kr-profile-${field.name}`;
           const control = field.options
-            ? `<select id="${id}" class="jc-input" name="${field.name}">
+            ? `<select id="${id}" class="kr-input" name="${field.name}">
                 <option value="">Not set</option>
                 ${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === value ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
               </select>`
-            : `<input id="${id}" class="jc-input" type="${field.type || 'text'}" name="${field.name}" value="${escapeHtml(value)}" placeholder="${escapeHtml(field.placeholder || '')}" ${field.min !== undefined ? `min="${field.min}" step="${field.step}"` : ''} />`;
-          return `<div class="jc-form-group"><label for="${id}">${escapeHtml(field.label)}</label>${control}</div>`;
+            : `<input id="${id}" class="kr-input" type="${field.type || 'text'}" name="${field.name}" value="${escapeHtml(value)}" placeholder="${escapeHtml(field.placeholder || '')}" ${field.min !== undefined ? `min="${field.min}" step="${field.step}"` : ''} />`;
+          return `<div class="kr-form-group"><label for="${id}">${escapeHtml(field.label)}</label>${control}</div>`;
         }).join('')}
       </div>
     </details>
   `).join('');
 
   return `
-    <form id="jc-profile-form" style="display: flex; flex-direction: column; gap: 12px;">
-      <div style="font-size: 12px; color: var(--jc-text-secondary);">Save common answers once. Explicit answers take priority over background notes.</div>
-      <div class="jc-form-group">
+    <form id="kr-profile-form" style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 12px; color: var(--kr-text-2);">Save common answers once. Explicit answers take priority over background notes.</div>
+      <div class="kr-form-group">
         <label>Full Name</label>
-        <input class="jc-input" type="text" name="fullName" value="${escapeHtml(profile.fullName)}" placeholder="e.g. Jane Doe" />
+        <input class="kr-input" type="text" name="fullName" value="${escapeHtml(profile.fullName)}" placeholder="e.g. Jane Doe" />
       </div>
 
-      <div class="jc-row" style="gap: 10px;">
-        <div class="jc-form-group" style="flex: 1;">
+      <div class="kr-row" style="gap: 10px;">
+        <div class="kr-form-group" style="flex: 1;">
           <label>Email</label>
-          <input class="jc-input" type="email" name="email" value="${escapeHtml(profile.email)}" placeholder="jane@example.com" />
+          <input class="kr-input" type="email" name="email" value="${escapeHtml(profile.email)}" placeholder="jane@example.com" />
         </div>
-        <div class="jc-form-group" style="flex: 1;">
+        <div class="kr-form-group" style="flex: 1;">
           <label>Phone</label>
-          <input class="jc-input" type="tel" name="phone" value="${escapeHtml(profile.phone)}" placeholder="+1 555 123 4567" />
+          <input class="kr-input" type="tel" name="phone" value="${escapeHtml(profile.phone)}" placeholder="+1 555 123 4567" />
         </div>
       </div>
 
-      <div class="jc-form-group">
+      <div class="kr-form-group">
         <label>Location</label>
-        <input class="jc-input" type="text" name="location" value="${escapeHtml(profile.location)}" placeholder="e.g. San Francisco, CA" />
+        <input class="kr-input" type="text" name="location" value="${escapeHtml(profile.location)}" placeholder="e.g. San Francisco, CA" />
       </div>
 
-      <div class="jc-form-group">
+      <div class="kr-form-group">
         <label>LinkedIn URL</label>
-        <input class="jc-input" type="url" name="linkedin" value="${escapeHtml(profile.linkedin)}" placeholder="https://linkedin.com/in/..." />
+        <input class="kr-input" type="url" name="linkedin" value="${escapeHtml(profile.linkedin)}" placeholder="https://linkedin.com/in/..." />
       </div>
 
-      <div class="jc-row" style="gap: 10px;">
-        <div class="jc-form-group" style="flex: 1;">
+      <div class="kr-row" style="gap: 10px;">
+        <div class="kr-form-group" style="flex: 1;">
           <label>GitHub URL</label>
-          <input class="jc-input" type="url" name="github" value="${escapeHtml(profile.github)}" placeholder="https://github.com/..." />
+          <input class="kr-input" type="url" name="github" value="${escapeHtml(profile.github)}" placeholder="https://github.com/..." />
         </div>
-        <div class="jc-form-group" style="flex: 1;">
+        <div class="kr-form-group" style="flex: 1;">
           <label>Portfolio URL</label>
-          <input class="jc-input" type="url" name="portfolio" value="${escapeHtml(profile.portfolio)}" placeholder="https://..." />
+          <input class="kr-input" type="url" name="portfolio" value="${escapeHtml(profile.portfolio)}" placeholder="https://..." />
         </div>
       </div>
 
       ${sections}
 
-      <div style="padding: 10px 12px; border-radius: var(--jc-radius-sm); background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); font-size: 12px; color: var(--jc-text-secondary);">
-        <strong style="color: var(--jc-text-primary);">Application source: LinkedIn</strong><br />Used for “How did you hear about us?” If LinkedIn is unavailable, the field is left for review.
+      <div style="padding: 10px 12px; border-radius: var(--kr-radius-sm); background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); font-size: 12px; color: var(--kr-text-2);">
+        <strong style="color: var(--kr-text-1);">Application source: LinkedIn</strong><br />Used for “How did you hear about us?” If LinkedIn is unavailable, the field is left for review.
       </div>
 
-      <div class="jc-form-group">
-        <label for="jc-profile-resumeContext">Resume / Background Summary</label>
-        <textarea id="jc-profile-resumeContext" class="jc-textarea" name="resumeContext" rows="4" placeholder="Paste your core resume highlights, skills, and background summary...">${escapeHtml(profile.resumeContext)}</textarea>
+      <div class="kr-form-group">
+        <label for="kr-profile-resumeContext">Resume / Background Summary</label>
+        <textarea id="kr-profile-resumeContext" class="kr-textarea" name="resumeContext" rows="4" placeholder="Paste your core resume highlights, skills, and background summary...">${escapeHtml(profile.resumeContext)}</textarea>
       </div>
 
-      <div class="jc-form-group">
-        <label for="jc-profile-applicantNotes">Applicant Notes / Custom Rules</label>
-        <textarea id="jc-profile-applicantNotes" class="jc-textarea" name="applicantNotes" rows="2" placeholder="Additional preferences, exceptions, and guidance for written answers...">${escapeHtml(profile.applicantNotes)}</textarea>
+      <div class="kr-form-group">
+        <label for="kr-profile-applicantNotes">Applicant Notes / Custom Rules</label>
+        <textarea id="kr-profile-applicantNotes" class="kr-textarea" name="applicantNotes" rows="2" placeholder="Additional preferences, exceptions, and guidance for written answers...">${escapeHtml(profile.applicantNotes)}</textarea>
       </div>
 
-      <div class="jc-row" style="margin-top: 4px;">
-        <button class="jc-btn" type="submit" style="flex: 1;">Save Profile</button>
-        <span class="jc-save-feedback" id="jc-profile-feedback">Saved ✓</span>
+      <div class="kr-row" style="margin-top: 4px;">
+        <button class="kr-btn" type="submit" style="flex: 1;">Save Profile</button>
+        <span class="kr-save-feedback" id="kr-profile-feedback">Saved ✓</span>
       </div>
     </form>
   `;
@@ -2099,13 +2076,13 @@ function renderApiKeyGroup() {
   // collects it: the options page is a privileged context, the page is not.
   if (!platform.capabilities.writeSecretsInPage) {
     return `
-      <div class="jc-form-group">
+      <div class="kr-form-group">
         <label>OpenRouter API Key</label>
-        <div class="jc-row">
-          <span class="jc-badge ${keySaved ? 'jc-badge-green' : 'jc-badge-amber'}">${keySaved ? 'Key saved' : 'No key'}</span>
-          <button type="button" class="jc-btn jc-btn-secondary" id="jc-open-options" style="flex: 1;">Open extension options</button>
+        <div class="kr-row">
+          <span class="kr-badge ${keySaved ? 'kr-badge-green' : 'kr-badge-amber'}">${keySaved ? 'Key saved' : 'No key'}</span>
+          <button type="button" class="kr-btn kr-btn-secondary" id="kr-open-options" style="flex: 1;">Open extension options</button>
         </div>
-        <span style="font-size: 11px; color: var(--jc-text-muted);">
+        <span style="font-size: 11px; color: var(--kr-text-3);">
           The key is stored by the extension and never enters this page.
         </span>
       </div>
@@ -2113,13 +2090,13 @@ function renderApiKeyGroup() {
   }
 
   return `
-    <div class="jc-form-group">
+    <div class="kr-form-group">
       <label>OpenRouter API Key</label>
-      <div class="jc-row">
-        <input class="jc-input" id="jc-api-key-input" type="password" autocomplete="off" placeholder="${keySaved ? 'Key saved — enter replacement' : 'sk-or-v1-...'}" />
-        <button type="button" class="jc-btn jc-btn-secondary" id="jc-toggle-key-btn" style="padding: 8px 10px;">${ICONS.eye}</button>
+      <div class="kr-row">
+        <input class="kr-input" id="kr-api-key-input" type="password" autocomplete="off" placeholder="${keySaved ? 'Key saved — enter replacement' : 'sk-or-v1-...'}" />
+        <button type="button" class="kr-btn kr-btn-secondary" id="kr-toggle-key-btn" style="padding: 8px 10px;">${ICONS.eye}</button>
       </div>
-      <span style="font-size: 11px; color: var(--jc-text-muted);">
+      <span style="font-size: 11px; color: var(--kr-text-3);">
         Saved key stays in userscript storage. Leave blank to keep it.
       </span>
     </div>
@@ -2135,74 +2112,74 @@ function renderSettingsTab() {
   }).join('');
 
   return `
-    <form id="jc-settings-form" style="display: flex; flex-direction: column; gap: 14px;">
+    <form id="kr-settings-form" style="display: flex; flex-direction: column; gap: 14px;">
       ${renderApiKeyGroup()}
 
-      <div class="jc-form-group">
+      <div class="kr-form-group">
         <label>AI Model</label>
-        <select class="jc-select" name="model" id="jc-model-select">
+        <select class="kr-select" name="model" id="kr-model-select">
           ${modelOptions}
           <option value="custom" ${!POPULAR_MODELS.includes(settings.model) ? 'selected' : ''}>Custom Model...</option>
         </select>
-        <input class="jc-input" id="jc-custom-model-input" type="text" placeholder="Enter custom model ID" value="${escapeHtml(settings.model)}" style="margin-top: 6px; display: ${!POPULAR_MODELS.includes(settings.model) ? 'block' : 'none'};" />
+        <input class="kr-input" id="kr-custom-model-input" type="text" placeholder="Enter custom model ID" value="${escapeHtml(settings.model)}" style="margin-top: 6px; display: ${!POPULAR_MODELS.includes(settings.model) ? 'block' : 'none'};" />
       </div>
 
-      <div class="jc-card">
-        <span class="jc-card-title">Behavior Controls</span>
+      <div class="kr-card">
+        <span class="kr-card-title">Behavior Controls</span>
         
-        <div class="jc-toggle-row">
+        <div class="kr-toggle-row">
           <div>
-            <div class="jc-label">AI Autofill</div>
-            <div style="font-size: 11px; color: var(--jc-text-muted);">Enable AI form filling capabilities</div>
+            <div class="kr-label">AI Autofill</div>
+            <div style="font-size: 11px; color: var(--kr-text-3);">Enable AI form filling capabilities</div>
           </div>
-          <label class="jc-switch">
+          <label class="kr-switch">
             <input type="checkbox" name="autofillEnabled" ${settings.autofillEnabled ? 'checked' : ''} />
-            <span class="jc-slider"></span>
+            <span class="kr-slider"></span>
           </label>
         </div>
 
-        <div class="jc-toggle-row">
+        <div class="kr-toggle-row">
           <div>
-            <div class="jc-label">Overwrite Existing Values</div>
-            <div style="font-size: 11px; color: var(--jc-text-muted);">Overwrite non-empty fields on autofill</div>
+            <div class="kr-label">Overwrite Existing Values</div>
+            <div style="font-size: 11px; color: var(--kr-text-3);">Overwrite non-empty fields on autofill</div>
           </div>
-          <label class="jc-switch">
+          <label class="kr-switch">
             <input type="checkbox" name="overwriteExisting" ${settings.overwriteExisting ? 'checked' : ''} />
-            <span class="jc-slider"></span>
+            <span class="kr-slider"></span>
           </label>
         </div>
 
-        <div class="jc-toggle-row">
+        <div class="kr-toggle-row">
           <div>
-            <div class="jc-label">Auto Continue</div>
-            <div style="font-size: 11px; color: var(--jc-text-muted);">Advance to next step on valid page</div>
+            <div class="kr-label">Auto Continue</div>
+            <div style="font-size: 11px; color: var(--kr-text-3);">Advance to next step on valid page</div>
           </div>
-          <label class="jc-switch">
+          <label class="kr-switch">
             <input type="checkbox" name="autoContinue" ${settings.autoContinue ? 'checked' : ''} />
-            <span class="jc-slider"></span>
+            <span class="kr-slider"></span>
           </label>
         </div>
 
-        <div class="jc-toggle-row">
+        <div class="kr-toggle-row">
           <div>
-            <div class="jc-label">Auto Submit</div>
-            <div style="font-size: 11px; color: var(--jc-text-muted);">Off by default. Submits only when every field is verified after a cancellable countdown.</div>
+            <div class="kr-label">Auto Submit</div>
+            <div style="font-size: 11px; color: var(--kr-text-3);">Off by default. Submits only when every field is verified after a cancellable countdown.</div>
           </div>
-          <label class="jc-switch">
+          <label class="kr-switch">
             <input type="checkbox" name="autoSubmit" ${settings.autoSubmit ? 'checked' : ''} />
-            <span class="jc-slider"></span>
+            <span class="kr-slider"></span>
           </label>
         </div>
       </div>
 
-      <div class="jc-row" style="margin-top: 4px;">
-        <button type="button" class="jc-btn jc-btn-secondary" id="jc-export-data" style="flex: 1;">Export backup JSON</button>
+      <div class="kr-row" style="margin-top: 4px;">
+        <button type="button" class="kr-btn kr-btn-secondary" id="kr-export-data" style="flex: 1;">Export backup JSON</button>
       </div>
-      <p style="font-size: 11px; color: var(--jc-text-muted); margin: 0;">Profile, settings, memory, and job only. The API key is never included.</p>
+      <p style="font-size: 11px; color: var(--kr-text-3); margin: 0;">Profile, settings, memory, and job only. The API key is never included.</p>
 
-      <div class="jc-row">
-        <button class="jc-btn" type="submit" style="flex: 1;">Save Settings</button>
-        <span class="jc-save-feedback" id="jc-settings-feedback">Saved ✓</span>
+      <div class="kr-row">
+        <button class="kr-btn" type="submit" style="flex: 1;">Save Settings</button>
+        <span class="kr-save-feedback" id="kr-settings-feedback">Saved ✓</span>
       </div>
     </form>
   `;
@@ -2214,63 +2191,63 @@ function renderDebugTab() {
   const lastPageChange = applicationState?.session?.lastPageChange;
 
   const logsHtml = logs.length === 0
-    ? '<span style="color: var(--jc-text-muted);">No debug logs recorded yet.</span>'
+    ? '<span style="color: var(--kr-text-3);">No debug logs recorded yet.</span>'
     : logs.slice().reverse().map((l) => {
         const time = l.timestamp.split('T')[1]?.slice(0, 8) || '';
         return `
-          <div class="jc-log-item">
-            <span class="jc-log-time">[${time}]</span>
-            <span class="jc-log-level-${l.level}">[${l.level}]</span>
+          <div class="kr-log-item">
+            <span class="kr-log-time">[${time}]</span>
+            <span class="kr-log-level-${l.level}">[${l.level}]</span>
             <span>${escapeHtml(l.message)}</span>
           </div>
         `;
       }).join('');
 
   return `
-    <div class="jc-card">
-      <div class="jc-row">
-        <span class="jc-card-title">System Information</span>
-        <span class="jc-val" style="font-size: 11px;">v${state.version}</span>
+    <div class="kr-card">
+      <div class="kr-row">
+        <span class="kr-card-title">System Information</span>
+        <span class="kr-val" style="font-size: 11px;">v${state.version}</span>
       </div>
-      <div class="jc-row">
-        <span class="jc-label">API Key Stored</span>
-        <span class="jc-badge ${state.hasApiKey ? 'jc-badge-green' : 'jc-badge-amber'}">
+      <div class="kr-row">
+        <span class="kr-label">API Key Stored</span>
+        <span class="kr-badge ${state.hasApiKey ? 'kr-badge-green' : 'kr-badge-amber'}">
           ${state.hasApiKey ? 'Present (Isolated in Secrets)' : 'Not Configured'}
         </span>
       </div>
-      <div class="jc-row">
-        <span class="jc-label">Current Host</span>
-        <span class="jc-val" style="font-size: 11px;">${state.host}</span>
+      <div class="kr-row">
+        <span class="kr-label">Current Host</span>
+        <span class="kr-val" style="font-size: 11px;">${state.host}</span>
       </div>
     </div>
 
-    <div class="jc-card">
-      <div class="jc-row">
-        <span class="jc-card-title">Sanitized Settings</span>
+    <div class="kr-card">
+      <div class="kr-row">
+        <span class="kr-card-title">Sanitized Settings</span>
       </div>
-      <pre style="margin: 0; font-family: var(--jc-font-mono); font-size: 11px; color: var(--jc-text-secondary); background: rgba(11, 15, 25, 0.7); padding: 8px; border-radius: var(--jc-radius-sm); overflow-x: auto; border: 1px solid var(--jc-border-subtle);">${escapeHtml(JSON.stringify(state.settings, null, 2))}</pre>
+      <pre style="margin: 0; font-family: var(--kr-font-mono); font-size: 11px; color: var(--kr-text-2); background: rgba(11, 15, 25, 0.7); padding: 8px; border-radius: var(--kr-radius-sm); overflow-x: auto; border: 1px solid var(--kr-line);">${escapeHtml(JSON.stringify(state.settings, null, 2))}</pre>
     </div>
 
-    <div class="jc-card">
-      <div class="jc-row">
-        <span class="jc-card-title">Regression Fixture</span>
-        <button class="jc-btn jc-btn-secondary" id="jc-capture-fixture" style="padding: 4px 8px; font-size: 10px;">Save page fixture</button>
+    <div class="kr-card">
+      <div class="kr-row">
+        <span class="kr-card-title">Regression Fixture</span>
+        <button class="kr-btn kr-btn-secondary" id="kr-capture-fixture" style="padding: 4px 8px; font-size: 10px;">Save page fixture</button>
       </div>
-      <div style="font-size: 11px; color: var(--jc-text-muted);">
+      <div style="font-size: 11px; color: var(--kr-text-3);">
         Downloads a sanitized copy of this page, including embedded frames, for the
         regression suite. Your answers, scripts, and inline handlers are removed.
       </div>
-      <div style="font-size: 11px; color: var(--jc-text-secondary);" id="jc-capture-feedback"></div>
+      <div style="font-size: 11px; color: var(--kr-text-2);" id="kr-capture-feedback"></div>
     </div>
 
-    <div class="jc-card">
-      ${lastPageChange ? `<div class="jc-row"><span class="jc-card-title">Last Workflow Change</span></div>
-      <pre style="font-size: 11px; font-family: var(--jc-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--jc-text-secondary); background: rgba(11, 15, 25, 0.7); padding: 8px; border-radius: var(--jc-radius-sm); border: 1px solid var(--jc-border-subtle);">${escapeHtml(JSON.stringify(lastPageChange, null, 2))}</pre>` : ''}
-      <div class="jc-row">
-        <span class="jc-card-title">Recent Activity Logs (${logs.length})</span>
-        <button class="jc-btn jc-btn-secondary" id="jc-clear-logs-btn" style="padding: 4px 8px; font-size: 10px;">Clear</button>
+    <div class="kr-card">
+      ${lastPageChange ? `<div class="kr-row"><span class="kr-card-title">Last Workflow Change</span></div>
+      <pre style="font-size: 11px; font-family: var(--kr-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--kr-text-2); background: rgba(11, 15, 25, 0.7); padding: 8px; border-radius: var(--kr-radius-sm); border: 1px solid var(--kr-line);">${escapeHtml(JSON.stringify(lastPageChange, null, 2))}</pre>` : ''}
+      <div class="kr-row">
+        <span class="kr-card-title">Recent Activity Logs (${logs.length})</span>
+        <button class="kr-btn kr-btn-secondary" id="kr-clear-logs-btn" style="padding: 4px 8px; font-size: 10px;">Clear</button>
       </div>
-      <div class="jc-log-box" id="jc-log-container">
+      <div class="kr-log-box" id="kr-log-container">
         ${logsHtml}
       </div>
     </div>
@@ -2280,7 +2257,7 @@ function renderDebugTab() {
 function updatePanelDOM() {
   if (!shadowRootRef) return;
 
-  const container = shadowRootRef.querySelector('.jc-widget-container');
+  const container = shadowRootRef.querySelector('.kr-widget-container');
   if (!container) return;
 
   const settings = getSettings();
@@ -2294,27 +2271,27 @@ function updatePanelDOM() {
     else if (currentTab === 'debug') tabContent = renderDebugTab();
 
     panelHtml = `
-      <div class="jc-panel" id="jc-main-panel">
-        <div class="jc-header">
-          <div class="jc-header-title">
-            <span class="jc-brand-mark">${ICONS.brandMark}</span>
+      <div class="kr-panel" id="kr-main-panel">
+        <div class="kr-header">
+          <div class="kr-header-title">
+            <span class="kr-brand-mark">${ICONS.brandMark}</span>
             <span>${VISUAL_NAME}</span>
-            <span class="jc-version-tag">v${APP_VERSION}</span>
+            <span class="kr-version-tag">v${APP_VERSION}</span>
           </div>
-          <div class="jc-header-actions">
-            <span class="jc-model-chip" title="${escapeHtml(settings.model)}">${escapeHtml(settings.model)}</span>
-            <button class="jc-close-btn" id="jc-close-panel-btn" title="Minimize panel">${ICONS.x}</button>
+          <div class="kr-header-actions">
+            <span class="kr-model-chip" title="${escapeHtml(settings.model)}">${escapeHtml(settings.model)}</span>
+            <button class="kr-close-btn" id="kr-close-panel-btn" title="Minimize panel">${ICONS.x}</button>
           </div>
         </div>
 
-        <div class="jc-nav-tabs">
-          <button class="jc-tab-btn ${currentTab === 'home' ? 'active' : ''}" data-tab="home">${ICONS.play} Run</button>
-          <button class="jc-tab-btn ${currentTab === 'profile' ? 'active' : ''}" data-tab="profile">${ICONS.user} Profile</button>
-          <button class="jc-tab-btn ${currentTab === 'settings' ? 'active' : ''}" data-tab="settings">${ICONS.settings} Settings</button>
-          <button class="jc-tab-btn ${currentTab === 'debug' ? 'active' : ''}" data-tab="debug">${ICONS.terminal} Debug</button>
+        <div class="kr-nav-tabs">
+          <button class="kr-tab-btn ${currentTab === 'home' ? 'active' : ''}" data-tab="home">${ICONS.play} Run</button>
+          <button class="kr-tab-btn ${currentTab === 'profile' ? 'active' : ''}" data-tab="profile">${ICONS.user} Profile</button>
+          <button class="kr-tab-btn ${currentTab === 'settings' ? 'active' : ''}" data-tab="settings">${ICONS.settings} Settings</button>
+          <button class="kr-tab-btn ${currentTab === 'debug' ? 'active' : ''}" data-tab="debug">${ICONS.terminal} Debug</button>
         </div>
 
-        <div class="jc-content">
+        <div class="kr-content">
           ${tabContent}
         </div>
       </div>
@@ -2331,11 +2308,11 @@ function updatePanelDOM() {
 
 function attachEventHandlers() {
   if (!shadowRootRef) return;
-  const capture = shadowRootRef.querySelector('#jc-capture-job');
+  const capture = shadowRootRef.querySelector('#kr-capture-job');
   if (capture) capture.onclick = () => applicationEngine?.capture();
-  const start = shadowRootRef.querySelector('#jc-start-application');
+  const start = shadowRootRef.querySelector('#kr-start-application');
   if (start) start.onclick = () => void applicationEngine?.start();
-  const pause = shadowRootRef.querySelector('#jc-pause-application');
+  const pause = shadowRootRef.querySelector('#kr-pause-application');
   if (pause) {
     pause.onclick = () => {
       applicationEngine?.pause();
@@ -2345,13 +2322,13 @@ function attachEventHandlers() {
     };
   }
 
-  const resumeBoundary = shadowRootRef.querySelector('#jc-resume-boundary');
+  const resumeBoundary = shadowRootRef.querySelector('#kr-resume-boundary');
   if (resumeBoundary) {
     resumeBoundary.onclick = () => void applicationEngine?.start();
   }
 
   // Toggle button handlers
-  const toggleBtn = shadowRootRef.querySelector('#jc-toggle-btn');
+  const toggleBtn = shadowRootRef.querySelector('#kr-toggle-btn');
   if (toggleBtn) {
     toggleBtn.onclick = () => {
       panelVisible = !panelVisible;
@@ -2360,7 +2337,7 @@ function attachEventHandlers() {
     };
   }
 
-  const expandBtn = shadowRootRef.querySelector('#jc-hud-expand-btn');
+  const expandBtn = shadowRootRef.querySelector('#kr-hud-expand-btn');
   if (expandBtn) {
     expandBtn.onclick = () => {
       panelVisible = !panelVisible;
@@ -2370,7 +2347,7 @@ function attachEventHandlers() {
   }
 
   // Pebble toggle
-  const pebbleBtn = shadowRootRef.querySelector('#jc-pebble-toggle-btn');
+  const pebbleBtn = shadowRootRef.querySelector('#kr-pebble-toggle-btn');
   if (pebbleBtn) {
     pebbleBtn.onclick = () => {
       isPebble = !isPebble;
@@ -2380,7 +2357,7 @@ function attachEventHandlers() {
   }
 
   // Close panel handler
-  const closeBtn = shadowRootRef.querySelector('#jc-close-panel-btn');
+  const closeBtn = shadowRootRef.querySelector('#kr-close-panel-btn');
   if (closeBtn) {
     closeBtn.onclick = () => {
       panelVisible = false;
@@ -2389,7 +2366,7 @@ function attachEventHandlers() {
   }
 
   // Tab navigation
-  const tabBtns = shadowRootRef.querySelectorAll('.jc-tab-btn');
+  const tabBtns = shadowRootRef.querySelectorAll('.kr-tab-btn');
   tabBtns.forEach((btn) => {
     btn.onclick = () => {
       const targetTab = btn.getAttribute('data-tab');
@@ -2401,19 +2378,19 @@ function attachEventHandlers() {
   });
 
   // Autofill button (in panel)
-  const autofillBtn = shadowRootRef.querySelector('#jc-autofill-btn');
+  const autofillBtn = shadowRootRef.querySelector('#kr-autofill-btn');
   if (autofillBtn) {
     autofillBtn.onclick = () => executeAutofillFlow();
   }
 
   // Autofill button (on compact HUD bar)
-  const hudAutofillBtn = shadowRootRef.querySelector('#jc-hud-autofill-btn');
+  const hudAutofillBtn = shadowRootRef.querySelector('#kr-hud-autofill-btn');
   if (hudAutofillBtn) {
     hudAutofillBtn.onclick = () => executeAutofillFlow();
   }
 
   // Autofill pause button (in panel)
-  const pauseAutofillBtn = shadowRootRef.querySelector('#jc-pause-autofill-btn');
+  const pauseAutofillBtn = shadowRootRef.querySelector('#kr-pause-autofill-btn');
   if (pauseAutofillBtn) {
     pauseAutofillBtn.onclick = () => {
       stopAutofillFlow('Autofill paused by user. Progress and filled fields preserved.');
@@ -2422,7 +2399,7 @@ function attachEventHandlers() {
   }
 
   // Autofill pause button (on compact HUD bar)
-  const hudPauseBtn = shadowRootRef.querySelector('#jc-hud-pause-btn');
+  const hudPauseBtn = shadowRootRef.querySelector('#kr-hud-pause-btn');
   if (hudPauseBtn) {
     hudPauseBtn.onclick = () => {
       stopAutofillFlow('Autofill paused by user. Progress and filled fields preserved.');
@@ -2431,7 +2408,7 @@ function attachEventHandlers() {
   }
 
   // Locate field buttons on Review tab
-  const locateBtns = shadowRootRef.querySelectorAll('.jc-locate-field-btn');
+  const locateBtns = shadowRootRef.querySelectorAll('.kr-locate-field-btn');
   locateBtns.forEach((btn) => {
     btn.onclick = () => {
       const fieldId = btn.getAttribute('data-field-id');
@@ -2444,7 +2421,7 @@ function attachEventHandlers() {
   });
 
   // Rescan buttons
-  const rescanBtn = shadowRootRef.querySelector('#jc-rescan-btn');
+  const rescanBtn = shadowRootRef.querySelector('#kr-rescan-btn');
   if (rescanBtn) {
     rescanBtn.onclick = () => {
       refreshDetectedFields();
@@ -2454,7 +2431,7 @@ function attachEventHandlers() {
   }
 
   // Test AI button
-  const testAiBtn = shadowRootRef.querySelector('#jc-test-ai-btn');
+  const testAiBtn = shadowRootRef.querySelector('#kr-test-ai-btn');
   if (testAiBtn) {
     testAiBtn.onclick = async () => {
       isAiTesting = true;
@@ -2471,7 +2448,7 @@ function attachEventHandlers() {
   }
 
   // Profile Form
-  const profileForm = shadowRootRef.querySelector('#jc-profile-form');
+  const profileForm = shadowRootRef.querySelector('#kr-profile-form');
   if (profileForm) {
     profileForm.onsubmit = (e) => {
       e.preventDefault();
@@ -2492,7 +2469,7 @@ function attachEventHandlers() {
       saveProfile(newProfile);
       logger.info('Profile saved successfully.');
 
-      const feedback = shadowRootRef.querySelector('#jc-profile-feedback');
+      const feedback = shadowRootRef.querySelector('#kr-profile-feedback');
       if (feedback) {
         feedback.style.display = 'inline';
         setTimeout(() => { feedback.style.display = 'none'; }, 2000);
@@ -2501,10 +2478,10 @@ function attachEventHandlers() {
   }
 
   // Settings Form
-  const settingsForm = shadowRootRef.querySelector('#jc-settings-form');
+  const settingsForm = shadowRootRef.querySelector('#kr-settings-form');
   if (settingsForm) {
-    const modelSelect = shadowRootRef.querySelector('#jc-model-select');
-    const customInput = shadowRootRef.querySelector('#jc-custom-model-input');
+    const modelSelect = shadowRootRef.querySelector('#kr-model-select');
+    const customInput = shadowRootRef.querySelector('#kr-custom-model-input');
     if (modelSelect && customInput) {
       modelSelect.onchange = () => {
         if (modelSelect.value === 'custom') {
@@ -2516,13 +2493,13 @@ function attachEventHandlers() {
       };
     }
 
-    const openOptionsBtn = shadowRootRef.querySelector('#jc-open-options');
+    const openOptionsBtn = shadowRootRef.querySelector('#kr-open-options');
     if (openOptionsBtn) {
       openOptionsBtn.onclick = () => platform.openOptions();
     }
 
-    const toggleKeyBtn = shadowRootRef.querySelector('#jc-toggle-key-btn');
-    const apiKeyInput = shadowRootRef.querySelector('#jc-api-key-input');
+    const toggleKeyBtn = shadowRootRef.querySelector('#kr-toggle-key-btn');
+    const apiKeyInput = shadowRootRef.querySelector('#kr-api-key-input');
     if (toggleKeyBtn && apiKeyInput) {
       toggleKeyBtn.onclick = () => {
         apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
@@ -2530,7 +2507,7 @@ function attachEventHandlers() {
       };
     }
 
-    const exportBtn = shadowRootRef.querySelector('#jc-export-data');
+    const exportBtn = shadowRootRef.querySelector('#kr-export-data');
     if (exportBtn) exportBtn.onclick = () => exportUserBackup();
 
     settingsForm.onsubmit = (e) => {
@@ -2559,7 +2536,7 @@ function attachEventHandlers() {
 
       logger.info('Settings saved.');
 
-      const feedback = shadowRootRef.querySelector('#jc-settings-feedback');
+      const feedback = shadowRootRef.querySelector('#kr-settings-feedback');
       if (feedback) {
         feedback.style.display = 'inline';
         setTimeout(() => { feedback.style.display = 'none'; }, 2000);
@@ -2567,13 +2544,13 @@ function attachEventHandlers() {
     };
   }
 
-  const captureFixtureBtn = shadowRootRef.querySelector('#jc-capture-fixture');
+  const captureFixtureBtn = shadowRootRef.querySelector('#kr-capture-fixture');
   if (captureFixtureBtn) {
     captureFixtureBtn.onclick = () => void saveFixtureSnapshot();
   }
 
   // Debug: Clear logs
-  const clearLogsBtn = shadowRootRef.querySelector('#jc-clear-logs-btn');
+  const clearLogsBtn = shadowRootRef.querySelector('#kr-clear-logs-btn');
   if (clearLogsBtn) {
     clearLogsBtn.onclick = () => {
       logger.clear();
@@ -2583,12 +2560,12 @@ function attachEventHandlers() {
 }
 
 /**
- * Resolves who may mount `#job-copilot-root`. Extension wins over userscript.
+ * Resolves who may mount `#kareer-root`. Extension wins over userscript.
  */
 export function claimPanelHost(hostName) {
   let existing = document.getElementById(UI_IDS.CONTAINER);
   if (existing) {
-    const owner = existing.getAttribute('data-jc-host') || '';
+    const owner = existing.getAttribute('data-kr-host') || '';
     if (owner === hostName) return { status: 'already-self', owner, root: existing };
     if (hostName === 'extension' && owner === 'userscript') {
       existing.remove();
@@ -2600,7 +2577,7 @@ export function claimPanelHost(hostName) {
 
   const root = document.createElement('div');
   root.id = UI_IDS.CONTAINER;
-  root.setAttribute('data-jc-host', hostName);
+  root.setAttribute('data-kr-host', hostName);
   root.style.position = 'absolute';
   root.style.top = '0';
   root.style.left = '0';
@@ -2614,14 +2591,14 @@ export function claimPanelHost(hostName) {
   let winner = document.getElementById(UI_IDS.CONTAINER);
   if (winner !== root) {
     root.remove();
-    const owner = winner?.getAttribute('data-jc-host') || '';
+    const owner = winner?.getAttribute('data-kr-host') || '';
     if (hostName === 'extension' && owner === 'userscript') {
       winner.remove();
       target.appendChild(root);
       winner = document.getElementById(UI_IDS.CONTAINER);
     }
     if (winner !== root) {
-      return { status: 'yield', owner: winner?.getAttribute('data-jc-host') || owner, root: winner };
+      return { status: 'yield', owner: winner?.getAttribute('data-kr-host') || owner, root: winner };
     }
   }
 
@@ -2681,10 +2658,10 @@ export function mountUI() {
     shadow.appendChild(styleEl);
   }
 
-  let container = shadow.querySelector('.jc-widget-container');
+  let container = shadow.querySelector('.kr-widget-container');
   if (!container) {
     container = document.createElement('div');
-    container.className = 'jc-widget-container';
+    container.className = 'kr-widget-container';
     shadow.appendChild(container);
   }
 
@@ -2723,7 +2700,7 @@ export function mountUI() {
     } });
     void applicationEngine.initialize();
 
-    logger.info('Job Copilot Shadow DOM UI mounted successfully.');
+    logger.info('Kareer Shadow DOM UI mounted successfully.');
   }
 }
 

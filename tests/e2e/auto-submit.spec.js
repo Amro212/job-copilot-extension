@@ -10,26 +10,26 @@ const PROFILE = {
 };
 
 test.describe('opt-in Auto Submit', () => {
-  test('submits after the countdown when every guard passes', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE, settings: { autoContinue: true, autoSubmit: true } });
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase3-application-fixture.html', undefined, '?scenario=validation&step=review'));
-    await jc.openPanel(page);
-    await page.locator('#jc-capture-job').click();
-    await page.locator('#jc-start-application').click();
-    await expect(page.locator('#jc-main-panel')).toContainText(/Submitting in \d+s/, { timeout: 20000 });
+  test('submits after the countdown when every guard passes', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE, settings: { autoContinue: true, autoSubmit: true } });
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase3-application-fixture.html', undefined, '?scenario=validation&step=review'));
+    await kr.openPanel(page);
+    await page.locator('#kr-capture-job').click();
+    await page.locator('#kr-start-application').click();
+    await expect(page.locator('#kr-main-panel')).toContainText(/Submitting in \d+s/, { timeout: 20000 });
     await expect(page.locator('main')).toContainText(/application submitted/i, { timeout: 20000 });
   });
 
-  test('Pause during the countdown prevents submission', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE, settings: { autoContinue: true, autoSubmit: true } });
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase3-application-fixture.html', undefined, '?scenario=validation&step=review'));
-    await jc.openPanel(page);
-    await page.locator('#jc-capture-job').click();
-    await page.locator('#jc-start-application').click();
-    await expect(page.locator('#jc-main-panel')).toContainText(/Submitting in \d+s/, { timeout: 20000 });
-    await page.locator('#jc-pause-application').click();
+  test('Pause during the countdown prevents submission', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE, settings: { autoContinue: true, autoSubmit: true } });
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase3-application-fixture.html', undefined, '?scenario=validation&step=review'));
+    await kr.openPanel(page);
+    await page.locator('#kr-capture-job').click();
+    await page.locator('#kr-start-application').click();
+    await expect(page.locator('#kr-main-panel')).toContainText(/Submitting in \d+s/, { timeout: 20000 });
+    await page.locator('#kr-pause-application').click();
     await page.waitForTimeout(6000);
     const submitted = await page.evaluate(() => {
       const main = document.querySelector('main')?.textContent || '';

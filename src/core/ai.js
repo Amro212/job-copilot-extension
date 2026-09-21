@@ -104,10 +104,10 @@ GOOD (Direct developer):
 Example 3: Personal project
 Question: "Describe your best personal software project, outside of curriculum or work"
 BAD (Product brochure):
-"My most significant personal software project is Job Copilot, a browser-based tool designed to reduce repetitive job application work. It uses structured personal and professional context... This project demonstrates my ability to build practical tools..."
+"My most significant personal software project is Kareer, a browser-based tool designed to reduce repetitive job application work. It uses structured personal and professional context... This project demonstrates my ability to build practical tools..."
 
 GOOD (Builder explanation):
-"I built Job Copilot, a browser extension and userscript that automates repetitive job application forms. Standard autofill extensions constantly fail on custom UI components like Workday comboboxes, so I engineered a DOM observer and event dispatcher that reliably selects those options across different ATS platforms."
+"I built Kareer, a browser extension and userscript that automates repetitive job application forms. Standard autofill extensions constantly fail on custom UI components like Workday comboboxes, so I engineered a DOM observer and event dispatcher that reliably selects those options across different ATS platforms."
 
 Example 4: Leadership / Team responsibility
 Question: "Describe any significant leadership or organizational / team responsibility that you took on during your education"
@@ -150,7 +150,7 @@ export function isNarrativeField(field) {
 }
 
 export function buildStructuredSystemPrompt({ allowSearch = true } = {}) {
-  return `You are Job Copilot, filling structured fields in an online job application for a candidate.
+  return `You are Kareer, filling structured fields in an online job application for a candidate.
 
 CRITICAL OPERATING RULES:
 1. Ground all candidate claims strictly in the provided applicant profile, resume highlights, and applicant notes.
@@ -184,7 +184,7 @@ CRITICAL OPERATING RULES:
 }
 
 export function buildNarrativeSystemPrompt(profile, settings) {
-  return `You are Job Copilot, writing open-ended job application responses for the candidate.
+  return `You are Kareer, writing open-ended job application responses for the candidate.
 
 Ground every factual claim in the supplied applicant profile, resume context, applicant notes, and job context. Never invent experience or company facts.
 Explicit structured profile answers take precedence over conflicting notes.
@@ -245,7 +245,7 @@ function stripModelDashes(text) {
 const REQUEST_HEADERS = {
   'Content-Type': 'application/json',
   'HTTP-Referer': 'https://github.com/Amro212/autofill-extension',
-  'X-Title': 'Job Copilot',
+  'X-Title': 'Kareer',
 };
 
 function sendAiRequest(options) {
@@ -588,7 +588,7 @@ export async function rewriteNarrativeField({ fieldLabel, currentValue, feedback
     throw new Error('No OpenRouter API key configured.');
   }
 
-  const systemPrompt = `You are Job Copilot. You are rewriting a single narrative response in a job application for the candidate.
+  const systemPrompt = `You are Kareer. You are rewriting a single narrative response in a job application for the candidate.
 
 Ground every claim in the candidate's actual experience from their resume highlights. Never invent experience or company facts.
 

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Job Copilot",
+  "name": "Kareer",
   "description": "AI job application autofill with multi-step application support.",
   "permissions": [
     "storage",
@@ -38,13 +38,13 @@
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     },
-    "default_title": "Toggle Job Copilot panel",
+    "default_title": "Toggle Kareer panel",
     "default_popup": "popup/index.html"
   },
   "commands": {
     "toggle-panel": {
       "suggested_key": { "default": "Alt+Shift+J" },
-      "description": "Toggle the Job Copilot panel"
+      "description": "Toggle the Kareer panel"
     }
   }
 }

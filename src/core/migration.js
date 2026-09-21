@@ -1,7 +1,8 @@
 import { STORAGE_KEYS } from './constants.js';
 import { platform } from './platform.js';
 
-export const PAYLOAD_KIND = 'job-copilot-backup';
+export const PAYLOAD_KIND = 'kareer-backup';
+const LEGACY_PAYLOAD_KIND = 'job-copilot-backup';
 
 /**
  * Keys that may cross a backup boundary. Secrets are deliberately absent: the
@@ -13,6 +14,13 @@ const PORTABLE_KEYS = [
   STORAGE_KEYS.MEMORY,
   STORAGE_KEYS.JOB,
 ];
+
+const LEGACY_KEY_MAP = {
+  'jc:profile': STORAGE_KEYS.PROFILE,
+  'jc:settings': STORAGE_KEYS.SETTINGS,
+  'jc:memory': STORAGE_KEYS.MEMORY,
+  'jc:job': STORAGE_KEYS.JOB,
+};
 
 export function exportPayload(data) {
   const payload = { kind: PAYLOAD_KIND, exportedAt: new Date().toISOString(), data: {} };
@@ -30,14 +38,28 @@ function scrubSettings(settings) {
   return clean;
 }
 
+function normalizeImportData(data) {
+  const normalized = { ...data };
+  for (const [legacyKey, nextKey] of Object.entries(LEGACY_KEY_MAP)) {
+    if (normalized[nextKey] === undefined && normalized[legacyKey] !== undefined) {
+      normalized[nextKey] = normalized[legacyKey];
+    }
+    delete normalized[legacyKey];
+  }
+  return normalized;
+}
+
 export function importPayload(payload) {
   if (!payload || typeof payload !== 'object') throw new Error('File is not a JSON object');
-  if (payload.kind !== PAYLOAD_KIND) throw new Error('Not a Job Copilot backup file');
+  if (payload.kind !== PAYLOAD_KIND && payload.kind !== LEGACY_PAYLOAD_KIND) {
+    throw new Error('Not a Kareer backup file');
+  }
   if (!payload.data || typeof payload.data !== 'object') throw new Error('Backup has no data section');
 
+  const data = normalizeImportData(payload.data);
   const entries = {};
   for (const key of PORTABLE_KEYS) {
-    let value = payload.data[key];
+    let value = data[key];
     if (value === undefined || value === null) continue;
     if (key === STORAGE_KEYS.SETTINGS) value = scrubSettings(value);
     entries[key] = value;

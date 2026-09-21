@@ -17,7 +17,7 @@
 
 ## 📖 Table of Contents
 
-- [What is Job Copilot?](#what-is-job-copilot)
+- [What is Kareer?](#what-is-kareer)
 - [Key Features](#key-features)
 - [Supported ATS Matrix](#supported-ats-matrix)
 - [Quick Start for Job Seekers](#quick-start-for-job-seekers)
@@ -36,11 +36,11 @@
 
 ---
 
-## What is Job Copilot?
+## What is Kareer?
 
-Job Copilot is an open-source browser assistant that scans job application forms, matches questions to your resume and experience, and accurately fills out inputs, comboboxes, dropdowns, radio buttons, and textareas.
+Kareer is an open-source browser assistant that scans job application forms, matches questions to your resume and experience, and accurately fills out inputs, comboboxes, dropdowns, radio buttons, and textareas.
 
-Unlike proprietary autofill extensions that store your sensitive resume data on third-party servers or charge monthly subscriptions, Job Copilot:
+Unlike proprietary autofill extensions that store your sensitive resume data on third-party servers or charge monthly subscriptions, Kareer:
 - **Runs entirely in your browser** with **zero telemetry** and no external backend.
 - Uses **Bring Your Own Key (BYOK)** with OpenRouter, allowing you to use fast, cost-effective models (such as `google/gemini-2.0-flash` or `anthropic/claude-3.5-sonnet`) for fractions of a cent per application.
 - Uses a **non-intrusive Shadow DOM floating panel** that never conflicts with website stylesheets.
@@ -60,7 +60,7 @@ Unlike proprietary autofill extensions that store your sensitive resume data on 
 
 ## Supported ATS Matrix
 
-Job Copilot includes dedicated adapters for major Applicant Tracking Systems (ATS) as well as an intelligent generic fallback:
+Kareer includes dedicated adapters for major Applicant Tracking Systems (ATS) as well as an intelligent generic fallback:
 
 | ATS / Platform | Adapter | Searchable Comboboxes | Multi-Page Steps | File Uploads |
 | :--- | :---: | :---: | :---: | :---: |
@@ -78,7 +78,7 @@ Follow this simple 4-step guide to get up and running in less than 5 minutes.
 
 ### Step 1: Get an OpenRouter API Key
 
-Job Copilot connects to AI models via [OpenRouter](https://openrouter.ai/), an API aggregator providing access to dozens of leading LLMs.
+Kareer connects to AI models via [OpenRouter](https://openrouter.ai/), an API aggregator providing access to dozens of leading LLMs.
 
 1. Create a free account at [openrouter.ai](https://openrouter.ai/).
 2. Navigate to **Keys** and click **Create Key**.
@@ -122,13 +122,13 @@ If you prefer userscripts:
    ```bash
    npm run build:userscript
    ```
-3. Open `dist/job-copilot.user.js` in your browser or import it into your Tampermonkey dashboard.
+3. Open `dist/kareer.user.js` in your browser or import it into your Tampermonkey dashboard.
 
 ---
 
 ### Step 3: Configure Your Profile & Resume
 
-1. Click the **Job Copilot** icon in your browser toolbar (or open the floating side panel).
+1. Click the **Kareer** icon in your browser toolbar (or open the floating side panel).
 2. Go to the **Settings** tab:
    - Paste your **OpenRouter API Key**.
    - Select your preferred model (e.g. `google/gemini-2.0-flash`).
@@ -143,7 +143,7 @@ If you prefer userscripts:
 ### Step 4: Autofill Your First Job Application
 
 1. Navigate to any supported job application page (e.g., Greenhouse, Lever, Ashby, or Workday).
-2. The **Job Copilot** floating panel will appear on the right side of the screen.
+2. The **Kareer** floating panel will appear on the right side of the screen.
 3. Click **Scan Fields** to inspect the form, or click **Autofill Application** to fill the form in one step.
 4. Review the filled values:
    - **Green highlights**: Field verified and filled.
@@ -154,13 +154,13 @@ If you prefer userscripts:
 
 ## Safety & Privacy Guarantees
 
-Job Copilot is designed with strict boundaries to protect both your privacy and the integrity of your job search:
+Kareer is designed with strict boundaries to protect both your privacy and the integrity of your job search:
 
 > [!IMPORTANT]
 > **Human-in-the-Loop Safeguards**
 > - **No Hallucinations**: Prompt constraints enforce truthful grounding. The model will never invent job titles, employment dates, or certifications.
-> - **Auto-Pause for Legal & Signature Fields**: Job Copilot intentionally pauses before e-signatures, background check authorizations, diversity surveys, and assessment tests.
-> - **No Stealth or Anti-Bot Bypass**: No `chrome.debugger` or CDP hacks. Job Copilot respects website security policies.
+> - **Auto-Pause for Legal & Signature Fields**: Kareer intentionally pauses before e-signatures, background check authorizations, diversity surveys, and assessment tests.
+> - **No Stealth or Anti-Bot Bypass**: No `chrome.debugger` or CDP hacks. Kareer respects website security policies.
 > - **Complete Key Isolation**: Your API keys are kept in isolated background workers or userscript storage and are never exposed to the page DOM.
 
 For full details, please review our [SECURITY.md](./SECURITY.md).
@@ -177,10 +177,10 @@ Contributions, issue reports, and ATS adapters are welcome!
 
 ### Project Architecture
 
-Job Copilot is structured as a unified monorepo building multiple distribution targets from a single core:
+Kareer is structured as a unified monorepo building multiple distribution targets from a single core:
 
 ```
-job-copilot-extension/
+kareer/
 ├── src/
 │   ├── core/                    # Host-agnostic core logic
 │   │   ├── adapters/            # ATS-specific logic (Greenhouse, Lever, Ashby, Workday)
@@ -225,7 +225,7 @@ npm run bump:major
 
 ### Testing & ATS Fixture Capture
 
-Job Copilot requires tests to pass on every code change to avoid regressions:
+Kareer requires tests to pass on every code change to avoid regressions:
 
 ```bash
 # Run unit tests
@@ -259,13 +259,13 @@ If you encounter a form or ATS edge case that doesn't fill correctly:
 
 - Check if the extension icon is active in your browser toolbar.
 - Click the extension icon in the toolbar and click **Toggle Panel**.
-- Refresh the application page. If the page is inside an `iframe`, Job Copilot will mount the panel in the top frame while scanning subframes in the background.
+- Refresh the application page. If the page is inside an `iframe`, Kareer will mount the panel in the top frame while scanning subframes in the background.
 </details>
 
 <details>
 <summary><b>Q: Why wasn't a specific field filled?</b></summary>
 
-- If a question cannot be answered from your saved profile or resume, Job Copilot skips it rather than guessing. Add the relevant detail (e.g., specific work authorization or salary expectations) to the **Applicant Notes** field in your profile.
+- If a question cannot be answered from your saved profile or resume, Kareer skips it rather than guessing. Add the relevant detail (e.g., specific work authorization or salary expectations) to the **Applicant Notes** field in your profile.
 </details>
 
 ---

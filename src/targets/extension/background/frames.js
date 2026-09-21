@@ -5,7 +5,7 @@ import { api } from '../shared/browser.js';
  * themselves; the top-frame panel asks for the list and then addresses each
  * frame by id. Lives in session storage because the worker can be recycled.
  */
-const key = (tabId) => `jc:frames:${tabId}`;
+const key = (tabId) => `kr:frames:${tabId}`;
 
 const session = () => api.storage.session || api.storage.local;
 

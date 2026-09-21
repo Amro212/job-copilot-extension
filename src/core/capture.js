@@ -135,7 +135,7 @@ function rewriteFrames(root, frameFiles) {
   const frames = Array.from(root.querySelectorAll('iframe'));
   frames.forEach((frame, index) => {
     const file = frameFiles[index];
-    frame.setAttribute('data-jc-original-host', safeHost(frame.getAttribute('src')));
+    frame.setAttribute('data-kr-original-host', safeHost(frame.getAttribute('src')));
     frame.setAttribute('src', file || 'about:blank');
   });
   return frames.length;
@@ -190,7 +190,7 @@ export function captureFixture(doc = document, { frameFiles = [], label = '' } =
   const head = clone.querySelector('head') || clone.insertBefore(doc.createElement('head'), clone.firstChild);
   if (css) {
     const style = doc.createElement('style');
-    style.setAttribute('data-jc-inlined', 'true');
+    style.setAttribute('data-kr-inlined', 'true');
     style.textContent = css;
     head.append(style);
   }
@@ -207,7 +207,7 @@ export function captureFixture(doc = document, { frameFiles = [], label = '' } =
 
   const banner = [
     '<!DOCTYPE html>',
-    `<!-- Job Copilot captured fixture`,
+    `<!-- Kareer captured fixture`,
     `     ${JSON.stringify(meta)}`,
     '     Applicant values, scripts, and inline handlers were removed. -->',
   ].join('\n');

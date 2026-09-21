@@ -679,7 +679,7 @@ Until the final name is selected:
 - keep the logo symbol independent from the wordmark
 - isolate the product name through a single application constant so rebranding is cheap
 
-Do not rename every internal `jc-*` class solely for branding.
+Do not rename every internal `kr-*` class solely for branding.
 
 Internal technical prefixes are implementation details and can remain until a larger cleanup is justified.
 
@@ -772,7 +772,7 @@ The winning mark can then inherit:
 
 - `src/core/theme.js` owns visual tokens, font filenames, and the working UI name.
   The panel interpolates tokens; the build emits the same tokens for all extension
-  pages. Product manifests and protocol identifiers retain Job Copilot naming.
+  pages. Product manifests and protocol identifiers retain Kareer naming.
 - Muted text is #8995A5 for readable small metadata on graphite surfaces.
 - Options is a 1180px maximum-width console: 210px sticky section navigation,
   56px gutter, flat sections separated by rules, two-column profile fields.

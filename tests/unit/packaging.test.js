@@ -6,7 +6,7 @@ import path from 'node:path';
 import { zipDirectory } from '../../tools/zip.js';
 
 test('zip writer produces a readable archive of a directory', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jc-zip-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kr-zip-'));
   fs.writeFileSync(path.join(dir, 'hello.txt'), 'hello');
   fs.mkdirSync(path.join(dir, 'sub'));
   fs.writeFileSync(path.join(dir, 'sub', 'nested.txt'), 'nested');

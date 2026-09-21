@@ -3,7 +3,7 @@
  * not (fixtures, jsdom tests). GM globals are probed per call because test
  * harnesses install and remove them between cases.
  */
-const SECRETS_KEY = 'jc:secrets';
+const SECRETS_KEY = 'kr:secrets';
 
 export function createGmHost() {
   const memoryStore = new Map();
@@ -19,7 +19,7 @@ export function createGmHost() {
       }
       return memoryStore.has(key) ? memoryStore.get(key) : defaultValue;
     } catch (err) {
-      console.error(`[JobCopilot:Storage] Failed to read "${key}":`, err);
+      console.error(`[Kareer:Storage] Failed to read "${key}":`, err);
       return defaultValue;
     }
   }
@@ -32,7 +32,7 @@ export function createGmHost() {
         memoryStore.set(key, value);
       }
     } catch (err) {
-      console.error(`[JobCopilot:Storage] Failed to write "${key}":`, err);
+      console.error(`[Kareer:Storage] Failed to write "${key}":`, err);
     }
   }
 
@@ -44,7 +44,7 @@ export function createGmHost() {
         memoryStore.delete(key);
       }
     } catch (err) {
-      console.error(`[JobCopilot:Storage] Failed to delete "${key}":`, err);
+      console.error(`[Kareer:Storage] Failed to delete "${key}":`, err);
     }
   }
 
@@ -110,7 +110,7 @@ export function createGmHost() {
     aiRequest,
     tabBind: (sessionId) => {
       if (typeof GM_getTab === 'function' && typeof GM_saveTab === 'function') {
-        GM_getTab((tab) => GM_saveTab({ ...tab, jobCopilotSession: sessionId }));
+        GM_getTab((tab) => GM_saveTab({ ...tab, kareerSession: sessionId }));
       }
     },
     tabBoundId: () => {
@@ -119,7 +119,7 @@ export function createGmHost() {
         const timer = setTimeout(() => resolve(null), 500);
         GM_getTab((tab) => {
           clearTimeout(timer);
-          resolve(tab?.jobCopilotSession || null);
+          resolve(tab?.kareerSession || null);
         });
       });
     },
@@ -129,16 +129,16 @@ export function createGmHost() {
     // No navigation API: a constant marker keeps the engine on DOM comparison.
     navigationMarker: () => ({ id: 0, url: '', frameId: 0, kind: '', at: 0 }),
     navigationOnChange: () => () => {},
-    documentsMeta: async () => memoryStore.has('jc:resume-meta') ? memoryStore.get('jc:resume-meta') : null,
-    documentsGet: async () => memoryStore.get('jc:resume') || null,
+    documentsMeta: async () => memoryStore.has('kr:resume-meta') ? memoryStore.get('kr:resume-meta') : null,
+    documentsGet: async () => memoryStore.get('kr:resume') || null,
     documentsPut: async (doc) => {
-      memoryStore.set('jc:resume', doc);
-      memoryStore.set('jc:resume-meta', { name: doc.name, type: doc.type, size: doc.buffer?.byteLength || 0 });
+      memoryStore.set('kr:resume', doc);
+      memoryStore.set('kr:resume-meta', { name: doc.name, type: doc.type, size: doc.buffer?.byteLength || 0 });
       return { ok: true };
     },
     documentsDelete: async () => {
-      memoryStore.delete('jc:resume');
-      memoryStore.delete('jc:resume-meta');
+      memoryStore.delete('kr:resume');
+      memoryStore.delete('kr:resume-meta');
     },
     openOptions: () => {},
     menuRegister: (label, handler) => {
@@ -146,7 +146,7 @@ export function createGmHost() {
         try {
           GM_registerMenuCommand(label, handler);
         } catch (err) {
-          console.warn('[JobCopilot] Could not register GM menu command:', err);
+          console.warn('[Kareer] Could not register GM menu command:', err);
         }
       }
     },

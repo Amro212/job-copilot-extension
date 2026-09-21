@@ -795,7 +795,7 @@ test('tab-bound recent navigation recovers a same-application POST redirect only
   session.pendingUrl = 'https://example.com/apply/42/step1';
   session.pendingAt = Date.now();
   saveSession(session);
-  globalThis.GM_getTab = callback => callback({ jobCopilotSession: session.id });
+  globalThis.GM_getTab = callback => callback({ kareerSession: session.id });
   assert.equal((await restoreSession('https://example.com/apply/42/step2'))?.id, session.id);
   assert.equal(await restoreSession('https://example.com/apply/99/step2'), null);
   assert.equal(await restoreSession('https://other.example/apply/42/step2'), null);

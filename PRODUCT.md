@@ -10,7 +10,7 @@ web
 Job seekers applying to multiple positions across major Applicant Tracking Systems (Workday, Greenhouse, Lever, Ashby, and generic web forms) who want to apply quickly, accurately, and privately without repetitive manual copy-pasting.
 
 ## Product Purpose
-Job Copilot is an open-source, local-first browser assistant (Chrome/Firefox extension and Tampermonkey userscript) that scans job application forms, matches questions to a user's verified profile data, and fills out complex web forms (inputs, comboboxes, dropdowns, radios, checkboxes, file uploads). It speeds up applications from 15+ minutes to seconds while guaranteeing zero data leakage and strictly avoiding AI hallucinations.
+Kareer is an open-source, local-first browser assistant (Chrome/Firefox extension and Tampermonkey userscript) that scans job application forms, matches questions to a user's verified profile data, and fills out complex web forms (inputs, comboboxes, dropdowns, radios, checkboxes, file uploads). It speeds up applications from 15+ minutes to seconds while guaranteeing zero data leakage and strictly avoiding AI hallucinations.
 
 ## Positioning
 Private, local-first Bring-Your-Own-Key (BYOK) architecture with zero telemetry, running entirely in the user's browser without external backends or subscriptions, with strict truthful grounding that refuses to fabricate credentials or answers.
@@ -27,7 +27,7 @@ Operates directly within candidate-facing application pages across Ashby, Greenh
 - Safety boundaries: pauses for assessments, identity verification, recorded interviews, e-signatures, and legal attestations.
 
 ## Brand Commitments
-- Name: Job Copilot
+- Name: Kareer
 - Voice: Precise, trustworthy, unobtrusive, transparent, professional.
 - Design Language: Operates within the page without hijacking focus; dark, focused HUD with high-contrast semantics and restrained accents.
 

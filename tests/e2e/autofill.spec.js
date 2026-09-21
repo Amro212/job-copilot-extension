@@ -14,19 +14,19 @@ const PROFILE = {
 };
 
 test.describe('single page autofill', () => {
-  test('fills every control type on the generic fixture and verifies the result', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE });
+  test('fills every control type on the generic fixture and verifies the result', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE });
 
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase2-form-fixture.html'));
-    await jc.openPanel(page);
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase2-form-fixture.html'));
+    await kr.openPanel(page);
 
-    await page.locator('#jc-autofill-btn').click();
-    await expect(page.locator('#jc-autofill-btn')).toBeEnabled({ timeout: 60000 });
+    await page.locator('#kr-autofill-btn').click();
+    await expect(page.locator('#kr-autofill-btn')).toBeEnabled({ timeout: 60000 });
 
     // Exactly one primary AI request for the page.
-    expect(jc.openrouter.requests.length).toBeGreaterThanOrEqual(1);
-    expect(jc.openrouter.requests[0].authorization).toBe('Bearer sk-or-v1-e2e-test-key');
+    expect(kr.openrouter.requests.length).toBeGreaterThanOrEqual(1);
+    expect(kr.openrouter.requests[0].authorization).toBe('Bearer sk-or-v1-e2e-test-key');
 
     await expect(page.locator('#first_name')).not.toHaveValue('');
     await expect(page.locator('#user_email')).toHaveValue('test.applicant@example.com');
@@ -42,22 +42,22 @@ test.describe('single page autofill', () => {
     // React-style controlled input needs the native setter path to stick.
     await expect(page.locator('#react_sim_input')).not.toHaveValue('');
 
-    const panel = page.locator('#jc-main-panel');
+    const panel = page.locator('#kr-main-panel');
     await expect(panel).toContainText('Autofill complete. Review field statuses below.');
     await expect(panel).not.toContainText('Autofill Progress');
     await expect(panel).toContainText('1 FAILED');
   });
 
-  test('the prompt carries the stored profile and no credentials', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE, apiKey: 'sk-or-v1-leak-canary-value' });
+  test('the prompt carries the stored profile and no credentials', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE, apiKey: 'sk-or-v1-leak-canary-value' });
 
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase2-form-fixture.html'));
-    await jc.openPanel(page);
-    await page.locator('#jc-autofill-btn').click();
-    await expect(page.locator('#jc-autofill-btn')).toBeEnabled({ timeout: 60000 });
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase2-form-fixture.html'));
+    await kr.openPanel(page);
+    await page.locator('#kr-autofill-btn').click();
+    await expect(page.locator('#kr-autofill-btn')).toBeEnabled({ timeout: 60000 });
 
-    const request = jc.openrouter.requests[0];
+    const request = kr.openrouter.requests[0];
     const userContent = JSON.parse(request.body.messages.at(-1).content);
     expect(userContent.applicantProfile.fullName).toBe('Test Applicant');
     expect(userContent.applicantProfile.workCountry).toBe('Canada');
@@ -67,43 +67,43 @@ test.describe('single page autofill', () => {
     expect(JSON.stringify(request.body)).not.toContain('leak-canary-value');
   });
 
-  test('existing values are left alone unless overwrite is enabled', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE, settings: { overwriteExisting: false } });
+  test('existing values are left alone unless overwrite is enabled', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE, settings: { overwriteExisting: false } });
 
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase2-form-fixture.html'));
-    await jc.openPanel(page);
-    await page.locator('#jc-autofill-btn').click();
-    await expect(page.locator('#jc-autofill-btn')).toBeEnabled({ timeout: 60000 });
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase2-form-fixture.html'));
+    await kr.openPanel(page);
+    await page.locator('#kr-autofill-btn').click();
+    await expect(page.locator('#kr-autofill-btn')).toBeEnabled({ timeout: 60000 });
 
     await expect(page.locator('#portfolio_url')).toHaveValue('https://pre-existing-portfolio.example.com');
   });
 
-  test('an OpenRouter failure surfaces in the panel instead of hanging', async ({ jc }) => {
-    await jc.seed({ profile: PROFILE });
-    jc.openrouter.status = 402;
-    jc.openrouter.handler = () => ({ error: { message: 'Insufficient credits' } });
+  test('an OpenRouter failure surfaces in the panel instead of hanging', async ({ kr }) => {
+    await kr.seed({ profile: PROFILE });
+    kr.openrouter.status = 402;
+    kr.openrouter.handler = () => ({ error: { message: 'Insufficient credits' } });
 
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase2-form-fixture.html'));
-    await jc.openPanel(page);
-    await page.locator('#jc-autofill-btn').click();
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase2-form-fixture.html'));
+    await kr.openPanel(page);
+    await page.locator('#kr-autofill-btn').click();
 
-    await expect(page.locator('#jc-main-panel')).toContainText('Insufficient credits', { timeout: 60000 });
-    await expect(page.locator('#jc-autofill-btn')).toBeEnabled();
+    await expect(page.locator('#kr-main-panel')).toContainText('Insufficient credits', { timeout: 60000 });
+    await expect(page.locator('#kr-autofill-btn')).toBeEnabled();
   });
 
-  test('no API key blocks the request before any network call', async ({ jc }) => {
-    await jc.seed({ apiKey: '', profile: PROFILE });
+  test('no API key blocks the request before any network call', async ({ kr }) => {
+    await kr.seed({ apiKey: '', profile: PROFILE });
 
-    const page = await jc.context.newPage();
-    await page.goto(jc.fixtureUrl('phase2-form-fixture.html'));
-    await jc.openPanel(page);
+    const page = await kr.context.newPage();
+    await page.goto(kr.fixtureUrl('phase2-form-fixture.html'));
+    await kr.openPanel(page);
 
     page.once('dialog', (dialog) => dialog.accept());
-    await page.locator('#jc-autofill-btn').click();
+    await page.locator('#kr-autofill-btn').click();
     await page.waitForTimeout(1500);
 
-    expect(jc.openrouter.requests.length).toBe(0);
+    expect(kr.openrouter.requests.length).toBe(0);
   });
 });

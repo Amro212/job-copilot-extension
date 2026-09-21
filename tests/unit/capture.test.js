@@ -75,8 +75,8 @@ test('applicant answers and identity never survive a capture', () => {
 test('scripts, inline handlers, and the copilot panel are stripped', () => {
   load(`
     <body>
-      <div id="job-copilot-root">panel host</div>
-      <div id="job-copilot-inline-rewrite">badge</div>
+      <div id="kareer-root">panel host</div>
+      <div id="kareer-inline-rewrite">badge</div>
       <form>
         <input id="name" onfocus="steal()" onchange="track()" />
         <button onclick="submitNow()">Next</button>
@@ -94,8 +94,8 @@ test('scripts, inline handlers, and the copilot panel are stripped', () => {
   assert.equal(html.includes('onfocus'), false);
   assert.equal(html.includes('onchange'), false);
   assert.equal(html.includes('onclick'), false);
-  assert.equal(html.includes('job-copilot-root'), false, 'the panel is not part of the page under test');
-  assert.equal(html.includes('job-copilot-inline-rewrite'), false);
+  assert.equal(html.includes('kareer-root'), false, 'the panel is not part of the page under test');
+  assert.equal(html.includes('kareer-inline-rewrite'), false);
   assert.equal(html.includes('tracker.example.com'), false, 'remote image sources are blanked');
   assert.match(html, /alt="Company logo"/, 'alt text is kept for label extraction');
   assert.match(html, />Next</);
@@ -117,7 +117,7 @@ test('embedded frames point at their own captured files', () => {
   assert.match(html, /src="acme-frame1\.html"/);
   assert.match(html, /src="acme-frame2\.html"/);
   // The original host is recorded so a reviewer can tell which ATS it was.
-  assert.match(html, /data-jc-original-host="job-boards\.greenhouse\.io"/);
+  assert.match(html, /data-kr-original-host="job-boards\.greenhouse\.io"/);
   assert.equal(html.includes('https://job-boards.greenhouse.io/acme/jobs/42/embed'), false);
 });
 
@@ -131,7 +131,7 @@ test('metadata records where the capture came from', () => {
   assert.equal(meta.label, 'workday-my-information');
   assert.equal(meta.fieldCount, 1);
   assert.match(html, /^<!DOCTYPE html>/);
-  assert.match(html, /Job Copilot captured fixture/);
+  assert.match(html, /Kareer captured fixture/);
   assert.match(html, /workday-my-information/);
 });
 

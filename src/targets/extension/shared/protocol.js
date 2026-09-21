@@ -4,54 +4,54 @@
  */
 export const MSG = {
   // Storage
-  SNAPSHOT: 'jc:snapshot',
-  STORAGE_SET: 'jc:storage-set',
-  STORAGE_DELETE: 'jc:storage-delete',
-  STORAGE_CHANGED: 'jc:storage-changed',
+  SNAPSHOT: 'kr:snapshot',
+  STORAGE_SET: 'kr:storage-set',
+  STORAGE_DELETE: 'kr:storage-delete',
+  STORAGE_CHANGED: 'kr:storage-changed',
 
   // Secrets (background only)
-  SECRET_WRITE: 'jc:secret-write',
-  SECRET_CLEAR: 'jc:secret-clear',
+  SECRET_WRITE: 'kr:secret-write',
+  SECRET_CLEAR: 'kr:secret-clear',
 
   // AI proxy
-  AI_REQUEST: 'jc:ai-request',
+  AI_REQUEST: 'kr:ai-request',
 
   // Tab-scoped session binding
-  TAB_BIND: 'jc:tab-bind',
-  TAB_BOUND_ID: 'jc:tab-bound-id',
+  TAB_BIND: 'kr:tab-bind',
+  TAB_BOUND_ID: 'kr:tab-bound-id',
 
   // UI
-  OPEN_OPTIONS: 'jc:open-options',
-  TOGGLE_PANEL: 'jc:toggle-panel',
-  PANEL_STATUS: 'jc:panel-status',
-  REQUEST_STATUS: 'jc:request-status',
+  OPEN_OPTIONS: 'kr:open-options',
+  TOGGLE_PANEL: 'kr:toggle-panel',
+  PANEL_STATUS: 'kr:panel-status',
+  REQUEST_STATUS: 'kr:request-status',
 
   // Cross-frame field agents
-  FRAME_ANNOUNCE: 'jc:frame-announce',
-  FRAMES_CHANGED: 'jc:frames-changed',
-  FRAME_LIST: 'jc:frame-list',
-  FRAME_COMMAND: 'jc:frame-command',
-  FRAME_RESULT: 'jc:frame-result',
+  FRAME_ANNOUNCE: 'kr:frame-announce',
+  FRAMES_CHANGED: 'kr:frames-changed',
+  FRAME_LIST: 'kr:frame-list',
+  FRAME_COMMAND: 'kr:frame-command',
+  FRAME_RESULT: 'kr:frame-result',
 
   // Documents
-  DOC_GET: 'jc:doc-get',
-  DOC_PUT: 'jc:doc-put',
-  DOC_META: 'jc:doc-meta',
-  DOC_DELETE: 'jc:doc-delete',
+  DOC_GET: 'kr:doc-get',
+  DOC_PUT: 'kr:doc-put',
+  DOC_META: 'kr:doc-meta',
+  DOC_DELETE: 'kr:doc-delete',
 
   // Navigation lifecycle
-  NAV_COMMITTED: 'jc:nav-committed',
-  NAV_STATE: 'jc:nav-state',
+  NAV_COMMITTED: 'kr:nav-committed',
+  NAV_STATE: 'kr:nav-state',
 };
 
 /** Keys the background refuses to hand to any page context. */
-export const SECRET_KEYS = ['jc:secrets'];
+export const SECRET_KEYS = ['kr:secrets'];
 
 /**
  * Keys worth pushing to other contexts when they change. Sessions are tab-local
  * and debug logs are written on every log line, so broadcasting either one would
  * flood every open tab for no benefit.
  */
-export const BROADCAST_KEYS = ['jc:settings', 'jc:profile', 'jc:memory', 'jc:documents'];
+export const BROADCAST_KEYS = ['kr:settings', 'kr:profile', 'kr:memory', 'kr:documents'];
 
 export const STORAGE_AREA = 'local';

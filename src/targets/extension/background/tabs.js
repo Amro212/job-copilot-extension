@@ -5,7 +5,7 @@ import { api } from '../shared/browser.js';
  * closes, which matches the old tab-object lifetime, and the worker can be
  * killed at any time without losing the binding.
  */
-const key = (tabId) => `jc:tab:${tabId}`;
+const key = (tabId) => `kr:tab:${tabId}`;
 
 const session = () => api.storage.session || api.storage.local;
 

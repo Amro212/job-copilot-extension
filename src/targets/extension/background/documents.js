@@ -3,7 +3,7 @@
  * never lives in a page origin or in chrome.storage (which would serialize it
  * into every snapshot).
  */
-const DB_NAME = 'job-copilot';
+const DB_NAME = 'kareer';
 const STORE = 'files';
 const KEY = 'resume';
 

@@ -2,17 +2,17 @@ import { STRUCTURED_PROFILE_DEFAULTS } from './profile.js';
 
 // Dynamically injected at build time, fallback to package.json version
 export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.3.0';
-export const APP_NAME = 'Job Copilot';
+export const APP_NAME = 'Kareer';
 
 export const STORAGE_KEYS = {
-  SETTINGS: 'jc:settings',
-  PROFILE: 'jc:profile',
-  SECRETS: 'jc:secrets',
-  DEBUG: 'jc:debug',
-  VERSION: 'jc:version',
-  JOB: 'jc:job',
-  SESSIONS: 'jc:sessions',
-  MEMORY: 'jc:memory',
+  SETTINGS: 'kr:settings',
+  PROFILE: 'kr:profile',
+  SECRETS: 'kr:secrets',
+  DEBUG: 'kr:debug',
+  VERSION: 'kr:version',
+  JOB: 'kr:job',
+  SESSIONS: 'kr:sessions',
+  MEMORY: 'kr:memory',
 };
 
 export const DEFAULT_SETTINGS = {
@@ -48,8 +48,8 @@ export const POPULAR_MODELS = [
 ];
 
 export const UI_IDS = {
-  CONTAINER: 'job-copilot-root',
-  INLINE_REWRITE: 'job-copilot-inline-rewrite',
+  CONTAINER: 'kareer-root',
+  INLINE_REWRITE: 'kareer-inline-rewrite',
 };
 
 export const FIELD_TYPES = {

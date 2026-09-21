@@ -11,31 +11,31 @@ const extensionPath = path.join(repoRoot, 'dist', 'chrome');
 
 /** Distinct origins that all resolve to the one fixture server, so cross-origin
  *  iframe behaviour can be tested without real domains. */
-export const ATS_HOST = 'ats.jobcopilot.test';
-export const EMBED_HOST = 'embed.jobcopilot.test';
+export const ATS_HOST = 'ats.kareer.test';
+export const EMBED_HOST = 'embed.kareer.test';
 export const WORKDAY_HOST = 'acme.myworkdayjobs.com';
 export const GREENHOUSE_HOST = 'boards.greenhouse.io';
 export const LEVER_HOST = 'jobs.lever.co';
 // Chrome HSTS-preloads ashbyhq.com, so HTTP fixture mapping to that host fails
 // with ERR_SSL_PROTOCOL_ERROR. The fixture still matches the Ashby adapter via
 // distinctive DOM ([data-ashby-root], .ashby-select-input).
-export const ASHBY_HOST = 'ashby.jobcopilot.test';
+export const ASHBY_HOST = 'ashby.kareer.test';
 
 export const test = base.extend({
-  jc: async ({}, use, testInfo) => {
+  kr: async ({}, use, testInfo) => {
     if (!fs.existsSync(path.join(extensionPath, 'manifest.json'))) {
       throw new Error('dist/chrome is missing. Run `npm run build` first.');
     }
 
     const fixtures = await startFixtureServer();
     const openrouter = await startOpenRouterMock();
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jc-e2e-'));
+    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kr-e2e-'));
 
     const context = await chromium.launchPersistentContext(userDataDir, {
       // The headless shell cannot load extensions; `channel: chromium` selects the
       // full browser, which supports them under the new headless mode.
       channel: 'chromium',
-      headless: process.env.JC_HEADED !== '1',
+      headless: process.env.KR_HEADED !== '1',
       ignoreHTTPSErrors: true,
       args: [
         `--disable-extensions-except=${extensionPath}`,
@@ -64,14 +64,14 @@ export const test = base.extend({
       /** Writes directly through the background worker, bypassing the UI. */
       async seed({ apiKey = 'sk-or-v1-e2e-test-key', settings, profile, resume } = {}) {
         await worker.evaluate(async ({ apiKey, settings, profile }) => {
-          if (apiKey) await chrome.storage.local.set({ 'jc:secrets': { apiKey } });
+          if (apiKey) await chrome.storage.local.set({ 'kr:secrets': { apiKey } });
           if (settings) {
-            const cur = (await chrome.storage.local.get('jc:settings'))['jc:settings'] || {};
-            await chrome.storage.local.set({ 'jc:settings': { ...cur, ...settings } });
+            const cur = (await chrome.storage.local.get('kr:settings'))['kr:settings'] || {};
+            await chrome.storage.local.set({ 'kr:settings': { ...cur, ...settings } });
           }
           if (profile) {
-            const cur = (await chrome.storage.local.get('jc:profile'))['jc:profile'] || {};
-            await chrome.storage.local.set({ 'jc:profile': { ...cur, ...profile } });
+            const cur = (await chrome.storage.local.get('kr:profile'))['kr:profile'] || {};
+            await chrome.storage.local.set({ 'kr:profile': { ...cur, ...profile } });
           }
         }, { apiKey, settings, profile });
         if (resume) await helpers.seedResume(resume);
@@ -81,7 +81,7 @@ export const test = base.extend({
         await worker.evaluate(async (file) => {
           const buffer = new TextEncoder().encode(file.contents).buffer;
           await new Promise((resolve, reject) => {
-            const req = indexedDB.open('job-copilot', 1);
+            const req = indexedDB.open('kareer', 1);
             req.onupgradeneeded = () => {
               if (!req.result.objectStoreNames.contains('files')) req.result.createObjectStore('files');
             };
@@ -109,10 +109,10 @@ export const test = base.extend({
 
       /** Playwright's CSS engine pierces the panel's open shadow root. */
       async openPanel(page) {
-        const toggle = page.locator('#jc-toggle-btn');
+        const toggle = page.locator('#kr-toggle-btn');
         await toggle.waitFor({ timeout: 20000 });
-        if (!(await page.locator('#jc-main-panel').count())) await toggle.click();
-        await page.locator('#jc-main-panel').waitFor({ timeout: 10000 });
+        if (!(await page.locator('#kr-main-panel').count())) await toggle.click();
+        await page.locator('#kr-main-panel').waitFor({ timeout: 10000 });
       },
     };
 
