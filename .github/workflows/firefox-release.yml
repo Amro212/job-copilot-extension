@@ -1,11 +1,6 @@
 name: Firefox Release
 
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - firefox-updates.json
   workflow_dispatch:
 
 permissions:
