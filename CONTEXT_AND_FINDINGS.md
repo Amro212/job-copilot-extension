@@ -5,6 +5,48 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-22 — Site Demo: Removed Developer "Debug" Tab & Streamlined Public Demo
+
+### Bugs/findings
+- **Target**: Public Website (`site/`) interactive demo panel.
+- **Scope**: User requested removal of the developer "Debug" tab and all associated remnants in the public demo, keeping it strictly developer-only.
+- **Resolution**:
+  - Removed `<button data-sim-tab="debug">` tab button from the simulated extension panel header in `site/index.html`.
+  - Removed the entire `#sim-pane-debug` pane (System State card, Regression Fixture card, and Recent Activity Logs console) from `site/index.html`.
+  - Cleaned up `site/script.js`: removed `fixtureBtn`, `clearLogsBtn`, and `logBox` element references and click listeners; updated tab switching comments and tab action logic so `actionBtn` remains cleanly aligned across the 3 user-facing tabs (`Run` -> "Autofill Application", `Profile` -> "Save Profile", `Settings` -> "Save Settings").
+  - Removed dead terminal styling (`.kr-sim-log-*`) from `site/styles.css`.
+  - Verified layout symmetry: With 3 tabs (`Run`, `Profile`, `Settings`), `.kr-sim-tab` (`flex: 1`) cleanly and symmetrically divides the panel header with zero awkward spacing or dead states.
+- **Verification**:
+  - `npm test`: **208 passed, 0 failed**.
+  - `impeccable detect`: **0 antipatterns (`[]`)**.
+  - Automated Playwright verification (`scratch/test_interactive_demo.js`): Confirmed debug tab count is 0, pane count is 0, exactly 3 tabs exist, tab switching works between all 3 tabs, model selector updates chip, profile/settings save feedback triggers, and autofill simulation runs to completion.
+
+---
+
+## Turn: 2026-09-22 — Official Kareer Public Website & GitHub Pages Deployment
+
+### Bugs/findings
+- **Target**: Public Website (`site/`) and GitHub Pages deployment.
+- **Antipattern audits & detector findings**: Ran Impeccable mechanical detector (`impeccable detect --json`). Resolved stacked icon slop tiles by converting to side-by-side header row with inline SVGs, adjusted typography scaling to enforce >=1.25:1 step between roles, eliminated colored box-shadow hover glow (#a3e635) in favor of clean neutral elevation, removed thick left border on callouts, fixed heading hierarchy (added visually hidden h2 for demonstration visual and converted privacy point subheads to h3), and resolved 375px mobile overflow via responsive flex wrapping and URL word breaking. Final detector result: 0 antipatterns (`[]`).
+- **Store link gating**: Guaranteed Chrome Web Store and Firefox AMO buttons remain visibly and functionally disabled with "Coming soon" tags via centralized `LINKS` configuration in `script.js` until production URLs are published.
+
+### Turn changes
+- `site/index.html`: Created public responsive landing page with semantic structure, navigation, hero, interactive flight-deck browser simulation, features, supported ATS grid, 4-step walkthrough, privacy summary, install/browser chooser, open source section, FAQ, and footer.
+- `site/styles.css`: Authored responsive vanilla CSS design system implementing tokens from `DESIGN.md` and `src/core/theme.js` (deep graphite surfaces `#080B10`, `#0D1117`, `#131922`, restrained chartreuse lime `#A3E635`, local Geist/Geist Mono fonts, themed scrollbars and selection, WCAG AA contrast, and reduced motion support).
+- `site/script.js`: Added vanilla JavaScript with centralized `LINKS` dictionary, dynamic store button state management, accessible mobile drawer toggle, and accessible FAQ accordion.
+- `site/privacy/index.html`: Created comprehensive 14-section public privacy policy covering local-first storage, AI transmission, API key isolation, manifest permissions, Firefox data collection categories (`authenticationInfo`, `personallyIdentifyingInfo`, `websiteContent`), zero telemetry/advertising, data retention, and private vulnerability reporting.
+- `site/assets/`: Copied production brand assets (`kareer-mark.svg`, `kareer-logo-horizontal.png`, `kareer-app-icon.png`, `kareer-promo-banner.png`) from `src/assets/brand/` and font files (`Geist-Variable.woff2`, `GeistMono-Variable.woff2`) from `src/assets/fonts/`.
+- `.github/workflows/pages.yml`: Added GitHub Pages deployment workflow deploying only `site/` on push to `master` with relative URL compatibility for repository subpath `/kareer/`.
+- `CONTEXT_AND_FINDINGS.md`: Logged website build, design choices, verification results, and deployment workflow.
+
+### Verification/status
+- `npm test`: **208 passed, 0 failed**.
+- `impeccable detect`: **0 antipatterns (`[]`)**.
+- Static link & HTTP checks: All internal relative links resolved; all 12 endpoints returned 200 OK on local server.
+- Playwright responsive tests: Verified at 375px (mobile), 768px (tablet), and 1440px (desktop) with 0 horizontal overflow; verified store buttons disabled state; verified mobile nav menu toggle.
+
+---
+
 ## Turn: 2026-09-21 — Rebrand Verification & Code Review
 
 ### Bugs/findings
@@ -893,3 +935,35 @@ Narrative voice prompt updated and verified.
 - Targeted real-browser regression passed after the fix: **1 passed**.
 - `npm test`: **207 passed, 0 failed**.
 - Full `npm run test:e2e` was started but stopped at the user's request; manual visual review was explicitly preferred. No full-suite result is claimed.
+
+---
+
+## Turn: 2026-09-22 — Public website & privacy policy for Kareer
+
+### User requests
+1. Build official public website and store-compliant privacy policy inside this repository (`site/`) according to `DESIGN.md` and `/impeccable` design principles.
+2. Remove status dot beside version badge and make version display fully dynamic on every update.
+
+### Findings / Resolution
+- **Design & Typography**: Built zero-dependency responsive site using Kareer brand tokens, local Geist variable fonts, and clean dark theme. Resolved all Impeccable audit flags (removed AI card slop icons, avoided harsh glow halos, strictly enforced 375px/768px/1440px layout wrapping with zero horizontal overflow).
+- **Dot removal**: Removed `.kr-status-dot` beside the hero version badge in `site/index.html` and eliminated unused CSS rule in `site/styles.css`.
+- **Dynamic versioning**: Implemented client-side version resolution in `site/script.js` (`initDynamicVersion`) with local fallback to `site/version.json` and remote fallback to `package.json` on GitHub `master`. Reverted unrequested modifications to `tools/build.js` to keep core build tooling untouched.
+- **Privacy Policy**: Created standalone 14-section privacy document (`site/privacy/index.html`) fulfilling Chrome Web Store and Mozilla Add-on store policies (local-first BYOK architecture, zero telemetry, zero cookies).
+
+### Turn changes
+- `site/index.html`: Landing page markup with hero, flight deck preview, feature breakdown, ATS matrix, workflow, privacy guarantee, store install chooser, and FAQ.
+- `site/privacy/index.html`: Store-compliant privacy policy.
+- `site/styles.css`: Impeccable CSS system with local `@font-face` Geist fonts and responsive breakpoints.
+- `site/script.js`: Central store links, mobile menu, accessible FAQ accordion, dynamic version fetcher, and interactive demo logic.
+- `site/version.json`: Static local version seed for offline local dev (`0.4.35`).
+- `site/assets/`: Self-hosted SVGs, PNGs, and WOFF2 variable fonts, including `kareer-mark-lime.svg` and `kareer-mark-lime.png`.
+- `.github/workflows/pages.yml`: GitHub Pages automated deployment workflow.
+- `tools/build.js`: Reverted to clean original state.
+
+### Interactive UI Simulation & Brand Mark Update
+- **Lime Icon**: Fixed panel HUD icon and favicon to use signal lime (`#A3E635`) via `assets/kareer-mark-lime.svg` and `assets/kareer-mark-lime.png`, resolving the previous black icon rendering issue caused by SVG `currentColor` in `<img>`.
+- **Authentic Extension UI**: Mimicked the exact panel architecture from `src/core/ui.js` and `DESIGN.md` across 4 interactive tabs (Run, Profile, Settings, Debug). Removed nested card borders in favor of flat separator rows.
+- **Interactive Controls**: Added keyboard-accessible tab switching (`[data-sim-tab]`), simulated live autofill progress with safety boundary pause, interactive model selector with header chip sync, fixture capture feedback, and profile/settings save feedback.
+- **Impeccable Audit**: Resolved `tiny-text`, `undersized-ui-text`, and `layout-transition` (switched progress bar from `width` to `transform: scaleX`). Impeccable detector output: `[]` (0 antipatterns).
+
+

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kareer — Privacy Policy</title>
+  <meta name="description" content="Official Privacy Policy for the Kareer open-source browser extension. Transparent details on local storage, data boundaries, and API transmission.">
+  <meta name="theme-color" content="#0D1117">
+  
+  <!-- Open Graph / Social Metadata -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Kareer — Privacy Policy">
+  <meta property="og:description" content="Official Privacy Policy for the Kareer open-source browser extension. Local-first, zero telemetry.">
+  <meta property="og:image" content="../assets/kareer-promo-banner.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../assets/kareer-app-icon.png">
+
+  <!-- Shared Stylesheet -->
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       Header / Navigation Bar
+       ======================================================================== -->
+  <header class="kr-header">
+    <div class="kr-container kr-header-inner">
+      <a href="../" class="kr-logo-link" aria-label="Kareer Homepage">
+        <img src="../assets/kareer-logo-horizontal.png" alt="Kareer" class="kr-logo-img">
+      </a>
+
+      <nav class="kr-nav" aria-label="Main Navigation">
+        <a href="../#features" class="kr-nav-link">Features</a>
+        <a href="../#supported-sites" class="kr-nav-link">Supported Sites</a>
+        <a href="../#how-it-works" class="kr-nav-link">How It Works</a>
+        <a href="../#open-source" class="kr-nav-link">Open Source</a>
+        <a href="./" class="kr-nav-link" style="color: var(--kr-signal);">Privacy</a>
+      </nav>
+
+      <div class="kr-header-actions">
+        <a href="https://github.com/Amro212/kareer" class="kr-btn kr-btn-secondary kr-btn-small" target="_blank" rel="noopener noreferrer">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </a>
+
+        <button type="button" class="kr-mobile-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Privacy Policy Article Layout
+       ======================================================================== -->
+  <main class="kr-policy-layout">
+    <div class="kr-container kr-policy-container">
+      <!-- Quick Table of Contents Sidebar -->
+      <aside class="kr-policy-sidebar" aria-label="Privacy Policy Sections">
+        <div class="kr-policy-sidebar-title">Sections</div>
+        <a href="#overview" class="kr-policy-toc-link">1. Overview</a>
+        <a href="#local-storage" class="kr-policy-toc-link">2. Stored Locally</a>
+        <a href="#ai-transmission" class="kr-policy-toc-link">3. AI Transmission</a>
+        <a href="#api-keys" class="kr-policy-toc-link">4. API Key Security</a>
+        <a href="#permissions" class="kr-policy-toc-link">5. Browser Permissions</a>
+        <a href="#data-categories" class="kr-policy-toc-link">6. Data Categories</a>
+        <a href="#analytics" class="kr-policy-toc-link">7. Zero Analytics</a>
+        <a href="#advertising" class="kr-policy-toc-link">8. No Data Selling</a>
+        <a href="#retention" class="kr-policy-toc-link">9. Data Retention</a>
+        <a href="#user-controls" class="kr-policy-toc-link">10. User Controls</a>
+        <a href="#third-parties" class="kr-policy-toc-link">11. Third Parties</a>
+        <a href="#security" class="kr-policy-toc-link">12. Security Policy</a>
+        <a href="#open-source" class="kr-policy-toc-link">13. Open Source</a>
+        <a href="#contact" class="kr-policy-toc-link">14. Contact &amp; Reports</a>
+      </aside>
+
+      <!-- Main Document Body -->
+      <article class="kr-policy-article">
+        <div class="kr-policy-header">
+          <span class="kr-badge kr-badge-lime">LEGAL COMPLIANCE &amp; DISCLOSURES</span>
+          <h1 style="margin-top: var(--kr-space-3);">Kareer Privacy Policy</h1>
+          <div class="kr-policy-meta">
+            Last updated: September 22, 2026 • Version 1.1
+          </div>
+        </div>
+
+        <!-- 1. Overview -->
+        <section id="overview" class="kr-policy-section">
+          <h2>1. Overview</h2>
+          <p>
+            Kareer is an open-source browser extension and productivity tool created to assist users in completing job application forms efficiently and accurately. Kareer operates on the user’s device (Chrome, Firefox, or supported userscript runtimes) to scan application forms, locate inputs, and assist in matching questions with candidate-supplied resume and profile information.
+          </p>
+          <p>
+            This Privacy Policy describes our strict data handling practices, explains our local-first architecture, and discloses all data flows required for the operation of the extension.
+          </p>
+        </section>
+
+        <!-- 2. Information stored locally -->
+        <section id="local-storage" class="kr-policy-section">
+          <h2>2. Information Stored Locally</h2>
+          <p>
+            Kareer is designed as a <strong>local-first</strong> application. The following information may be saved directly in your browser’s extension-controlled storage (<code>chrome.storage.local</code> or sandboxed userscript storage):
+          </p>
+          <ul>
+            <li><strong>Candidate profile information</strong>: Full name, email address, phone number, location, and social or professional profile URLs (e.g., LinkedIn, GitHub, portfolio).</li>
+            <li><strong>Resume context &amp; notes</strong>: Plaintext resume excerpts, work history summaries, education details, and applicant notes (e.g., salary expectations, work authorization status, preferred pronouns).</li>
+            <li><strong>Extension configuration</strong>: Selected AI model preferences, UI preferences, and feature toggles.</li>
+            <li><strong>AI credentials</strong>: User-provided OpenRouter API key.</li>
+          </ul>
+          <div class="kr-policy-callout">
+            <strong>Key Guarantee:</strong> Kareer does not operate a remote server, cloud database, or central backend service. The developers and maintainers of Kareer never have access to your stored profile data or API credentials.
+          </div>
+        </section>
+
+        <!-- 3. Information transmitted when AI features are used -->
+        <section id="ai-transmission" class="kr-policy-section">
+          <h2>3. Information Transmitted When AI Features Are Used</h2>
+          <p>
+            Kareer does not continuously broadcast data. However, when you explicitly click <strong>Autofill</strong> or trigger an inline narrative rewrite, Kareer must transmit specific contextual data to generate answers.
+          </p>
+          <p>
+            Outgoing AI requests travel directly over encrypted HTTPS from your browser extension background worker to OpenRouter (<code>https://openrouter.ai/api/v1/chat/completions</code>). The network payload includes:
+          </p>
+          <ul>
+            <li>The extracted labels, descriptions, and option choices of form fields detected on the current application page.</li>
+            <li>Relevant excerpts of your saved profile and resume context required to formulate answers to those fields.</li>
+            <li>System prompts instructing the language model to return structured JSON grounded strictly in your provided profile without inventing experience.</li>
+          </ul>
+          <p>
+            Data transmitted during AI requests is processed by OpenRouter and the specific downstream language model provider chosen by the user (such as Google, Anthropic, or OpenAI) according to their respective privacy terms and data handling practices. Kareer does not proxy, intercept, or record these requests on any intermediary server.
+          </p>
+        </section>
+
+        <!-- 4. API keys -->
+        <section id="api-keys" class="kr-policy-section">
+          <h2>4. API Keys &amp; Credential Isolation</h2>
+          <p>
+            Kareer operates on a <strong>Bring Your Own Key (BYOK)</strong> model. You supply your own personal API key from OpenRouter.
+          </p>
+          <ul>
+            <li>Your API key is stored exclusively in sandboxed browser extension storage.</li>
+            <li>All network requests to OpenRouter are dispatched exclusively from the extension's privileged background service worker (or sandboxed userscript host).</li>
+            <li>The extension is engineered to prevent exposure of your raw API key to visited web pages, content scripts, DOM elements, or page storage (<code>localStorage</code> / <code>sessionStorage</code>).</li>
+            <li>The developers of Kareer have no ability to view, retrieve, or log your API key.</li>
+          </ul>
+        </section>
+
+        <!-- 5. Permissions -->
+        <section id="permissions" class="kr-policy-section">
+          <h2>5. Browser Extension Permissions Explained</h2>
+          <p>
+            Kareer requests only the browser permissions strictly required to perform form detection, state synchronization, and secure network dispatch:
+          </p>
+          <ul>
+            <li><code>storage</code> &amp; <code>unlimitedStorage</code>: Used to store your candidate profile, resume text, application settings, and API configuration locally on your computer.</li>
+            <li><code>tabs</code>: Used to detect when a supported job application page is open, query the active tab, and mount or toggle the floating assistant interface.</li>
+            <li><code>webNavigation</code>: Used to monitor multi-step application transitions (e.g. moving from Step 1 to Step 2 in Ashby, Greenhouse, Lever, or Workday) so session continuity is maintained without losing answers.</li>
+            <li><code>host_permissions</code> / <code>optional_host_permissions</code> (<code>&lt;all_urls&gt;</code>): Used to allow the extension content script to detect and fill form fields across arbitrary employer job boards and applicant tracking systems.</li>
+            <li><code>https://openrouter.ai/*</code>: Used to allow the background worker to communicate directly with the OpenRouter completion API when you initiate autofill.</li>
+          </ul>
+        </section>
+
+        <!-- 6. Data collection categories -->
+        <section id="data-categories" class="kr-policy-section">
+          <h2>6. Data Collection Categories (Firefox &amp; Web Store Disclosures)</h2>
+          <p>
+            In compliance with Mozilla Firefox Add-on and Chrome Web Store privacy declarations, Kareer declares the following data collection categories:
+          </p>
+          <ul>
+            <li>
+              <strong>Authentication Information (<code>authenticationInfo</code>):</strong><br>
+              The user's personal OpenRouter API key is required to authenticate outgoing requests to the AI provider. It is stored locally in extension storage and never collected by Kareer.
+            </li>
+            <li>
+              <strong>Personally Identifying Information (<code>personallyIdentifyingInfo</code>):</strong><br>
+              A candidate’s profile and resume can contain personal details including name, contact information, work history, and education. Relevant portions are transmitted to the user's chosen AI provider only when autofill is explicitly requested.
+            </li>
+            <li>
+              <strong>Website Content (<code>websiteContent</code>):</strong><br>
+              Kareer reads form labels, placeholders, and question text on job application pages in order to identify required fields, and sends this question context to the AI model to match answers.
+            </li>
+          </ul>
+        </section>
+
+        <!-- 7. Analytics / tracking -->
+        <section id="analytics" class="kr-policy-section">
+          <h2>7. Analytics &amp; Telemetry</h2>
+          <p>
+            Kareer contains <strong>zero</strong> analytics SDKs, error reporting telemetry (such as Sentry or Bugsnag), advertising identifiers, tracking pixels, or behavioral telemetry systems. We do not track which websites you visit, how many applications you submit, or which jobs you apply for.
+          </p>
+        </section>
+
+        <!-- 8. Data selling / advertising -->
+        <section id="advertising" class="kr-policy-section">
+          <h2>8. Data Selling &amp; Advertising</h2>
+          <p>
+            Kareer does not sell, rent, monetize, or disclose your personal data, resume information, or browsing activity to any third party, broker, or advertiser. We do not display advertisements within the extension or on this website.
+          </p>
+        </section>
+
+        <!-- 9. Data retention -->
+        <section id="retention" class="kr-policy-section">
+          <h2>9. Data Retention</h2>
+          <ul>
+            <li><strong>Local Data:</strong> All profile data, resume context, and settings remain in your browser’s extension storage until you edit or delete them, or until you uninstall the extension.</li>
+            <li><strong>Third-Party Model Providers:</strong> Data transmitted to OpenRouter or downstream model providers (e.g., Google, Anthropic, OpenAI) during an AI completion request is governed by OpenRouter’s privacy policy and the retention policies of the specific model provider selected. Users should review <a href="https://openrouter.ai/privacy" target="_blank" rel="noopener noreferrer" style="color: var(--kr-signal); text-decoration: underline;">OpenRouter’s Privacy Policy</a> for their current data retention and logging commitments.</li>
+          </ul>
+        </section>
+
+        <!-- 10. User controls -->
+        <section id="user-controls" class="kr-policy-section">
+          <h2>10. User Controls &amp; Data Rights</h2>
+          <p>You have full, immediate control over all data handled by Kareer:</p>
+          <ul>
+            <li><strong>Edit or Delete Profile:</strong> You can edit or clear your saved contact details, resume text, and notes at any time in the extension’s Profile tab.</li>
+            <li><strong>Clear All Data:</strong> You can use the extension's reset controls or browser extension management page to delete all local storage.</li>
+            <li><strong>Revoke API Keys:</strong> You can revoke, rotate, or delete your API key at any time directly through your OpenRouter account dashboard.</li>
+            <li><strong>Audit Code:</strong> Because Kareer is completely open source, you can audit the source code and build the extension yourself from GitHub.</li>
+          </ul>
+        </section>
+
+        <!-- 11. Third-party services -->
+        <section id="third-parties" class="kr-policy-section">
+          <h2>11. Third-Party Services</h2>
+          <p>
+            Kareer connects with <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" style="color: var(--kr-signal); text-decoration: underline;">OpenRouter</a> to provide access to large language models. OpenRouter is an independent third-party service provider and is not owned, operated, or controlled by Kareer. Use of OpenRouter is subject to OpenRouter's own Terms of Service and Privacy Policy.
+          </p>
+        </section>
+
+        <!-- 12. Security -->
+        <section id="security" class="kr-policy-section">
+          <h2>12. Security Model &amp; Architecture</h2>
+          <p>
+            For a technical breakdown of our threat boundaries, credential isolation architecture, and human-in-the-loop safeguards, please consult our official <a href="https://github.com/Amro212/kareer/blob/master/SECURITY.md" target="_blank" rel="noopener noreferrer" style="color: var(--kr-signal); text-decoration: underline;">Security Policy on GitHub</a>.
+          </p>
+        </section>
+
+        <!-- 13. Open source -->
+        <section id="open-source" class="kr-policy-section">
+          <h2>13. Open Source Verification</h2>
+          <p>
+            Kareer is maintained in the open. The complete repository, including all manifests, content scripts, background workers, and build scripts, is available at <a href="https://github.com/Amro212/kareer" target="_blank" rel="noopener noreferrer" style="color: var(--kr-signal); text-decoration: underline;">https://github.com/Amro212/kareer</a>.
+          </p>
+        </section>
+
+        <!-- 14. Contact / reporting -->
+        <section id="contact" class="kr-policy-section">
+          <h2>14. Contact &amp; Vulnerability Reporting</h2>
+          <p>
+            For general questions, bug reports, or feature discussions:
+            <br>
+            <a href="https://github.com/Amro212/kareer/issues" target="_blank" rel="noopener noreferrer" style="color: var(--kr-signal); text-decoration: underline;">GitHub Issues Tracker</a>
+          </p>
+          <p style="margin-top: var(--kr-space-3);">
+            For reporting security vulnerabilities or potential credential risks, please do not open public issues. Instead, submit a private report using:
+            <br>
+            <a href="https://github.com/Amro212/kareer/security/advisories/new" target="_blank" rel="noopener noreferrer" style="color: var(--kr-signal); text-decoration: underline;">GitHub Private Vulnerability Reporting</a>
+          </p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       Footer
+       ======================================================================== -->
+  <footer class="kr-footer">
+    <div class="kr-container">
+      <div class="kr-footer-top">
+        <div class="kr-footer-brand">
+          <img src="../assets/kareer-logo-horizontal.png" alt="Kareer" class="kr-logo-img">
+          <p class="kr-footer-tagline">
+            AI-powered job application autofill for Chrome and Firefox, without giving up control.
+          </p>
+        </div>
+
+        <div class="kr-footer-nav">
+          <div class="kr-footer-col">
+            <span class="kr-footer-col-title">Navigation</span>
+            <a href="../#features" class="kr-footer-link">Features</a>
+            <a href="../#supported-sites" class="kr-footer-link">Supported Sites</a>
+            <a href="../#how-it-works" class="kr-footer-link">How It Works</a>
+            <a href="../#install" class="kr-footer-link">Install</a>
+          </div>
+
+          <div class="kr-footer-col">
+            <span class="kr-footer-col-title">Open Source</span>
+            <a href="https://github.com/Amro212/kareer" class="kr-footer-link" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+            <a href="https://github.com/Amro212/kareer/issues" class="kr-footer-link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+            <a href="https://github.com/Amro212/kareer/releases" class="kr-footer-link" target="_blank" rel="noopener noreferrer">Releases</a>
+          </div>
+
+          <div class="kr-footer-col">
+            <span class="kr-footer-col-title">Security &amp; Legal</span>
+            <a href="./" class="kr-footer-link" style="color: var(--kr-signal);">Privacy Policy</a>
+            <a href="https://github.com/Amro212/kareer/blob/master/SECURITY.md" class="kr-footer-link" target="_blank" rel="noopener noreferrer">Security Policy</a>
+            <a href="https://github.com/Amro212/kareer/blob/master/LICENSE" class="kr-footer-link" target="_blank" rel="noopener noreferrer">MIT License</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="kr-footer-bottom">
+        <div>
+          Open source under the MIT License. Built for job seekers.
+        </div>
+        <div>
+          <a href="https://github.com/Amro212/kareer" target="_blank" rel="noopener noreferrer" style="color: var(--kr-text-2);">GitHub</a>
+          &nbsp;•&nbsp;
+          <a href="./" style="color: var(--kr-signal);">Privacy</a>
+          &nbsp;•&nbsp;
+          <a href="https://github.com/Amro212/kareer/blob/master/SECURITY.md" target="_blank" rel="noopener noreferrer" style="color: var(--kr-text-2);">Security</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../script.js"></script>
+</body>
+</html>

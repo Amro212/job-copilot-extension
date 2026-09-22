@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kareer - Open Source AI Job Application Autofill</title>
+  <meta name="description"
+    content="Open-source browser extension that helps fill job applications using your own resume context and AI provider key. Local-first, zero telemetry, bring your own key.">
+  <meta name="theme-color" content="#0D1117">
+
+  <!-- Open Graph / Social Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kareer — Open Source AI Job Application Autofill">
+  <meta property="og:description"
+    content="Open-source browser extension that helps fill job applications using your own resume context and AI provider key. Local-first, zero telemetry.">
+  <meta property="og:image" content="assets/kareer-promo-banner.png">
+
+  <!-- Twitter Card Metadata -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kareer — Open Source AI Job Application Autofill">
+  <meta name="twitter:description"
+    content="Open-source browser extension that helps fill job applications using your own resume context and AI provider key. Local-first, zero telemetry.">
+  <meta name="twitter:image" content="assets/kareer-promo-banner.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/kareer-mark-lime.svg">
+  <link rel="icon" type="image/png" href="assets/kareer-mark-lime.png">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- ========================================================================
+       Navigation Bar
+       ======================================================================== -->
+  <header class="kr-header">
+    <div class="kr-container kr-header-inner">
+      <a href="./" class="kr-logo-link" aria-label="Kareer Homepage">
+        <img src="assets/kareer-logo-horizontal.png" alt="Kareer" class="kr-logo-img">
+      </a>
+
+      <nav class="kr-nav" aria-label="Main Navigation">
+        <a href="#features" class="kr-nav-link">Features</a>
+        <a href="#supported-sites" class="kr-nav-link">Supported Sites</a>
+        <a href="#how-it-works" class="kr-nav-link">How It Works</a>
+        <a href="#open-source" class="kr-nav-link">Open Source</a>
+        <a href="privacy/" class="kr-nav-link">Privacy</a>
+      </nav>
+
+      <div class="kr-header-actions">
+        <a href="https://github.com/Amro212/kareer" class="kr-btn kr-btn-secondary kr-btn-small" target="_blank"
+          rel="noopener noreferrer">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+          </svg>
+          GitHub
+        </a>
+
+        <!-- Store Buttons (Dynamically controlled via script.js LINKS) -->
+        <a class="kr-btn kr-btn-secondary kr-btn-small kr-btn-store kr-btn-disabled" data-store="chrome"
+          aria-disabled="true" tabindex="-1">
+          Chrome
+          <span class="kr-btn-tag">Coming soon</span>
+        </a>
+        <a class="kr-btn kr-btn-secondary kr-btn-small kr-btn-store kr-btn-disabled" data-store="firefox"
+          aria-disabled="true" tabindex="-1">
+          Firefox
+          <span class="kr-btn-tag">Coming soon</span>
+        </a>
+
+        <button type="button" class="kr-mobile-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================================================================
+         Hero Section
+         ====================================================================== -->
+    <section class="kr-hero">
+      <div class="kr-container">
+        <div class="kr-hero-content">
+          <div class="kr-hero-telemetry">
+            <span class="kr-badge kr-badge-lime" data-version-badge>v0.4.35</span>
+            <span class="kr-badge">OPEN SOURCE</span>
+            <span class="kr-badge">CHROME + FIREFOX</span>
+            <span class="kr-badge">LOCAL-FIRST BYOK</span>
+          </div>
+
+          <h1 class="kr-hero-title">AI job application autofill, without giving up control.</h1>
+
+          <p class="kr-hero-lead">
+            Kareer scans job application forms, matches questions against your saved profile and resume context, and
+            fills applications while keeping you in complete control. No telemetry, no backend database, bring your own
+            AI key.
+          </p>
+
+          <div class="kr-hero-actions">
+            <a href="#install" class="kr-btn kr-btn-primary">
+              Get Kareer
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+            </a>
+            <a href="https://github.com/Amro212/kareer" class="kr-btn kr-btn-secondary" target="_blank"
+              rel="noopener noreferrer">
+              View on GitHub
+            </a>
+          </div>
+
+          <div class="kr-hero-guarantees">
+            <div class="kr-guarantee-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>MIT Licensed</span>
+            </div>
+            <div class="kr-guarantee-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Local Browser Storage Only</span>
+            </div>
+            <div class="kr-guarantee-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Zero Analytics &amp; Telemetry</span>
+            </div>
+            <div class="kr-guarantee-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>No Fabricated Experience</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Product Visual: Flight Deck Simulation
+         ====================================================================== -->
+    <section class="kr-visual-section" aria-label="Product Interface Demonstration">
+      <div class="kr-container">
+        <h2 class="visually-hidden">Live Interface Demonstration</h2>
+        <div class="kr-browser-frame">
+          <div class="kr-browser-titlebar">
+            <div class="kr-browser-dots">
+              <div class="kr-browser-dot"></div>
+              <div class="kr-browser-dot"></div>
+              <div class="kr-browser-dot"></div>
+            </div>
+            <div class="kr-browser-url">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>boards.greenhouse.io/acme-engineering/jobs/4820199</span>
+            </div>
+            <div style="width: 42px;"></div>
+          </div>
+
+          <div class="kr-browser-body">
+            <!-- Simulated ATS Form -->
+            <div class="kr-sim-page">
+              <div class="kr-sim-ats-header">
+                <div class="kr-sim-company">Acme Systems Inc.</div>
+                <div class="kr-sim-job-title">Staff Infrastructure Engineer</div>
+              </div>
+
+              <div class="kr-sim-form">
+                <div class="kr-sim-field">
+                  <div class="kr-sim-label">
+                    <span>Full Name *</span>
+                    <span class="kr-sim-field-flag kr-flag-verified">✓ Verified</span>
+                  </div>
+                  <div class="kr-sim-input filled-verified">Alex Rivera</div>
+                </div>
+
+                <div class="kr-sim-field">
+                  <div class="kr-sim-label">
+                    <span>Email Address *</span>
+                    <span class="kr-sim-field-flag kr-flag-verified">✓ Verified</span>
+                  </div>
+                  <div class="kr-sim-input filled-verified">alex.rivera@example.com</div>
+                </div>
+
+                <div class="kr-sim-field">
+                  <div class="kr-sim-label">
+                    <span>Location (City) *</span>
+                    <span class="kr-sim-field-flag kr-flag-verified">✓ Verified</span>
+                  </div>
+                  <div class="kr-sim-input filled-verified">Toronto, ON, Canada</div>
+                </div>
+
+                <div class="kr-sim-field">
+                  <div class="kr-sim-label">
+                    <span>Notice Period</span>
+                    <span class="kr-sim-field-flag kr-flag-inferred">⚠ Inferred from notes</span>
+                  </div>
+                  <div class="kr-sim-input filled-inferred">2 weeks (available immediately upon offer)</div>
+                </div>
+
+                <div class="kr-sim-boundary-box">
+                  <div class="kr-sim-boundary-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                      </path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Safety Boundary: Legal Attestation &amp; Signature
+                  </div>
+                  <div class="kr-sim-boundary-desc">
+                    Autofill paused automatically. Kareer never signs legal disclosures, authorizations, or diversity
+                    surveys without candidate verification.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Simulated Kareer Panel Inside Document -->
+            <div class="kr-sim-panel" id="kr-interactive-demo">
+              <div class="kr-sim-hud">
+                <div class="kr-sim-hud-left">
+                  <img src="assets/kareer-mark-lime.svg" alt="Kareer" class="kr-sim-hud-mark">
+                  <span class="kr-sim-hud-name">Kareer</span>
+                </div>
+                <div class="kr-sim-hud-telemetry">
+                  <span class="kr-sim-model-chip" id="sim-model-chip">gemini-2.0-flash</span>
+                  <span class="kr-sim-hud-badge">GREENHOUSE</span>
+                  <span class="kr-sim-hud-badge">14 FIELDS</span>
+                </div>
+              </div>
+
+              <div class="kr-sim-panel-tabs" role="tablist" aria-label="Demo panel tabs">
+                <button type="button" class="kr-sim-tab active" data-sim-tab="run" role="tab" aria-selected="true"
+                  aria-controls="sim-pane-run">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <polygon points="4 2 13 8 4 14 4 2" />
+                  </svg>
+                  Run
+                </button>
+                <button type="button" class="kr-sim-tab" data-sim-tab="profile" role="tab" aria-selected="false"
+                  aria-controls="sim-pane-profile">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M13 14v-1.5a3.5 3.5 0 0 0-3.5-3.5h-3A3.5 3.5 0 0 0 3 12.5V14" />
+                    <circle cx="8" cy="5" r="3" />
+                  </svg>
+                  Profile
+                </button>
+                <button type="button" class="kr-sim-tab" data-sim-tab="settings" role="tab" aria-selected="false"
+                  aria-controls="sim-pane-settings">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="8" cy="8" r="2.5" />
+                    <path
+                      d="M13.5 9.5l1.1-.6a1 1 0 0 0 .4-1.3l-1-1.7a1 1 0 0 0-1.2-.5l-1.2.5a5 5 0 0 0-1.1-.6L10.3 4a1 1 0 0 0-1-.8H7.3a1 1 0 0 0-1 .8L6.1 5.3a5 5 0 0 0-1.1.6l-1.2-.5a1 1 0 0 0-1.2.5l-1 1.7a1 1 0 0 0 .4 1.3l1.1.6a5 5 0 0 0 0 1.2l-1.1.6a1 1 0 0 0-.4 1.3l1 1.7a1 1 0 0 0 1.2.5l1.2-.5a5 5 0 0 0 1.1.6l.2 1.3a1 1 0 0 0 1 .8h2a1 1 0 0 0 1-.8l.2-1.3a5 5 0 0 0 1.1-.6l1.2.5a1 1 0 0 0 1.2-.5l1-1.7a1 1 0 0 0-.4-1.3l-1.1-.6a5 5 0 0 0 0-1.2z" />
+                  </svg>
+                  Settings
+                </button>
+              </div>
+
+              <div class="kr-sim-panel-body">
+                <!-- ==================== RUN PANE ==================== -->
+                <div class="kr-sim-pane kr-sim-pane-run active" id="sim-pane-run" role="tabpanel">
+                  <!-- Application Workflow Card -->
+                  <div class="kr-sim-card">
+                    <div class="kr-sim-card-title">
+                      <span>Application Workflow</span>
+                      <span class="kr-badge kr-badge-success" id="sim-wf-badge">READY FOR REVIEW</span>
+                    </div>
+                    <div class="kr-sim-job-row">
+                      <span class="kr-sim-job-title-text">Staff Infrastructure Engineer</span>
+                      <span class="kr-sim-job-company-text">Acme Systems Inc. · Toronto, ON</span>
+                    </div>
+                    <div class="kr-sim-progress-rail">
+                      <div class="kr-sim-progress-bar" id="sim-progress-bar"></div>
+                    </div>
+                    <div class="kr-sim-metrics-row">
+                      <span><strong>2</strong> steps completed</span>
+                      <span><strong>14</strong> fields detected</span>
+                    </div>
+                    <div class="kr-sim-card-desc" id="sim-wf-desc">
+                      Application fields matched from saved profile context. Inspect verification before submission.
+                    </div>
+                    <div class="kr-sim-mini-actions">
+                      <button type="button" class="kr-btn kr-btn-secondary kr-btn-small"
+                        style="font-size: 0.75rem; padding: 4px 10px;">Capture Job</button>
+                      <button type="button" class="kr-btn kr-btn-secondary kr-btn-small"
+                        style="font-size: 0.75rem; padding: 4px 10px;">Start / Resume</button>
+                      <button type="button" class="kr-btn kr-btn-secondary kr-btn-small"
+                        style="font-size: 0.75rem; padding: 4px 10px;">Pause</button>
+                    </div>
+                  </div>
+
+                  <!-- Field Verification & Review Card -->
+                  <div class="kr-sim-card">
+                    <div class="kr-sim-card-title">
+                      <span>Field Verification &amp; Review</span>
+                      <span class="kr-badge">14 FIELDS</span>
+                    </div>
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                      <span class="kr-badge kr-badge-success">4 VERIFIED</span>
+                      <span class="kr-badge kr-badge-warning">1 INFERRED</span>
+                      <span class="kr-badge" style="color: var(--kr-danger); border-color: rgba(240, 106, 106, 0.3);">1
+                        PAUSED</span>
+                      <span class="kr-badge">8 UNTOUCHED</span>
+                    </div>
+                    <div class="kr-sim-review-list">
+                      <div class="kr-sim-review-item">
+                        <span class="kr-sim-review-field">First &amp; Last Name</span>
+                        <div class="kr-sim-review-right">
+                          <span class="kr-badge kr-badge-success">VERIFIED</span>
+                        </div>
+                      </div>
+                      <div class="kr-sim-review-item">
+                        <span class="kr-sim-review-field">Email &amp; Phone</span>
+                        <div class="kr-sim-review-right">
+                          <span class="kr-badge kr-badge-success">VERIFIED</span>
+                        </div>
+                      </div>
+                      <div class="kr-sim-review-item">
+                        <span class="kr-sim-review-field">Residence / City</span>
+                        <div class="kr-sim-review-right">
+                          <span class="kr-badge kr-badge-success">VERIFIED</span>
+                        </div>
+                      </div>
+                      <div class="kr-sim-review-item">
+                        <span class="kr-sim-review-field">Notice Period</span>
+                        <div class="kr-sim-review-right">
+                          <span class="kr-badge kr-badge-warning">INFERRED</span>
+                        </div>
+                      </div>
+                      <div class="kr-sim-review-item">
+                        <span class="kr-sim-review-field">Candidate Signature</span>
+                        <div class="kr-sim-review-right">
+                          <span class="kr-badge"
+                            style="color: var(--kr-danger); border-color: rgba(240, 106, 106, 0.3);">PAUSED</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ==================== PROFILE PANE ==================== -->
+                <div class="kr-sim-pane kr-sim-pane-profile" id="sim-pane-profile" role="tabpanel">
+                  <div class="kr-sim-card">
+                    <div class="kr-sim-card-title">
+                      <span>Candidate Profile</span>
+                      <span class="kr-badge kr-badge-success">LOCAL ONLY</span>
+                    </div>
+                    <div class="kr-sim-card-desc">
+                      Stored in local browser extension storage. Values populate fields during autofill.
+                    </div>
+
+                    <div class="kr-sim-form-group">
+                      <label class="kr-sim-input-label">Full Name</label>
+                      <input type="text" class="kr-sim-input" value="Alex Rivera" readonly>
+                    </div>
+
+                    <div class="kr-sim-row-split">
+                      <div class="kr-sim-form-group">
+                        <label class="kr-sim-input-label">Email</label>
+                        <input type="email" class="kr-sim-input" value="alex.rivera@example.com" readonly>
+                      </div>
+                      <div class="kr-sim-form-group">
+                        <label class="kr-sim-input-label">Phone</label>
+                        <input type="tel" class="kr-sim-input" value="+1 555 019 2834" readonly>
+                      </div>
+                    </div>
+
+                    <div class="kr-sim-form-group">
+                      <label class="kr-sim-input-label">Location (City, Region, Country)</label>
+                      <input type="text" class="kr-sim-input" value="Toronto, ON, Canada" readonly>
+                    </div>
+
+                    <div class="kr-sim-row-split">
+                      <div class="kr-sim-form-group">
+                        <label class="kr-sim-input-label">LinkedIn URL</label>
+                        <input type="text" class="kr-sim-input" value="https://linkedin.com/in/alexrivera-dev" readonly>
+                      </div>
+                      <div class="kr-sim-form-group">
+                        <label class="kr-sim-input-label">GitHub URL</label>
+                        <input type="text" class="kr-sim-input" value="https://github.com/alexrivera" readonly>
+                      </div>
+                    </div>
+
+                    <div class="kr-sim-form-group">
+                      <label class="kr-sim-input-label">Resume / Background Summary</label>
+                      <textarea class="kr-sim-textarea" rows="3"
+                        readonly>Senior Systems &amp; Infrastructure Engineer with 7+ years architecting Kubernetes platforms, Terraform automation, and distributed microservices across AWS and GCP.</textarea>
+                    </div>
+
+                    <div class="kr-sim-form-group">
+                      <label class="kr-sim-input-label">Applicant Notes / Custom Rules</label>
+                      <textarea class="kr-sim-textarea" rows="2"
+                        readonly>Prefer remote or hybrid roles in Toronto. Available on 2 weeks notice upon signed offer.</textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ==================== SETTINGS PANE ==================== -->
+                <div class="kr-sim-pane kr-sim-pane-settings" id="sim-pane-settings" role="tabpanel">
+                  <div class="kr-sim-card">
+                    <div class="kr-sim-card-title">
+                      <span>OpenRouter API Key</span>
+                      <span class="kr-badge kr-badge-success">KEY SAVED</span>
+                    </div>
+                    <div class="kr-sim-card-desc">
+                      Stored securely in sandboxed background worker storage. Web pages cannot access this secret.
+                    </div>
+                  </div>
+
+                  <div class="kr-sim-card">
+                    <div class="kr-sim-card-title">AI Model Selection</div>
+                    <div class="kr-sim-form-group">
+                      <label class="kr-sim-input-label">Inference Model</label>
+                      <select class="kr-sim-select" id="sim-model-select">
+                        <option value="gemini-2.0-flash" selected>google/gemini-2.0-flash (Recommended)</option>
+                        <option value="claude-3.5-sonnet">anthropic/claude-3.5-sonnet</option>
+                        <option value="gpt-4o-mini">openai/gpt-4o-mini</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="kr-sim-card">
+                    <div class="kr-sim-card-title">Behavior Controls</div>
+
+                    <div class="kr-sim-toggle-row">
+                      <div>
+                        <div class="kr-sim-toggle-title">AI Autofill</div>
+                        <div class="kr-sim-toggle-sub">Enable intelligent form autofilling</div>
+                      </div>
+                      <label class="kr-sim-switch">
+                        <input type="checkbox" checked>
+                        <span class="kr-sim-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="kr-sim-toggle-row">
+                      <div>
+                        <div class="kr-sim-toggle-title">Overwrite Existing Values</div>
+                        <div class="kr-sim-toggle-sub">Replace pre-filled form fields</div>
+                      </div>
+                      <label class="kr-sim-switch">
+                        <input type="checkbox">
+                        <span class="kr-sim-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="kr-sim-toggle-row">
+                      <div>
+                        <div class="kr-sim-toggle-title">Auto Continue</div>
+                        <div class="kr-sim-toggle-sub">Advance to next page on valid step</div>
+                      </div>
+                      <label class="kr-sim-switch">
+                        <input type="checkbox" checked>
+                        <span class="kr-sim-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="kr-sim-toggle-row">
+                      <div>
+                        <div class="kr-sim-toggle-title">Auto Submit</div>
+                        <div class="kr-sim-toggle-sub">Off by default. Submits only after full verification</div>
+                      </div>
+                      <label class="kr-sim-switch">
+                        <input type="checkbox">
+                        <span class="kr-sim-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer with dynamic interactive actions -->
+              <div class="kr-sim-panel-footer">
+                <span class="kr-sim-feedback" id="sim-feedback-msg">Saved ✓</span>
+                <button type="button" class="kr-btn kr-btn-primary kr-btn-small" id="sim-action-btn">
+                  Autofill Application
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Features Section
+         ====================================================================== -->
+    <section id="features" class="kr-section">
+      <div class="kr-container">
+        <div class="kr-section-header">
+          <h2>Engineered for control, accuracy, and speed.</h2>
+          <p class="kr-section-lead">
+            Kareer eliminates tedious copy-pasting across dozens of job applications without sacrificing accuracy or
+            handing your private credentials to a third-party server.
+          </p>
+        </div>
+
+        <div class="kr-features-grid">
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="22" y1="12" x2="18" y2="12"></line>
+                <line x1="6" y1="12" x2="2" y2="12"></line>
+                <line x1="12" y1="6" x2="12" y2="2"></line>
+                <line x1="12" y1="22" x2="12" y2="18"></line>
+              </svg>
+              <h3 class="kr-feature-title">Accurate Field Detection</h3>
+            </div>
+            <p class="kr-feature-text">
+              Understands standard inputs, multiline textareas, radio groups, checkboxes, searchable comboboxes, date
+              pickers, and multi-select dropdowns across diverse ATS layouts.
+            </p>
+          </div>
+
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <h3 class="kr-feature-title">Truthful Grounding</h3>
+            </div>
+            <p class="kr-feature-text">
+              Rigid prompt constraints enforce truthfulness. Kareer never invents employment dates, past companies,
+              metrics, or certifications. Missing data is flagged for manual input.
+            </p>
+          </div>
+
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+              <h3 class="kr-feature-title">Multi-Step Applications</h3>
+            </div>
+            <p class="kr-feature-text">
+              Maintains session memory and application state as you progress through multi-page application flows on
+              platforms like Ashby, Workday, and Lever.
+            </p>
+          </div>
+
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <h3 class="kr-feature-title">Inline Narrative Assistance</h3>
+            </div>
+            <p class="kr-feature-text">
+              Tailor open-ended answers (“Why do you want to work here?”) directly inside the form using your saved
+              profile context and target company information.
+            </p>
+          </div>
+
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <h3 class="kr-feature-title">Human Review &amp; Safeguards</h3>
+            </div>
+            <p class="kr-feature-text">
+              Intentionally halts before electronic signatures, legal attestations, background check consents, and
+              interactive assessments so you maintain final authorization.
+            </p>
+          </div>
+
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path
+                  d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                </path>
+              </svg>
+              <h3 class="kr-feature-title">Local-First Architecture</h3>
+            </div>
+            <p class="kr-feature-text">
+              Your profile, resume text, notes, and credentials stay in your browser's private extension storage. Kareer
+              operates no remote servers and logs no telemetry.
+            </p>
+          </div>
+
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+              <h3 class="kr-feature-title">Bring Your Own Key (BYOK)</h3>
+            </div>
+            <p class="kr-feature-text">
+              Supply your own OpenRouter API key. Use high-speed, cost-effective models like Gemini 2.0 Flash or Claude
+              3.5 Sonnet for fractions of a cent per application.
+            </p>
+          </div>
+
+          <div class="kr-feature-card">
+            <div class="kr-feature-header">
+              <svg class="kr-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+              <h3 class="kr-feature-title">100% Free &amp; Open Source</h3>
+            </div>
+            <p class="kr-feature-text">
+              Published under the MIT License. Audit the codebase, inspect network traffic, report issues, and
+              contribute new ATS adapters in public.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Supported Sites / ATS Section
+         ====================================================================== -->
+    <section id="supported-sites" class="kr-section">
+      <div class="kr-container">
+        <div class="kr-section-header">
+          <h2>Built-in handling for major ATS platforms.</h2>
+          <p class="kr-section-lead">
+            Built-in handling for major applicant tracking systems, with an intelligent generic fallback for standard
+            web forms.
+          </p>
+        </div>
+
+        <div class="kr-ats-grid">
+          <div class="kr-ats-card">
+            <div class="kr-ats-card-header">
+              <span class="kr-ats-name">Ashby</span>
+              <span class="kr-badge kr-badge-success">DEDICATED</span>
+            </div>
+            <ul class="kr-ats-capabilities">
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Custom select menus (.ashby-select)
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Multi-page workflow navigation
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Automated resume file attachment
+              </li>
+            </ul>
+          </div>
+
+          <div class="kr-ats-card">
+            <div class="kr-ats-card-header">
+              <span class="kr-ats-name">Greenhouse</span>
+              <span class="kr-badge kr-badge-success">DEDICATED</span>
+            </div>
+            <ul class="kr-ats-capabilities">
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Google Places &amp; React-select
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Embedded iframe orchestration
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Post-upload re-acquisition tolerance
+              </li>
+            </ul>
+          </div>
+
+          <div class="kr-ats-card">
+            <div class="kr-ats-card-header">
+              <span class="kr-ats-name">Lever</span>
+              <span class="kr-badge kr-badge-success">DEDICATED</span>
+            </div>
+            <ul class="kr-ats-capabilities">
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Location typeahead commit
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Custom essay &amp; narrative questions
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Duplicate ID disambiguation
+              </li>
+            </ul>
+          </div>
+
+          <div class="kr-ats-card">
+            <div class="kr-ats-card-header">
+              <span class="kr-ats-name">Workday</span>
+              <span class="kr-badge kr-badge-success">DEDICATED</span>
+            </div>
+            <ul class="kr-ats-capabilities">
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Automation ID detection
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Multi-step progress tracking
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Dropdown commit stabilization
+              </li>
+            </ul>
+          </div>
+
+          <div class="kr-ats-card">
+            <div class="kr-ats-card-header">
+              <span class="kr-ats-name">Generic Web Forms</span>
+              <span class="kr-badge">FALLBACK</span>
+            </div>
+            <ul class="kr-ats-capabilities">
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Standard HTML inputs &amp; textareas
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Native selects, radios &amp; checkboxes
+              </li>
+              <li class="kr-ats-cap-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Multi-page form continuity
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         How It Works Section
+         ====================================================================== -->
+    <section id="how-it-works" class="kr-section">
+      <div class="kr-container">
+        <div class="kr-section-header">
+          <h2>Four steps to faster applications.</h2>
+          <p class="kr-section-lead">
+            Get up and running in under five minutes. Kareer works alongside you in the browser, leaving you in complete
+            control of submission.
+          </p>
+        </div>
+
+        <div class="kr-steps-grid">
+          <div class="kr-step-card">
+            <span class="kr-step-badge">STEP 01</span>
+            <h3 class="kr-step-title">Install Kareer</h3>
+            <p class="kr-step-text">
+              Install the extension for Chrome, Chromium, or Firefox, or run as a Tampermonkey userscript.
+            </p>
+          </div>
+
+          <div class="kr-step-card">
+            <span class="kr-step-badge">STEP 02</span>
+            <h3 class="kr-step-title">Add your profile</h3>
+            <p class="kr-step-text">
+              Save your contact information, resume context, links, and applicant notes locally in your browser
+              extension storage.
+            </p>
+          </div>
+
+          <div class="kr-step-card">
+            <span class="kr-step-badge">STEP 03</span>
+            <h3 class="kr-step-title">Add your AI key</h3>
+            <p class="kr-step-text">
+              Supply your own OpenRouter API key. It lives safely inside the sandboxed extension background worker and
+              never touches web pages.
+            </p>
+          </div>
+
+          <div class="kr-step-card">
+            <span class="kr-step-badge">STEP 04</span>
+            <h3 class="kr-step-title">Review and autofill</h3>
+            <p class="kr-step-text">
+              Open an application page, let Kareer match and fill supported fields, inspect the results, and submit with
+              full confidence.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Privacy & Security Section
+         ====================================================================== -->
+    <section id="privacy" class="kr-section kr-privacy-section">
+      <div class="kr-container">
+        <div class="kr-section-header">
+          <h2>Your data isn't our business.</h2>
+          <p class="kr-section-lead">
+            Kareer is architected with a strict local-first, zero-telemetry boundary. We do not operate a remote user
+            database or track your browsing activity.
+          </p>
+        </div>
+
+        <div class="kr-privacy-box">
+          <div class="kr-privacy-points">
+            <div class="kr-privacy-point">
+              <svg class="kr-privacy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <div>
+                <h3 class="kr-privacy-point-title">Local Browser Storage</h3>
+                <p class="kr-privacy-point-desc">
+                  Your resume text, contact details, notes, and settings are stored locally in your browser's private
+                  extension storage. Kareer operates no remote servers to store your profile.
+                </p>
+              </div>
+            </div>
+
+            <div class="kr-privacy-point">
+              <svg class="kr-privacy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <div>
+                <h3 class="kr-privacy-point-title">Zero Telemetry &amp; No Tracking</h3>
+                <p class="kr-privacy-point-desc">
+                  The extension contains no analytics SDKs, behavioral telemetry, error monitors, or tracking pixels. We
+                  never sell user data or operate an advertising network.
+                </p>
+              </div>
+            </div>
+
+            <div class="kr-privacy-point">
+              <svg class="kr-privacy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <div>
+                <h3 class="kr-privacy-point-title">Direct AI Transmission</h3>
+                <p class="kr-privacy-point-desc">
+                  When you click Autofill, relevant question labels and relevant excerpts of your profile are
+                  transmitted directly from your browser to OpenRouter via HTTPS. No intermediary server inspects the
+                  payload.
+                </p>
+              </div>
+            </div>
+
+            <div class="kr-privacy-point">
+              <svg class="kr-privacy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <div>
+                <h3 class="kr-privacy-point-title">Strict API Key Isolation</h3>
+                <p class="kr-privacy-point-desc">
+                  Your OpenRouter API key is stored in privileged extension storage and used only by the background
+                  service worker. Web pages you visit cannot access or read your API key.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="kr-privacy-sidebar">
+            <div>
+              <h3 class="kr-privacy-sidebar-title">Verifiable &amp; Transparent</h3>
+              <p style="font-size: 0.875rem; color: var(--kr-text-2); line-height: 1.5;">
+                Every line of code handling storage, network dispatch, and DOM actuation is publicly inspectable in our
+                GitHub repository.
+              </p>
+            </div>
+
+            <div class="kr-privacy-links">
+              <a href="privacy/" class="kr-btn kr-btn-primary kr-btn-small">
+                Read our Privacy Policy →
+              </a>
+              <a href="https://github.com/Amro212/kareer/blob/master/SECURITY.md"
+                class="kr-btn kr-btn-secondary kr-btn-small" target="_blank" rel="noopener noreferrer">
+                Inspect Security Model on GitHub →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Install / Get Kareer Section
+         ====================================================================== -->
+    <section id="install" class="kr-section">
+      <div class="kr-container">
+        <div class="kr-section-header">
+          <h2>Get Kareer for your browser.</h2>
+          <p class="kr-section-lead">
+            Official extension store releases are currently in review. In the meantime, you can install directly from
+            source or run as a userscript.
+          </p>
+        </div>
+
+        <div class="kr-install-grid">
+          <div class="kr-install-card">
+            <div>
+              <div class="kr-install-header">
+                <svg class="kr-install-browser-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <line x1="21.17" y1="8" x2="12" y2="8"></line>
+                  <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+                  <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
+                </svg>
+                <span class="kr-badge">CHROMIUM</span>
+              </div>
+              <h3 class="kr-install-title">Google Chrome</h3>
+              <p class="kr-install-text">
+                Compatible with Chrome, Brave, Microsoft Edge, and Chromium-based browsers.
+              </p>
+            </div>
+            <div>
+              <a class="kr-btn kr-btn-secondary kr-btn-disabled" data-store="chrome" style="width: 100%;"
+                aria-disabled="true" tabindex="-1">
+                Chrome Web Store
+                <span class="kr-btn-tag">Coming soon</span>
+              </a>
+              <p
+                style="font-size: 0.75rem; color: var(--kr-text-3); margin-top: var(--kr-space-2); text-align: center;">
+                Or load unpacked from <a
+                  href="https://github.com/Amro212/kareer#option-a-chrome-brave-edge-or-chromium-browsers"
+                  target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">source instructions</a>.
+              </p>
+            </div>
+          </div>
+
+          <div class="kr-install-card">
+            <div>
+              <div class="kr-install-header">
+                <svg class="kr-install-browser-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                  <path d="M2 12h20"></path>
+                </svg>
+                <span class="kr-badge">FIREFOX</span>
+              </div>
+              <h3 class="kr-install-title">Mozilla Firefox</h3>
+              <p class="kr-install-text">
+                Native MV3 add-on support for Firefox desktop and developer editions.
+              </p>
+            </div>
+            <div>
+              <a class="kr-btn kr-btn-secondary kr-btn-disabled" data-store="firefox" style="width: 100%;"
+                aria-disabled="true" tabindex="-1">
+                Firefox Add-ons
+                <span class="kr-btn-tag">Coming soon</span>
+              </a>
+              <p
+                style="font-size: 0.75rem; color: var(--kr-text-3); margin-top: var(--kr-space-2); text-align: center;">
+                Or load temporarily from <a href="https://github.com/Amro212/kareer#option-b-firefox" target="_blank"
+                  rel="noopener noreferrer" style="text-decoration: underline;">Firefox instructions</a>.
+              </p>
+            </div>
+          </div>
+
+          <div class="kr-install-card">
+            <div>
+              <div class="kr-install-header">
+                <svg class="kr-install-browser-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="4 17 10 11 4 5"></polyline>
+                  <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                <span class="kr-badge">USERSCRIPT</span>
+              </div>
+              <h3 class="kr-install-title">Tampermonkey</h3>
+              <p class="kr-install-text">
+                Standalone userscript bundle compatible with Tampermonkey and Violentmonkey across any desktop browser.
+              </p>
+            </div>
+            <div>
+              <a href="https://github.com/Amro212/kareer#option-c-tampermonkey-userscript-any-browser"
+                class="kr-btn kr-btn-secondary" style="width: 100%;" target="_blank" rel="noopener noreferrer">
+                View Userscript Guide
+              </a>
+              <p
+                style="font-size: 0.75rem; color: var(--kr-text-3); margin-top: var(--kr-space-2); text-align: center;">
+                Builds to dist/kareer.user.js
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Open Source Section
+         ====================================================================== -->
+    <section id="open-source" class="kr-section">
+      <div class="kr-container">
+        <div class="kr-opensource-card">
+          <div>
+            <h2>Built in the open.</h2>
+            <p style="max-width: 62ch; margin-bottom: 0;">
+              Kareer is an open-source project released under the MIT License. Read the code, audit the privacy
+              guarantees, report bugs, or build support for an ATS adapter.
+            </p>
+          </div>
+
+          <div class="kr-opensource-actions">
+            <a href="https://github.com/Amro212/kareer" class="kr-btn kr-btn-primary" target="_blank"
+              rel="noopener noreferrer">
+              View Source on GitHub
+            </a>
+            <a href="https://github.com/Amro212/kareer/issues" class="kr-btn kr-btn-secondary" target="_blank"
+              rel="noopener noreferrer">
+              Report an Issue
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         Frequently Asked Questions (FAQ)
+         ====================================================================== -->
+    <section class="kr-section">
+      <div class="kr-container">
+        <div class="kr-section-header">
+          <h2>Frequently Asked Questions</h2>
+          <p class="kr-section-lead">
+            Transparent answers regarding pricing, models, storage, and automation boundaries.
+          </p>
+        </div>
+
+        <div class="kr-faq-list">
+          <details class="kr-faq-item">
+            <summary class="kr-faq-question">
+              <span>Is Kareer free?</span>
+              <svg class="kr-faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            <div class="kr-faq-answer">
+              Yes. Kareer is completely free and open-source under the MIT license. There are no subscriptions,
+              paywalls, or premium tiers. Because you provide your own OpenRouter API key, you pay OpenRouter directly
+              for model inference (typically fractions of a cent per application when using efficient models like Gemini
+              2.0 Flash).
+            </div>
+          </details>
+
+          <details class="kr-faq-item">
+            <summary class="kr-faq-question">
+              <span>Does Kareer store my resume on a Kareer server?</span>
+              <svg class="kr-faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            <div class="kr-faq-answer">
+              No. Kareer does not operate any backend servers or central databases. Your resume, profile, application
+              notes, and API key are stored locally in your browser's private extension storage. When you trigger
+              autofill, only the relevant form field questions and relevant profile sections are sent directly to
+              OpenRouter via HTTPS.
+            </div>
+          </details>
+
+          <details class="kr-faq-item">
+            <summary class="kr-faq-question">
+              <span>Which browsers are supported?</span>
+              <svg class="kr-faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            <div class="kr-faq-answer">
+              Kareer natively supports Google Chrome, Brave, Microsoft Edge, and other Chromium-based browsers, as well
+              as Mozilla Firefox. It can also be built and run as a Tampermonkey userscript across any desktop browser.
+            </div>
+          </details>
+
+          <details class="kr-faq-item">
+            <summary class="kr-faq-question">
+              <span>Which job sites does Kareer support?</span>
+              <svg class="kr-faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            <div class="kr-faq-answer">
+              Kareer has dedicated adapters for Ashby, Greenhouse, Lever, and Workday, handling custom selects, location
+              typeaheads, and multi-page flows. For other job boards and career pages, Kareer includes an intelligent
+              generic fallback engine supporting standard HTML inputs, textareas, selects, radios, and checkboxes.
+            </div>
+          </details>
+
+          <details class="kr-faq-item">
+            <summary class="kr-faq-question">
+              <span>Does Kareer automatically submit applications?</span>
+              <svg class="kr-faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            <div class="kr-faq-answer">
+              By default, Kareer never automatically submits an application. It scans, fills, and presents all filled
+              fields for candidate review. An optional "Auto Submit" setting exists in Settings (default OFF) which only
+              activates if all required fields are validated, no errors exist, and the candidate has reviewed the page.
+              Kareer strictly halts before e-signatures, legal attestations, background checks, and assessments.
+            </div>
+          </details>
+
+          <details class="kr-faq-item">
+            <summary class="kr-faq-question">
+              <span>What AI model does Kareer use?</span>
+              <svg class="kr-faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            <div class="kr-faq-answer">
+              You choose the model through OpenRouter. We recommend <code>google/gemini-2.0-flash</code> for its high
+              speed, strong JSON structure compliance, and low cost. You can also select models from Anthropic (e.g.
+              Claude 3.5 Sonnet), OpenAI, or open-source weights.
+            </div>
+          </details>
+
+          <details class="kr-faq-item">
+            <summary class="kr-faq-question">
+              <span>Is Kareer open source?</span>
+              <svg class="kr-faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            <div class="kr-faq-answer">
+              Yes. All source code, tests, fixtures, and build configurations are openly maintained under the MIT
+              License at <a href="https://github.com/Amro212/kareer" target="_blank" rel="noopener noreferrer"
+                style="color: var(--kr-signal); text-decoration: underline;">github.com/Amro212/kareer</a>.
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       Footer
+       ======================================================================== -->
+  <footer class="kr-footer">
+    <div class="kr-container">
+      <div class="kr-footer-top">
+        <div class="kr-footer-brand">
+          <img src="assets/kareer-logo-horizontal.png" alt="Kareer" class="kr-logo-img">
+          <p class="kr-footer-tagline">
+            AI-powered job application autofill for Chrome and Firefox, without giving up control.
+          </p>
+        </div>
+
+        <div class="kr-footer-nav">
+          <div class="kr-footer-col">
+            <span class="kr-footer-col-title">Navigation</span>
+            <a href="#features" class="kr-footer-link">Features</a>
+            <a href="#supported-sites" class="kr-footer-link">Supported Sites</a>
+            <a href="#how-it-works" class="kr-footer-link">How It Works</a>
+            <a href="#install" class="kr-footer-link">Install</a>
+          </div>
+
+          <div class="kr-footer-col">
+            <span class="kr-footer-col-title">Open Source</span>
+            <a href="https://github.com/Amro212/kareer" class="kr-footer-link" target="_blank"
+              rel="noopener noreferrer">GitHub Repository</a>
+            <a href="https://github.com/Amro212/kareer/issues" class="kr-footer-link" target="_blank"
+              rel="noopener noreferrer">Issue Tracker</a>
+            <a href="https://github.com/Amro212/kareer/releases" class="kr-footer-link" target="_blank"
+              rel="noopener noreferrer">Releases</a>
+          </div>
+
+          <div class="kr-footer-col">
+            <span class="kr-footer-col-title">Security &amp; Legal</span>
+            <a href="privacy/" class="kr-footer-link">Privacy Policy</a>
+            <a href="https://github.com/Amro212/kareer/blob/master/SECURITY.md" class="kr-footer-link" target="_blank"
+              rel="noopener noreferrer">Security Policy</a>
+            <a href="https://github.com/Amro212/kareer/blob/master/LICENSE" class="kr-footer-link" target="_blank"
+              rel="noopener noreferrer">MIT License</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="kr-footer-bottom">
+        <div>
+          Open source under the MIT License. Built for job seekers.
+        </div>
+        <div>
+          <a href="https://github.com/Amro212/kareer" target="_blank" rel="noopener noreferrer"
+            style="color: var(--kr-text-2);">GitHub</a>
+          &nbsp;•&nbsp;
+          <a href="privacy/" style="color: var(--kr-text-2);">Privacy</a>
+          &nbsp;•&nbsp;
+          <a href="https://github.com/Amro212/kareer/blob/master/SECURITY.md" target="_blank" rel="noopener noreferrer"
+            style="color: var(--kr-text-2);">Security</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+
+</html>
