@@ -27,6 +27,7 @@
     "@playwright/test": "^1.63.0",
     "esbuild": "^0.25.0",
     "jsdom": "^30.0.1",
-    "selfsigned": "^5.5.0"
+    "selfsigned": "^5.5.0",
+    "web-ext": "^10.7.0"
   }
 }
