@@ -5,6 +5,26 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-23 — Deploy workflow shell parsing failure
+
+### Bugs/findings
+- **Target**: GitHub Actions deployment pipeline (`.github/workflows/deploy.yml`).
+- **Platform**: GitHub-hosted Ubuntu runner; `Sync site version and Firefox update manifest` step.
+- **Symptoms**: The workflow stopped after signing and staging the Firefox XPI with `syntax error near unexpected token '('`; GitHub Pages setup, artifact upload, and deployment were skipped.
+- **Root cause**: The step embedded JavaScript in a shell double-quoted `node -e "..."` argument. The JavaScript regular expression matching `src="script.js..."` contained an unescaped double quote, which ended the shell string early and made Bash parse the regex parenthesis.
+- **Resolution**: Replaced the fragile `node -e` string with a literal quoted heredoc, added required-version checks, and derived the add-on ID from the built Firefox manifest so the generated update manifest cannot drift from the signed extension ID.
+
+### Turn changes
+- `.github/workflows/deploy.yml`: Made the site/update-manifest synchronization script shell-safe and removed the duplicated Firefox add-on ID.
+- `CONTEXT_AND_FINDINGS.md`: Recorded the reported failure, cause, resolution, and verification status.
+
+### Verification/status
+- Workflow YAML parsed successfully with all 14 steps present.
+- Executed the exact parsed synchronization step in an isolated directory with `VERSION=0.4.37.123` and `BASE_VERSION=0.4.37`; it exited 0 and generated the expected add-on ID/version, public version JSON, version badge, and cache-busted script URL.
+- `npm test`: **209 passed, 0 failed** using a Node runtime compatible with the workflow's Node 24 configuration.
+
+---
+
 ## Turn: 2026-09-23 — Unified Continuous Delivery: Auto-Sign, Host on Pages & Auto-Update (No GitHub Releases)
 
 ### Bugs/findings

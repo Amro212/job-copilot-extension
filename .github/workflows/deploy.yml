@@ -100,28 +100,41 @@ jobs:
           echo "Copied signed XPI to site/downloads/kareer-firefox.xpi"
 
       - name: Sync site version and Firefox update manifest
+        shell: bash
         run: |
-          node -e "
-            const fs = require('fs');
-            const xpiVersion = process.env.VERSION;
-            const baseVersion = process.env.BASE_VERSION;
-            const updates = {
-              addons: {
-                'kareer@amro212': {
-                  updates: [{
-                    version: xpiVersion,
-                    update_link: 'https://amro212.github.io/kareer/downloads/kareer-firefox.xpi'
-                  }]
-                }
+          node <<'NODE'
+          const fs = require('fs');
+
+          const xpiVersion = process.env.VERSION;
+          const baseVersion = process.env.BASE_VERSION;
+          if (!xpiVersion || !baseVersion) {
+            throw new Error('VERSION and BASE_VERSION must be set');
+          }
+
+          const manifest = JSON.parse(fs.readFileSync('dist/firefox/manifest.json', 'utf8'));
+          const addonId = manifest.browser_specific_settings?.gecko?.id;
+          if (!addonId) {
+            throw new Error('Firefox manifest is missing browser_specific_settings.gecko.id');
+          }
+
+          const updates = {
+            addons: {
+              [addonId]: {
+                updates: [{
+                  version: xpiVersion,
+                  update_link: 'https://amro212.github.io/kareer/downloads/kareer-firefox.xpi'
+                }]
               }
-            };
-            fs.writeFileSync('site/firefox-updates.json', JSON.stringify(updates, null, 2) + '\n');
-            fs.writeFileSync('site/version.json', JSON.stringify({ version: baseVersion }, null, 2) + '\n');
-            let html = fs.readFileSync('site/index.html', 'utf8');
-            html = html.replace(/(data-version-badge>)[^<]*(<\/span>)/g, '\$1v' + baseVersion + '\$2');
-            html = html.replace(/src="script\.js(\?v=[^\"']*)?"/g, 'src="script.js?v=' + baseVersion + '"');
-            fs.writeFileSync('site/index.html', html);
-          "
+            }
+          };
+          fs.writeFileSync('site/firefox-updates.json', JSON.stringify(updates, null, 2) + '\n');
+          fs.writeFileSync('site/version.json', JSON.stringify({ version: baseVersion }, null, 2) + '\n');
+
+          let html = fs.readFileSync('site/index.html', 'utf8');
+          html = html.replace(/(data-version-badge>)[^<]*(<\/span>)/g, '$1v' + baseVersion + '$2');
+          html = html.replace(/src="script\.js(\?v=[^"']*)?"/g, 'src="script.js?v=' + baseVersion + '"');
+          fs.writeFileSync('site/index.html', html);
+          NODE
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
