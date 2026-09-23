@@ -106,14 +106,12 @@ Choose whichever method fits your browser:
 4. Toggle on **Developer mode** (usually a switch in the top-right corner).
 5. Click **Load unpacked** and select the `dist/chrome` folder inside this project.
 
-#### Option B: Firefox
-1. Build the extension:
-   ```bash
-   npm install
-   npm run build:extension
-   ```
-2. In Firefox, navigate to `about:debugging#/runtime/this-firefox`.
-3. Click **Load Temporary Add-on...** and select `dist/firefox/manifest.json` (or the packed `.xpi` file in `dist/`).
+#### Option B: Firefox (Signed Add-on)
+1. Download the latest signed extension directly:
+   **[Download Kareer for Firefox (.xpi)](https://amro212.github.io/kareer/downloads/kareer-firefox.xpi)**
+2. In Firefox, open the downloaded `.xpi` file (or drag it into any open Firefox tab).
+3. Firefox will detect Mozilla's signature and prompt: *"Add Kareer? This extension has been verified by Mozilla"*. Click **Add** to install.
+*(Alternatively, build from source and load temporarily via `about:debugging`)*.
 
 #### Option C: Tampermonkey Userscript (Any Browser)
 If you prefer userscripts:

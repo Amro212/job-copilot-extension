@@ -8,7 +8,7 @@
 const LINKS = {
   github: "https://github.com/Amro212/kareer",
   chrome: null, // e.g. "https://chromewebstore.google.com/detail/kareer/..."
-  firefox: null, // e.g. "https://addons.mozilla.org/en-US/firefox/addon/kareer/..."
+  firefox: "https://amro212.github.io/kareer/downloads/kareer-firefox.xpi",
   issues: "https://github.com/Amro212/kareer/issues",
   security: "https://github.com/Amro212/kareer/blob/master/SECURITY.md"
 };
@@ -43,7 +43,7 @@ function initStoreLinks() {
 
       const tag = btn.querySelector(".kr-btn-tag");
       if (tag) {
-        tag.textContent = "Install";
+        tag.textContent = store === "firefox" ? ".xpi" : "Install";
         tag.style.color = "var(--kr-signal)";
       }
     } else {

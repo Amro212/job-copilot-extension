@@ -5,6 +5,41 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-23 — Unified Continuous Delivery: Auto-Sign, Host on Pages & Auto-Update (No GitHub Releases)
+
+### Bugs/findings
+- **Target**: Release pipeline and auto-update architecture (`.github/workflows/deploy.yml`, `manifest.firefox.json`, `firefox-updates.json`, `site/`).
+- **Goal**: Enable full continuous delivery on push to `master`: run tests, build & sign with Mozilla (unlisted), host the signed `.xpi` on GitHub Pages (`https://amro212.github.io/kareer/downloads/kareer-firefox.xpi`), auto-update installed Firefox users via `update_url`, and deploy the website without creating any GitHub Releases.
+- **Resolution**:
+  - `src/targets/extension/manifest.firefox.json`: Added `update_url: "https://amro212.github.io/kareer/firefox-updates.json"` under `browser_specific_settings.gecko` so installed Firefox extensions automatically check for updates.
+  - `.github/workflows/deploy.yml`: Upgraded into a unified CD pipeline that tests, assigns build version (`${BASE_VERSION}.${GITHUB_RUN_NUMBER}`), builds Firefox extension, signs unlisted with Mozilla API, stages signed `.xpi` in `site/downloads/kareer-firefox.xpi`, generates `site/firefox-updates.json`, syncs version badge on `site/index.html`, and deploys to GitHub Pages.
+  - Deleted obsolete `.github/workflows/firefox-release.yml` (removes GitHub Releases creation).
+  - `site/script.js` & `site/index.html`: Configured Firefox download buttons to point to `https://amro212.github.io/kareer/downloads/kareer-firefox.xpi`.
+  - `README.md`: Updated direct Firefox download link to `https://amro212.github.io/kareer/downloads/kareer-firefox.xpi`.
+  - `firefox-updates.json` & `site/firefox-updates.json`: Synchronized update manifest with the Pages download URL.
+- **Verification**:
+  - Impeccable mechanical detector: 0 antipatterns (`[]`).
+  - Automated Playwright interactive demo test: Passed.
+
+---
+
+## Turn: 2026-09-23 — Firefox Direct Signed Release Distribution via GitHub & Site
+
+### Bugs/findings
+- **Target**: Public distribution channels (`site/index.html`, `site/script.js`, `README.md`).
+- **Goal**: Enable direct, 1-click installation of the officially signed Firefox MV3 extension without waiting for store approval or requiring manual source builds.
+- **Permanent latest URL**: GitHub provides a permanent redirect for release assets: `https://github.com/Amro212/kareer/releases/latest/download/kareer-firefox.xpi`. Tested via curl (`HTTP 200 OK`, `application/x-xpinstall`, 4.7MB).
+- **Resolution**:
+  - `site/script.js`: Set `LINKS.firefox` to `https://github.com/Amro212/kareer/releases/latest/download/kareer-firefox.xpi`. Updated tag styling to `.xpi`.
+  - `site/index.html`: Updated the Firefox install card from "Coming soon" to active "Download for Firefox" with direct `.xpi` link and note indicating Mozilla signature and GitHub auto-updates.
+  - `README.md`: Updated Option B (Firefox) to guide users to direct 1-click install via the signed `.xpi` download instead of manual developer debugging.
+- **Verification**:
+  - Direct download curl: `HTTP 200 OK`, verified signed content type `application/x-xpinstall`.
+  - Impeccable mechanical detector: 0 antipatterns (`[]`).
+  - Automated Playwright interactive demo test: Passed.
+
+---
+
 ## Turn: 2026-09-22 — Firefox Release Workflow Versioning & Gecko ID Alignment
 
 ### Bugs/findings
@@ -978,5 +1013,29 @@ Narrative voice prompt updated and verified.
 - **Authentic Extension UI**: Mimicked the exact panel architecture from `src/core/ui.js` and `DESIGN.md` across 4 interactive tabs (Run, Profile, Settings, Debug). Removed nested card borders in favor of flat separator rows.
 - **Interactive Controls**: Added keyboard-accessible tab switching (`[data-sim-tab]`), simulated live autofill progress with safety boundary pause, interactive model selector with header chip sync, fixture capture feedback, and profile/settings save feedback.
 - **Impeccable Audit**: Resolved `tiny-text`, `undersized-ui-text`, and `layout-transition` (switched progress bar from `width` to `transform: scaleX`). Impeccable detector output: `[]` (0 antipatterns).
+
+### Automated Firefox CD Pipeline & Self-Hosted Updates (2026-09-23)
+- **Target**: Extension (Firefox Unlisted Self-Hosted Distribution).
+- **Architecture**:
+  - Pushes to `master` trigger `.github/workflows/deploy.yml` (`Build, Sign & Deploy`).
+  - Runs automated test suite (`npm test`).
+  - Derives dynamic monotonically incrementing version string (`${BASE_VERSION}.${GITHUB_RUN_NUMBER}`) to satisfy Mozilla AMO's strict duplicate-version rejection policy.
+  - Builds Firefox extension and signs unlisted `.xpi` cryptographically via Mozilla API (`web-ext sign`) using repository secrets (`AMO_JWT_ISSUER`, `AMO_JWT_SECRET`).
+  - Saves signed `.xpi` to `site/downloads/kareer-firefox.xpi` and produces `site/firefox-updates.json` pointing to it.
+  - Synchronizes `site/version.json` and updates the site version badge in `site/index.html`.
+  - Deploys static site, download `.xpi`, and update manifest to GitHub Pages with zero GitHub Releases created.
+- **Turn changes**:
+  - `src/targets/extension/manifest.firefox.json`: Added `update_url: "https://amro212.github.io/kareer/firefox-updates.json"` to `browser_specific_settings.gecko` to enable Firefox native background update polling.
+  - `.github/workflows/deploy.yml`: Replaced and renamed `.github/workflows/pages.yml` with comprehensive build, sign, and deploy workflow.
+  - `.github/workflows/firefox-release.yml`: Removed obsolete manual GitHub Release workflow.
+  - `firefox-updates.json` & `site/firefox-updates.json`: Added update manifests following Mozilla extension update protocol.
+  - `site/index.html` & `site/script.js`: Updated Firefox download buttons and links to `https://amro212.github.io/kareer/downloads/kareer-firefox.xpi`.
+  - `README.md`: Updated manual download link for Firefox to point to the self-hosted `.xpi`.
+- **Status & Verification**:
+  - 208 unit tests pass (`npm test`).
+  - Site interactive demo passes Playwright verification.
+  - Impeccable detector reports 0 antipatterns.
+  - Git working tree staged for user review (no auto-commit).
+
 
 
