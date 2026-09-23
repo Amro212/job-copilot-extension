@@ -1,10 +1,10 @@
 {
   "addons": {
-    "kareer@local": {
+    "kareer@amro212": {
       "updates": [
         {
-          "version": "0.4.35.1",
-          "update_link": "https://github.com/Amro212/kareer/releases/download/firefox-v0.4.35.1/kareer-firefox.xpi"
+          "version": "0.4.35",
+          "update_link": "https://github.com/Amro212/kareer/releases/download/firefox-v0.4.35/kareer-firefox.xpi"
         }
       ]
     }

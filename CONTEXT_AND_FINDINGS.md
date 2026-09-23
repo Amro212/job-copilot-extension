@@ -5,6 +5,19 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-22 — Firefox Release Workflow Versioning & Gecko ID Alignment
+
+### Bugs/findings
+- **Target**: `.github/workflows/firefox-release.yml` and `firefox-updates.json`.
+- **Version discrepancy**: Workflow previously appended `${GITHUB_RUN_NUMBER}` as a 4th digit (e.g. `0.4.35.1`), creating a version mismatch against `package.json` (`0.4.35`) and the public website badge (`v0.4.35`).
+- **Gecko ID mismatch**: `firefox-updates.json` and workflow update manifest generation hardcoded `kareer@local`, whereas `manifest.firefox.json` was updated to `kareer@amro212`, which would cause Firefox self-hosted auto-updates to fail.
+- **Resolution**:
+  - Simplified version assignment in `.github/workflows/firefox-release.yml` to directly read `package.json` version, guaranteeing 1:1 version consistency across package, website, Firefox manifest, and GitHub releases.
+  - Dynamically read `browser_specific_settings.gecko.id` from `src/targets/extension/manifest.firefox.json` in `.github/workflows/firefox-release.yml`.
+  - Updated root `firefox-updates.json` to match `kareer@amro212` and version `0.4.35`.
+
+---
+
 ## Turn: 2026-09-22 — Site Demo: Removed Developer "Debug" Tab & Streamlined Public Demo
 
 ### Bugs/findings

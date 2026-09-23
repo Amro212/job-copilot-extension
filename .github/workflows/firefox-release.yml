@@ -26,28 +26,10 @@ jobs:
       - name: Build Firefox extension
         run: npm run build:extension
 
-      - name: Assign unique Firefox version
+      - name: Read extension version
         shell: bash
         run: |
-          BASE_VERSION=$(node -p "require('./package.json').version")
-          RUN_NUMBER="${GITHUB_RUN_NUMBER}"
-
-          VERSION="${BASE_VERSION}.${RUN_NUMBER}"
-
-          VERSION="$VERSION" node <<'NODE'
-          const fs = require('fs');
-
-          const path = 'dist/firefox/manifest.json';
-          const manifest = JSON.parse(fs.readFileSync(path, 'utf8'));
-
-          manifest.version = process.env.VERSION;
-
-          fs.writeFileSync(
-            path,
-            JSON.stringify(manifest, null, 2) + '\n'
-          );
-          NODE
-
+          VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Firefox version: $VERSION"
 
@@ -104,10 +86,11 @@ jobs:
       - name: Generate Firefox update manifest
         shell: bash
         run: |
+          GECKO_ID=$(node -p "require('./src/targets/extension/manifest.firefox.json').browser_specific_settings.gecko.id")
           cat > firefox-updates.json <<EOF
           {
             "addons": {
-              "kareer@local": {
+              "${GECKO_ID}": {
                 "updates": [
                   {
                     "version": "${VERSION}",
