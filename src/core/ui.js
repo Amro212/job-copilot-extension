@@ -13,7 +13,7 @@ import {
 import { platform, getHostName } from './platform.js';
 import { collectPortableData, exportPayload } from './migration.js';
 import { logger } from './debug.js';
-import { testConnection, generateAutofillAnswers } from './ai.js';
+import { testConnection, generateAutofillAnswers, rewriteNarrativeField } from './ai.js';
 import { scanFormFields, harvestComboboxOptions, deduplicateFields, refreshField } from './fields/scanner.js';
 import { resolveComboboxSearchAnswers } from './autofill.js';
 import { extractOptionLabel } from './fields/labels.js';
@@ -2671,19 +2671,44 @@ export function mountUI() {
   if (target) {
     refreshDetectedFields();
     updatePanelDOM();
-    initInlineRewriteBadge((targetInput) => {
-      const field = detectedFieldsCache.find((f) => f.element === targetInput);
-      if (field) {
-        openRewriteModal(field);
-      } else {
-        openRewriteModal({
-          id: targetInput.id || 'narrative_field',
-          label: targetInput.getAttribute('aria-label') || targetInput.placeholder || 'Narrative Response',
-          element: targetInput,
-          currentValue: targetInput.value || '',
-          isNarrative: true,
-          constraints: {},
+    initInlineRewriteBadge(async (targetInput, setBadgeState) => {
+      const field = detectedFieldsCache.find((f) => f.element === targetInput) || {
+        id: targetInput.id || 'narrative_field',
+        label: targetInput.getAttribute('aria-label') || targetInput.placeholder || 'Narrative Response',
+        element: targetInput,
+        currentValue: targetInput.value || '',
+        isNarrative: true,
+        constraints: {},
+      };
+
+      try {
+        setBadgeState?.('loading', 'Rewriting...');
+        field.element = resolveLiveElement(field) || targetInput;
+        const currentVal = field.element?.value || targetInput.value || '';
+        const rewritten = await rewriteNarrativeField({
+          fieldLabel: field.label,
+          currentValue: currentVal,
+          feedback: '',
+          constraints: field.constraints,
         });
+
+        if (rewritten) {
+          scrollToField(field.element);
+          await fillField(field, rewritten);
+          highlightVerifiedField(field.element);
+          setBadgeState?.('success', 'Rewritten ✓');
+          setTimeout(() => {
+            setBadgeState?.('idle', 'Rewrite with AI');
+          }, 2500);
+        } else {
+          setBadgeState?.('idle', 'Rewrite with AI');
+        }
+      } catch (err) {
+        logger.error(`Inline rewrite failed: ${err.message}`);
+        setBadgeState?.('error', 'Rewrite failed');
+        setTimeout(() => {
+          setBadgeState?.('idle', 'Rewrite with AI');
+        }, 2500);
       }
     });
 

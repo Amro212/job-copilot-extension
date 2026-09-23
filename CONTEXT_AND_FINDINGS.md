@@ -1037,5 +1037,27 @@ Narrative voice prompt updated and verified.
   - Impeccable detector reports 0 antipatterns.
   - Git working tree staged for user review (no auto-commit).
 
+### Systematic Debugging: Inline Rewrite Button on Ashby ATS & Theme Realignment (2026-09-23)
+- **Target**: Extension (`src/core/fields/highlight.js`, `src/core/ui.js`, Ashby ATS).
+- **Symptoms**:
+  - On Ashby ATS application pages, the floating "✨ Rewrite with AI" button was visually squished to only 8px in height with letters cut off and emoji protruding out the bottom.
+  - Button used outdated blue AI SaaS theme (`linear-gradient(135deg, #2563eb, #1d4ed8)`, emoji `✨`) violating `DESIGN.md`.
+  - Clicking the badge threw `ReferenceError: openRewriteModal is not defined` because `openRewriteModal` was pruned in commit `811eab5`.
+  - Mozilla AMO signing failed in CI with `Conflict: Version 0.4.35.1 already exists.` because `0.4.35.1` had been previously uploaded.
+- **Root-Cause Analysis (Systematic Debugging)**:
+  - Phase 1 (Evidence Gathering): Inspected Ashby's production stylesheet (`cdn.ashbyprd.com/.../index-NOGznrcu.css`). Discovered the global rule `div { line-height: 0; }`.
+  - Phase 2 (Data Flow / Inheritance): The rewrite badge was created as a plain `<div>` appended directly to `document.body` without Shadow DOM encapsulation or explicit `line-height`. As a result, Ashby's `div { line-height: 0; }` collapsed the element's content box to 0px, yielding a total computed height of only `8px` (`4px padding-top + 4px padding-bottom`).
+  - Phase 3 (Design Realignment): Adhered to `DESIGN.md` Section 5 & 7. Replaced emoji `✨` with a technical vector spark SVG, styled with dark graphite background (`#0D1117`), crisp border (`#26303D`), signal lime accent (`#A3E635`), 6px border-radius, and interactive states (`idle`, `loading`, `success`, `error`).
+- **Resolution**:
+  - `src/core/fields/highlight.js`: Encapsulated `#kareer-inline-rewrite` inside an open Shadow DOM with isolated typography and box metrics, making it immune to external CSS pollution. Added defensive inline properties (`!important`) to the host element.
+  - `src/core/ui.js`: Connected inline badge click directly to `rewriteNarrativeField({ fieldLabel, currentValue, feedback, constraints })`, field value application via `fillField`, verification outline via `highlightVerifiedField`, and live badge state indicators (`loading`, `success`, `error`).
+  - `tests/unit/inline-rewrite.test.js`: Added unit tests asserting Shadow DOM isolation, host `div { line-height: 0; }` immunity, positioning, and callback transitions.
+  - `package.json`, `site/version.json`, `site/index.html`, `site/firefox-updates.json`, `firefox-updates.json`: Bumped version to `0.4.37` to resolve AMO conflict.
+  - `README.md`: Added prominent website badge, bold hyperlinked URL, and tip banner to the top header for instant discovery.
+- **Verification**:
+  - Verified visual rendering on live Ashby ATS application with Playwright (`scratch/ashby_perfect_render.png`).
+  - All 209 unit tests pass (`npm test`).
+
+
 
 

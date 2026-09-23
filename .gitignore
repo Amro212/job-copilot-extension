@@ -10,4 +10,5 @@ playwright-report/
 *.xpi
 .cursor/plans/*
 pages/*
+scratch/
 .env
