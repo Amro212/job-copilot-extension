@@ -64,6 +64,40 @@ function saveBuildCache(hash, version) {
   } catch {}
 }
 
+function syncSiteAndUpdates(version) {
+  const siteVersionPath = path.join(rootDir, 'site', 'version.json');
+  if (fs.existsSync(siteVersionPath)) {
+    try {
+      fs.writeFileSync(siteVersionPath, JSON.stringify({ version }, null, 2) + '\n', 'utf8');
+    } catch {}
+  }
+
+  for (const p of [path.join(rootDir, 'site', 'firefox-updates.json'), path.join(rootDir, 'firefox-updates.json')]) {
+    if (fs.existsSync(p)) {
+      try {
+        const manifest = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (manifest?.addons?.['kareer@amro212']) {
+          manifest.addons['kareer@amro212'].updates = [{
+            version,
+            update_link: 'https://amro212.github.io/kareer/downloads/kareer-firefox.xpi',
+          }];
+          fs.writeFileSync(p, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+        }
+      } catch {}
+    }
+  }
+
+  const siteIndexPath = path.join(rootDir, 'site', 'index.html');
+  if (fs.existsSync(siteIndexPath)) {
+    try {
+      let html = fs.readFileSync(siteIndexPath, 'utf8');
+      html = html.replace(/data-version-badge>[^<]+</, `data-version-badge>v${version}<`);
+      html = html.replace(/src="script\.js(\?v=[^"']*)?"/g, `src="script.js?v=${version}"`);
+      fs.writeFileSync(siteIndexPath, html, 'utf8');
+    } catch {}
+  }
+}
+
 function prepareVersion() {
   const pkg = readPackage();
   const currentHash = computeSourceHash();
@@ -77,6 +111,7 @@ function prepareVersion() {
     pkg.version = incrementVersion(oldVersion, explicitBump);
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
     saveBuildCache(currentHash, pkg.version);
+    syncSiteAndUpdates(pkg.version);
     console.log(`[build] Explicit version bump (${explicitBump}): ${oldVersion} -> ${pkg.version}`);
     return pkg;
   }
@@ -87,9 +122,12 @@ function prepareVersion() {
     pkg.version = incrementVersion(oldVersion, 'patch');
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
     saveBuildCache(currentHash, pkg.version);
+    syncSiteAndUpdates(pkg.version);
     console.log(`[build] Source changes detected. Version incremented: ${oldVersion} -> ${pkg.version}`);
     return pkg;
   }
+
+  syncSiteAndUpdates(pkg.version);
 
   if (!cache || !fs.existsSync(userscriptFile)) {
     saveBuildCache(currentHash, pkg.version);

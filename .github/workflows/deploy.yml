@@ -42,8 +42,9 @@ jobs:
         run: |
           BASE_VERSION=$(node -p "require('./package.json').version")
           VERSION="${BASE_VERSION}.${GITHUB_RUN_NUMBER}"
+          echo "BASE_VERSION=$BASE_VERSION" >> "$GITHUB_ENV"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Assigning version: $VERSION"
+          echo "Assigning XPI version: $VERSION (canonical site version: $BASE_VERSION)"
 
       - name: Build Firefox extension
         run: npm run build:extension
@@ -102,21 +103,23 @@ jobs:
         run: |
           node -e "
             const fs = require('fs');
-            const version = process.env.VERSION;
+            const xpiVersion = process.env.VERSION;
+            const baseVersion = process.env.BASE_VERSION;
             const updates = {
               addons: {
                 'kareer@amro212': {
                   updates: [{
-                    version: version,
+                    version: xpiVersion,
                     update_link: 'https://amro212.github.io/kareer/downloads/kareer-firefox.xpi'
                   }]
                 }
               }
             };
             fs.writeFileSync('site/firefox-updates.json', JSON.stringify(updates, null, 2) + '\n');
-            fs.writeFileSync('site/version.json', JSON.stringify({ version: version }, null, 2) + '\n');
+            fs.writeFileSync('site/version.json', JSON.stringify({ version: baseVersion }, null, 2) + '\n');
             let html = fs.readFileSync('site/index.html', 'utf8');
-            html = html.replace(/(data-version-badge>)[^<]*(<\/span>)/g, '\$1v' + version + '\$2');
+            html = html.replace(/(data-version-badge>)[^<]*(<\/span>)/g, '\$1v' + baseVersion + '\$2');
+            html = html.replace(/src="script\.js(\?v=[^\"']*)?"/g, 'src="script.js?v=' + baseVersion + '"');
             fs.writeFileSync('site/index.html', html);
           "
 

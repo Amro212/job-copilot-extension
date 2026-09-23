@@ -1058,6 +1058,69 @@ Narrative voice prompt updated and verified.
   - Verified visual rendering on live Ashby ATS application with Playwright (`scratch/ashby_perfect_render.png`).
   - All 209 unit tests pass (`npm test`).
 
+---
+
+## Turn: 2026-09-23 — Automated version synchronization in build tooling
+
+### Findings & Architecture Rationale
+- **Target**: Build tooling (`tools/build.js`).
+- **User Question**: Why were versions being manually adjusted across files (`site/version.json`, `firefox-updates.json`, `site/firefox-updates.json`, `site/index.html`) in recent staged changes? Shouldn't `npm run build` handle that automatically?
+- **Root-Cause Analysis**:
+  - Historically, `tools/build.js` managed versions strictly for `package.json`, `dist/kareer.user.js`, and `dist/{chrome,firefox}/manifest.json` (auto-incrementing patch version on source code changes or via `npm run bump:*`).
+  - The static marketing site and self-hosted Firefox update manifests (`site/version.json`, `site/firefox-updates.json`, `firefox-updates.json`) were introduced recently for the automated CD pipeline.
+  - While GitHub Actions (`.github/workflows/deploy.yml`) already synced these files in CI, local `tools/build.js` lacked knowledge of these paths. Consequently, local version changes required manual updates across 4 separate manifest files.
+- **Resolution**:
+  - Extended `tools/build.js` with `syncSiteAndUpdates(version)`:
+    - Automatically updates `site/version.json` with the new version string.
+    - Synchronizes the update entry in `site/firefox-updates.json` and root `firefox-updates.json`.
+    - Updates the static version badge attribute (`data-version-badge>v${version}<`) in `site/index.html`.
+  - Hooked `syncSiteAndUpdates` into `prepareVersion()` during both explicit bumps (`--bump=major|minor|patch`) and automatic source-change hash bumps, as well as on every standard build run.
+  - Manual adjustments are now completely eliminated. Running `npm run build` or `npm run bump:patch` keeps all 5 files in exact synchronization.
+
+### Turn changes
+- `tools/build.js`: Added `syncSiteAndUpdates()` and called it during `prepareVersion()`.
+- `CONTEXT_AND_FINDINGS.md`: Logged rationale, design decisions, and status.
+
+### Verification
+- `npm run build`: Successfully built at v0.4.37 and verified synchronization across all manifests.
+- `npm test`: **209 passed, 0 failed**.
+
+---
+
+## Turn: 2026-09-23 — Resolving Hosted vs Local Site Inconsistencies
+
+### Findings & Architecture Rationale
+- **Target**: Public Website & CI/CD Deployment (`site/index.html`, `site/script.js`, `.github/workflows/deploy.yml`, `tools/build.js`).
+- **Symptoms**:
+  1. On GitHub Pages (`amro212.github.io/kareer/`), the top navbar Firefox button appeared disabled with "Coming soon" in the user's browser, whereas locally on `localhost:8080` it appeared active as `Firefox .XPI`.
+  2. On GitHub Pages, the hero version badge rendered as `v0.4.37.2` (including GitHub Actions run number) while locally it rendered as `v0.4.37`.
+- **Root-Cause Analysis**:
+  1. **Firefox Button**:
+     - In `site/index.html`, the navbar button was statically authored as `class="... kr-btn-disabled"` with `<span class="kr-btn-tag">Coming soon</span>` and no `href`.
+     - It relied entirely on client-side execution of `initStoreLinks()` in `site/script.js`.
+     - Prior to the self-hosted distribution commit, `LINKS.firefox` was `null`. Browsers that had visited the site earlier cached `script.js` (GitHub Pages Fastly CDN cache). Because `index.html` had `<script src="script.js"></script>` without a version query string (`?v=...`), the cached `script.js` was reused, keeping `LINKS.firefox = null` and actively enforcing the disabled state.
+  2. **Version Mismatch**:
+     - `.github/workflows/deploy.yml` generated `VERSION="${BASE_VERSION}.${GITHUB_RUN_NUMBER}"` (e.g., `0.4.37.2`) strictly to satisfy Mozilla AMO's requirement that every unlisted signed `.xpi` must have a unique monotonically increasing version.
+     - However, `deploy.yml` also used `VERSION` when writing `site/version.json` and substituting `data-version-badge` in `site/index.html`. Consequently, the hosted website advertised the internal CI build number (`v0.4.37.2`) instead of the clean canonical product semver (`v0.4.37`), causing a discrepancy with local `package.json` and `localhost:8080`.
+- **Resolution**:
+  1. **Static-First HTML**: Updated `site/index.html` so the navbar Firefox button is statically authored as an active link to `downloads/kareer-firefox.xpi` with `.xpi` tag. It is now instantly clickable and functional even before JavaScript executes or if an older script was cached.
+  2. **Asset Cache-Busting**: Added `?v=${version}` to `<script src="script.js?v=...">` in `site/index.html`, dynamically maintained by `tools/build.js` and `deploy.yml`.
+  3. **Site & Build Separation in CI**: In `.github/workflows/deploy.yml`, exported `BASE_VERSION` separately from `VERSION`. `VERSION` (`0.4.37.${GITHUB_RUN_NUMBER}`) is used solely for the Firefox XPI manifest and `site/firefox-updates.json` (for Firefox auto-updates), while `BASE_VERSION` (`0.4.37`) is written to `site/version.json` and the website badge, ensuring 100% parity between local and hosted environments.
+
+### Turn changes
+- `site/index.html`: Statically authored active Firefox navbar button and added version query to script tag.
+- `.github/workflows/deploy.yml`: Preserved canonical `BASE_VERSION` for website manifests while retaining unique `VERSION` for signed XPI.
+- `tools/build.js`: Added cache-busting regex for script tag in `syncSiteAndUpdates()`.
+- `CONTEXT_AND_FINDINGS.md`: Logged findings and resolution.
+
+### Verification
+- `npm run build`: Success at v0.4.37.
+- Playwright verification on `localhost:8080`: Navbar button active, points to `.xpi`, badge is `v0.4.37`.
+- Playwright verification on remote `amro212.github.io/kareer/`: Confirmed Firefox button active and functional.
+- `npm test`: **209 passed, 0 failed**.
+
+
+
 
 
 
