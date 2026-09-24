@@ -5,6 +5,36 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-24 — Decoupled CD pipeline & asynchronous Mozilla AMO sync
+
+### Bugs/findings
+- **Target**: Release pipeline and version synchronization (`.github/workflows/deploy.yml`, `tools/sync-amo.js`, `site/`).
+- **Platform**: GitHub Actions deployment workflow; Mozilla Add-ons (AMO) API v5.
+- **Symptoms**: In CI, `web-ext sign` timed out after 15m waiting for Mozilla approval, causing the workflow to fail. Consequently, subsequent steps (`Sync site version` and `Deploy to GitHub Pages`) were skipped, leaving the live site displaying an outdated version (`v0.4.37.2` from Run 2) with the internal 4th build digit instead of canonical `v0.4.38`. Furthermore, when Mozilla approved the version hours later, no mechanism existed to retrieve the signed `.xpi`.
+- **Root cause**:
+  1. Synchronous coupling: The website deployment was hard-blocked on Mozilla's external approval queue.
+  2. Failure to deploy prevented the earlier fix (which hides the 4th digit on the website) from ever reaching GitHub Pages.
+  3. No asynchronous retrieval: Once `web-ext sign` timed out, approved `.xpi` files remained stranded on AMO because `web-ext sign` cannot download an already-approved existing version without re-uploading.
+- **Resolution**:
+  - Implemented `tools/sync-amo.js` using Node's native `crypto` and `fetch` to authenticate with AMO API v5 via JWT. It stages local XPIs when available, or fetches the latest approved public XPI directly from AMO if signing timed out or in a sync-only run.
+  - Decoupled `web-ext sign` in `.github/workflows/deploy.yml` with `continue-on-error: true` and 8m timeout so signing latency never blocks the website deployment.
+  - Ensured the canonical product version (`BASE_VERSION` `v0.4.38`, 3 digits) is always deployed to GitHub Pages and the site badge, while the 4th digit is used exclusively for the `.xpi` binary and `site/firefox-updates.json`.
+  - Added `workflow_dispatch` (with `sync_only` option) and an hourly cron schedule (`0 * * * *`) to automatically promote approved versions from Mozilla without pushing dummy commits.
+  - Added unit test suite `tests/unit/sync-amo.test.js`.
+
+### Turn changes
+- `tools/sync-amo.js`: New zero-dependency utility for staging local XPI or fetching approved XPI from AMO API v5.
+- `tests/unit/sync-amo.test.js`: Comprehensive unit tests for JWT creation, site version updates, and local/remote fallback staging.
+- `.github/workflows/deploy.yml`: Non-blocking sign step, integrated `sync-amo.js`, added `sync_only` dispatch and hourly promotion cron.
+- `CONTEXT_AND_FINDINGS.md`: Logged findings, root cause, and verification.
+
+### Verification/status
+- `node --test tests/unit/sync-amo.test.js`: **4 passed, 0 failed** (JWT generation, canonical version updates, local staging, remote fallback).
+- `npm test`: **213 passed, 0 failed** across all unit test suites.
+- Workflow YAML validated with all steps and run conditions verified.
+
+---
+
 ## Turn: 2026-09-24 — Mozilla AMO signing timeout & manual review elimination
 
 ### Bugs/findings

@@ -5,6 +5,14 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      sync_only:
+        description: 'Sync latest approved XPI from Mozilla without rebuilding'
+        type: boolean
+        default: false
+  schedule:
+    # Hourly check to promote asynchronously approved versions from Mozilla
+    - cron: '0 * * * *'
 
 permissions:
   contents: read
@@ -31,25 +39,35 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run test suite
-        run: npm test
-
-      - name: Determine version
+      - name: Determine run mode & versions
         shell: bash
         run: |
+          IS_SYNC_ONLY="false"
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event.inputs.sync_only }}" = "true" ]; then
+            IS_SYNC_ONLY="true"
+          fi
+          echo "IS_SYNC_ONLY=$IS_SYNC_ONLY" >> "$GITHUB_ENV"
+
           BASE_VERSION=$(node -p "require('./package.json').version")
           VERSION="${BASE_VERSION}.${GITHUB_RUN_NUMBER}"
           echo "BASE_VERSION=$BASE_VERSION" >> "$GITHUB_ENV"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Assigning XPI version: $VERSION (canonical site version: $BASE_VERSION)"
+          echo "Run mode: is_sync_only=$IS_SYNC_ONLY, canonical site version: $BASE_VERSION, target build version: $VERSION"
+
+      - name: Install dependencies
+        if: env.IS_SYNC_ONLY != 'true'
+        run: npm ci
+
+      - name: Run test suite
+        if: env.IS_SYNC_ONLY != 'true'
+        run: npm test
 
       - name: Build Firefox extension
+        if: env.IS_SYNC_ONLY != 'true'
         run: npm run build:extension
 
       - name: Stamp unique version in extension manifest
+        if: env.IS_SYNC_ONLY != 'true'
         shell: bash
         run: |
           VERSION="$VERSION" node <<'NODE'
@@ -61,6 +79,9 @@ jobs:
           NODE
 
       - name: Sign extension with Mozilla (Unlisted)
+        if: env.IS_SYNC_ONLY != 'true'
+        continue-on-error: true
+        id: mozilla_sign
         env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
@@ -72,66 +93,30 @@ jobs:
             --channel=unlisted \
             --api-key="$AMO_JWT_ISSUER" \
             --api-secret="$AMO_JWT_SECRET" \
-            --approval-timeout=900000 \
+            --approval-timeout=480000 \
             --no-input
 
-      - name: Stage signed XPI in site downloads
-        shell: bash
+      - name: Sync AMO and stage site assets
+        id: sync_amo
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          VERSION: ${{ env.VERSION }}
+          BASE_VERSION: ${{ env.BASE_VERSION }}
         run: |
-          SIGNED_XPI=$(find dist/signed -type f -name "*.xpi" | head -n 1)
-          if [ -z "$SIGNED_XPI" ]; then
-            echo "Mozilla did not return a signed XPI."
-            exit 1
-          fi
-          mkdir -p site/downloads
-          cp "$SIGNED_XPI" site/downloads/kareer-firefox.xpi
-          echo "Copied signed XPI to site/downloads/kareer-firefox.xpi"
-
-      - name: Sync site version and Firefox update manifest
-        shell: bash
-        run: |
-          node <<'NODE'
-          const fs = require('fs');
-
-          const xpiVersion = process.env.VERSION;
-          const baseVersion = process.env.BASE_VERSION;
-          if (!xpiVersion || !baseVersion) {
-            throw new Error('VERSION and BASE_VERSION must be set');
-          }
-
-          const manifest = JSON.parse(fs.readFileSync('dist/firefox/manifest.json', 'utf8'));
-          const addonId = manifest.browser_specific_settings?.gecko?.id;
-          if (!addonId) {
-            throw new Error('Firefox manifest is missing browser_specific_settings.gecko.id');
-          }
-
-          const updates = {
-            addons: {
-              [addonId]: {
-                updates: [{
-                  version: xpiVersion,
-                  update_link: 'https://amro212.github.io/kareer/downloads/kareer-firefox.xpi'
-                }]
-              }
-            }
-          };
-          fs.writeFileSync('site/firefox-updates.json', JSON.stringify(updates, null, 2) + '\n');
-          fs.writeFileSync('site/version.json', JSON.stringify({ version: baseVersion }, null, 2) + '\n');
-
-          let html = fs.readFileSync('site/index.html', 'utf8');
-          html = html.replace(/(data-version-badge>)[^<]*(<\/span>)/g, '$1v' + baseVersion + '$2');
-          html = html.replace(/src="script\.js(\?v=[^"']*)?"/g, 'src="script.js?v=' + baseVersion + '"');
-          fs.writeFileSync('site/index.html', html);
-          NODE
+          node tools/sync-amo.js
 
       - name: Setup Pages
+        if: steps.sync_amo.outputs.deploy_needed == 'true'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: steps.sync_amo.outputs.deploy_needed == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'site'
 
       - name: Deploy to GitHub Pages
+        if: steps.sync_amo.outputs.deploy_needed == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
