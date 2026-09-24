@@ -3,6 +3,29 @@
 Running log of changes, bugs, and platform findings for the dual-target
 (extension + userscript) Kareer.
 
+## Turn: 2026-09-24 — Operating Rules & Architecture Alignment with Expansion Plan and Simplify Research
+
+### Bugs/findings
+- **Target**: Project architecture guidelines and operating rules (`AGENTS.md`).
+- **Goal**: Align `AGENTS.md` with the newly approved roadmap (`docs/plans/2026-09-24-kareer-expansion.md`) and forensic reverse-engineering findings on Simplify Copilot (`docs/plans/simplify-research.md`), unblocking architectural evolution.
+- **Key alignments**:
+  1. **Direct references**: Established `docs/plans/simplify-research.md` (data-driven ATS adapters, canonical schemas, selector mapping, tiered routing) and `docs/plans/2026-09-24-kareer-expansion.md` (structured profiles, repeater coordination, provenance model, local application materials) as the architectural baseline.
+  2. **Unfreezing execution layer**: Replaced "Actuator layer frozen" with an extensible "Action execution & event strategy" rule allowing ATS-specific action executors (e.g. Workday comboboxes, repeater row additions) while strictly maintaining the ban on `chrome.debugger`, synthetic typing animations, randomized delays, fingerprint spoofing, stealth logic, and CAPTCHA solving.
+  3. **Repeatable-section coordinator**: Formally incorporated dynamic repeater sections (`discover section -> match existing rows -> create missing rows -> scan row fields -> fill -> verify`) and idempotency requirements (session-tracked rows, completing resume-parsed rows without wholesale clearing).
+  4. **Tiered resolution pipeline**: Formally documented the 3-tier resolution model: (1) Deterministic canonical profile fields via ATS adapter selectors, (2) Exact saved answers for repeated questions, (3) Contextual AI fallback with single-page batching.
+  5. **Provenance & controlled guessing**: Replaced legacy "never invent facts" with 5-tier provenance (**saved**, **inferred**, **guessed [yellow]**, **verified**, **unresolved**), allowing yellow factual guesses on ambiguous questions by default and enabling Auto Submit for yellow answers, while preserving safety hard stops.
+
+### Turn changes
+- `AGENTS.md`: Updated Section 3 (Architecture rules) to incorporate reference docs, unfreeze execution layer for ATS adapters, add repeatable-section coordinator, tiered resolution, and the 5-tier provenance/guessing policy.
+- `.gitignore`: Structured and categorized into dependencies, build artifacts, test artifacts, secrets/keys, local documents/scratch (`docs/`, `scratch/`, `pages/*`), editor/IDE metadata (`.cursor/`, `.codex/`, `.vscode/*`, `.idea/`), OS files, and diagnostics.
+- Git cache: Removed `docs/` from git index (`git rm -r --cached docs`), ensuring local plan documentation remains untracked.
+- `CONTEXT_AND_FINDINGS.md`: Documented rule adjustments, gitignore organization, and cache removal.
+
+### Verification/status
+- `AGENTS.md` and `docs/plans/` synchronized.
+- `git status`: `docs/` untracked and ignored, `docs/plans/2026-09-21-kareer-rebrand-design.md` staged for removal from git cache.
+- `npm test`: **209 passed, 0 failed** across all unit test suites.
+
 ---
 
 ## Turn: 2026-09-24 — Decoupled CD pipeline & asynchronous Mozilla AMO sync

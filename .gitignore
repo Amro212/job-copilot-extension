@@ -1,14 +1,55 @@
+# Dependencies
 node_modules/
+
+# Build and distribution artifacts
 dist/
 # Tracked so Tampermonkey @updateURL keeps working
 !dist/kareer.user.js
 .build-cache.json
+*.zip
+*.xpi
+*.crx
+
+# Test results and browser automation artifacts
 test-results/
 playwright-report/
 .playwright/
-*.zip
-*.xpi
-.cursor/plans/*
-pages/*
-scratch/
+coverage/
+.nyc_output/
+
+# Environment, credentials, and private keys
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Local documents, plans, scratch, and local mocks
+scratch/
+pages/*
+
+# Editor, AI workspace, and IDE metadata
+.cursor/
+.codex/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and runtime diagnostics
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
