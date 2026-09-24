@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - '.vscode/**'
+      - 'scratch/**'
   workflow_dispatch:
     inputs:
       sync_only:
@@ -32,6 +38,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,6 +53,17 @@ jobs:
           IS_SYNC_ONLY="false"
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event.inputs.sync_only }}" = "true" ]; then
             IS_SYNC_ONLY="true"
+          elif [ "${{ github.event_name }}" = "push" ] && [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            if git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1; then
+              EXT_CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- src package.json package-lock.json tools/build.js tools/build-user-script.js)
+              if [ -z "$EXT_CHANGED" ]; then
+                echo "No extension source files changed in this push. Running in sync/deploy mode without building a new add-on version."
+                IS_SYNC_ONLY="true"
+              else
+                echo "Extension source files changed in this push:"
+                echo "$EXT_CHANGED"
+              fi
+            fi
           fi
           echo "IS_SYNC_ONLY=$IS_SYNC_ONLY" >> "$GITHUB_ENV"
 

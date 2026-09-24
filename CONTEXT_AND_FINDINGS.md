@@ -3,6 +3,27 @@
 Running log of changes, bugs, and platform findings for the dual-target
 (extension + userscript) Kareer.
 
+## Turn: 2026-09-24 — CI/CD trigger filtering & extension change detection
+
+### Bugs/findings
+- **Target**: Release workflow triggering and versioning (`.github/workflows/deploy.yml`, `.github/workflows/ci.yml`).
+- **Symptoms**: Any push to `master` (including markdown files, documentation, and `.gitignore`) was triggering `deploy.yml`, stamping a new build version number, and submitting an unlisted add-on version to Mozilla AMO for signing even when extension code was unchanged.
+- **Root cause**: `on.push` on `master` had no path filtering, and `Determine run mode` only checked for scheduled or dispatch events rather than inspecting whether extension source code actually changed.
+- **Resolution**:
+  1. Added `paths-ignore` (`'**.md'`, `'docs/**'`, `'.gitignore'`, `'.vscode/**'`, `'scratch/**'`) to both `deploy.yml` and `ci.yml` so documentation and repository configuration commits never trigger workflow runs.
+  2. Added full fetch depth (`fetch-depth: 0`) and extension source diff detection (`src/`, `package.json`, `package-lock.json`, `tools/build.js`, `tools/build-user-script.js`) in `deploy.yml`. When only non-extension files (e.g. landing page in `site/**` or workflow files) are pushed, `IS_SYNC_ONLY="true"` is automatically set, skipping extension builds and Mozilla AMO signing while deploying site updates.
+
+### Turn changes
+- `.github/workflows/deploy.yml`: Added `paths-ignore`, `fetch-depth: 0`, and extension source diff check setting `IS_SYNC_ONLY="true"`.
+- `.github/workflows/ci.yml`: Added `paths-ignore` for `push` and `pull_request` triggers.
+- `CONTEXT_AND_FINDINGS.md`: Logged findings, root cause, and resolution.
+
+### Verification/status
+- YAML workflows validated with path filters and diff condition logic verified.
+- `npm test`: **213 passed, 0 failed** across all unit test suites.
+
+---
+
 ## Turn: 2026-09-24 — Operating Rules & Architecture Alignment with Expansion Plan and Simplify Research
 
 ### Bugs/findings
