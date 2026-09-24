@@ -7,7 +7,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "kareer@amro212",
-      "strict_min_version": "140.0",
+      "strict_min_version": "142.0",
       "update_url": "https://amro212.github.io/kareer/firefox-updates.json",
       "data_collection_permissions": {
         "required": [

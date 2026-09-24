@@ -184,21 +184,33 @@ export function initInlineRewriteBadge(onRewriteClick) {
   btn.className = 'kr-rewrite-btn';
   btn.type = 'button';
   btn.setAttribute('data-state', 'idle');
-  btn.innerHTML = `${BADGE_ICONS.spark}<span>Rewrite with AI</span>`;
+
+  const iconSpan = document.createElement('span');
+  iconSpan.style.display = 'contents';
+  iconSpan.innerHTML = BADGE_ICONS.spark;
+
+  const labelSpan = document.createElement('span');
+  labelSpan.textContent = 'Rewrite with AI';
+
+  btn.append(iconSpan, labelSpan);
   shadow.appendChild(btn);
 
   function setBadgeState(state, customLabel) {
     if (!btn) return;
     btn.setAttribute('data-state', state);
-    if (state === 'loading') {
-      btn.innerHTML = `${BADGE_ICONS.spin}<span>${customLabel || 'Rewriting...'}</span>`;
-    } else if (state === 'success') {
-      btn.innerHTML = `${BADGE_ICONS.check}<span>${customLabel || 'Rewritten ✓'}</span>`;
-    } else if (state === 'error') {
-      btn.innerHTML = `${BADGE_ICONS.error}<span>${customLabel || 'Rewrite failed'}</span>`;
-    } else {
-      btn.innerHTML = `${BADGE_ICONS.spark}<span>${customLabel || 'Rewrite with AI'}</span>`;
-    }
+    const icons = {
+      loading: BADGE_ICONS.spin,
+      success: BADGE_ICONS.check,
+      error: BADGE_ICONS.error,
+    };
+    iconSpan.innerHTML = icons[state] || BADGE_ICONS.spark;
+
+    const defaultLabels = {
+      loading: 'Rewriting...',
+      success: 'Rewritten ✓',
+      error: 'Rewrite failed',
+    };
+    labelSpan.textContent = customLabel || defaultLabels[state] || 'Rewrite with AI';
   }
 
   btn.addEventListener('click', (e) => {

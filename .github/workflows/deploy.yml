@@ -60,17 +60,6 @@ jobs:
           fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');
           NODE
 
-      - name: Create source archive for Mozilla
-        shell: bash
-        run: |
-          zip -r dist/kareer-source.zip \
-            src \
-            tools \
-            package.json \
-            package-lock.json \
-            README.md \
-            -x "*/node_modules/*"
-
       - name: Sign extension with Mozilla (Unlisted)
         env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
@@ -83,7 +72,6 @@ jobs:
             --channel=unlisted \
             --api-key="$AMO_JWT_ISSUER" \
             --api-secret="$AMO_JWT_SECRET" \
-            --upload-source-code=dist/kareer-source.zip \
             --approval-timeout=900000 \
             --no-input
 

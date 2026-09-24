@@ -5,6 +5,38 @@ Running log of changes, bugs, and platform findings for the dual-target
 
 ---
 
+## Turn: 2026-09-24 — Mozilla AMO signing timeout & manual review elimination
+
+### Bugs/findings
+- **Target**: Firefox extension continuous delivery & automated signing (`.github/workflows/deploy.yml`, `tools/build.js`, `src/core/fields/highlight.js`, `manifest.firefox.json`).
+- **Platform**: Mozilla Add-ons (AMO) signing API; GitHub Actions deployment workflow.
+- **Symptoms**: `web-ext sign` timed out after 15m 12s on version 0.4.37.4 with `WebExtError: Approval: timeout exceeded`; downstream Pages staging was skipped. In AMO Developer Hub, the version status was marked as `Awaiting Review`.
+- **Root cause**:
+  1. Passing `--upload-source-code=dist/kareer-source.zip` signaled to AMO that the package required human inspection to verify built code against source code.
+  2. `tools/build.js` copied 4.4 MB of promotional brand graphics from `src/assets/brand` into `dist/<browser>/assets/brand`, bloating the XPI to 4.5 MiB and tripping size heuristics.
+  3. Commit `239d3d6` added dynamic variable interpolation to `btn.innerHTML` in `src/core/fields/highlight.js`, triggering static analysis warnings (`NO_UNSANITIZED_INNERHTML`).
+- **Resolution**:
+  - Removed source archive creation and `--upload-source-code` from `.github/workflows/deploy.yml`. Unminified code does not require source submission.
+  - Stopped copying unused `src/assets/brand/` promo PNGs into extension builds in `tools/build.js`, reducing package size by >90% (4.5 MiB -> 391 KB).
+  - Refactored `src/core/fields/highlight.js` to split icon SVGs and label text into separate elements using `labelSpan.textContent` rather than interpolated `innerHTML`.
+  - Updated `manifest.firefox.json` gecko `strict_min_version` to `142.0` to match Mozilla's `data_collection_permissions` baseline, achieving 0 errors and 0 manifest warnings under `web-ext lint --self-hosted`.
+  - Bumped version to `0.4.38`.
+
+### Turn changes
+- `.github/workflows/deploy.yml`: Removed source zip creation and `--upload-source-code` flag.
+- `tools/build.js`: Removed copying `src/assets/brand` into `outDir/assets/brand`.
+- `src/core/fields/highlight.js`: Converted badge state changes to use `labelSpan.textContent` and static SVG insertion.
+- `src/targets/extension/manifest.firefox.json`: Aligned `strict_min_version` to `142.0` with `data_collection_permissions`.
+- `package.json`, `site/version.json`, `site/firefox-updates.json`, `site/index.html`: Clean version bump to `0.4.38`.
+- `CONTEXT_AND_FINDINGS.md`: Recorded findings, root causes, and verification.
+
+### Verification/status
+- `npx web-ext lint --source-dir=dist/firefox --self-hosted`: **0 errors, 0 manifest warnings**. Total scanned package size reduced from 4.5 MiB to 557 KB.
+- `npm run build`: Successfully built userscript, Chrome zip, and Firefox XPI (391 KB).
+- `npm test`: **209 passed, 0 failed** across all unit test suites.
+
+---
+
 ## Turn: 2026-09-23 — Deploy workflow shell parsing failure
 
 ### Bugs/findings

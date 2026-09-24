@@ -216,9 +216,6 @@ function writeExtensionStaticFiles(pkg, browser) {
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', 'utf8');
   fs.cpSync(path.join(srcDir, 'assets', 'fonts'), path.join(outDir, 'assets', 'fonts'), { recursive: true });
-  if (fs.existsSync(path.join(srcDir, 'assets', 'brand'))) {
-    fs.cpSync(path.join(srcDir, 'assets', 'brand'), path.join(outDir, 'assets', 'brand'), { recursive: true });
-  }
   const pageStyles = fs.readFileSync(path.join(extDir, 'shared', 'pages.css'), 'utf8');
   fs.writeFileSync(path.join(outDir, 'assets', 'theme.css'),
     fontFaceCSS(file => `fonts/${file}`) + `\n:root {${TOKENS}}\n` + pageStyles);
