@@ -36,6 +36,10 @@ export const DEFAULT_PROFILE = {
   portfolio: '',
   resumeContext: '',
   applicantNotes: '',
+  workExperiences: [],
+  education: [],
+  projects: [],
+  skills: [],
 };
 
 export const POPULAR_MODELS = [

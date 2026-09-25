@@ -177,3 +177,112 @@ test('source does not overwrite unrelated questions that share a discovery prefi
   const { answers } = await generateAutofillAnswers([{ fieldId: 'experience', label: 'Where did you find the most challenging technical problem in your previous role?', type: 'textarea' }]);
   assert.equal(answers[0].value, 'While working on a compiler project.');
 });
+
+test('structured profile factories generate IDs and default values', async () => {
+  const { createWorkExperience, createEducation, createProject } = await import('../../src/core/profile.js');
+  const work = createWorkExperience({ title: 'Staff Engineer', company: 'Acme' });
+  assert.ok(work.id.startsWith('work_'));
+  assert.equal(work.title, 'Staff Engineer');
+  assert.equal(work.company, 'Acme');
+  assert.equal(work.enabled, true);
+  assert.equal(work.current, false);
+
+  const edu = createEducation({ institution: 'Stanford', degree: "Master's" });
+  assert.ok(edu.id.startsWith('edu_'));
+  assert.equal(edu.institution, 'Stanford');
+  assert.equal(edu.enabled, true);
+
+  const proj = createProject({ name: 'Kareer', role: 'Maintainer' });
+  assert.ok(proj.id.startsWith('proj_'));
+  assert.equal(proj.name, 'Kareer');
+  assert.equal(proj.enabled, true);
+});
+
+test('getProfile provides array defaults for repeatable collections on legacy objects', () => {
+  gmSet('kr:profile', { fullName: 'Legacy User' });
+  const profile = getProfile();
+  assert.deepEqual(profile.workExperiences, []);
+  assert.deepEqual(profile.education, []);
+  assert.deepEqual(profile.projects, []);
+  assert.deepEqual(profile.skills, []);
+});
+
+test('formatStructuredBackground formats active entries and excludes disabled ones', async () => {
+  const { formatStructuredBackground } = await import('../../src/core/profile.js');
+  const profile = {
+    workExperiences: [
+      { enabled: true, title: 'Lead Engineer', company: 'Stripe', startDate: '2022-01', current: true, description: 'Scaled payments' },
+      { enabled: false, title: 'Intern', company: 'OldCo', startDate: '2020-05', endDate: '2020-08' },
+    ],
+    education: [
+      { enabled: true, institution: 'MIT', degree: 'BS', fieldOfStudy: 'CS', startDate: '2018-09', endDate: '2022-05', gpa: '3.9' },
+    ],
+    projects: [
+      { enabled: true, name: 'TaskEngine', role: 'Creator', url: 'https://github.com/demo', description: 'Distributed queue' },
+    ],
+    skills: ['TypeScript', 'Rust', 'Docker'],
+  };
+
+  const text = formatStructuredBackground(profile);
+  assert.match(text, /WORK EXPERIENCE:/);
+  assert.match(text, /Lead Engineer at Stripe/);
+  assert.match(text, /Present/);
+  assert.match(text, /Scaled payments/);
+  assert.doesNotMatch(text, /OldCo/);
+  assert.match(text, /EDUCATION:/);
+  assert.match(text, /BS in CS – MIT/);
+  assert.match(text, /PROJECTS:/);
+  assert.match(text, /TaskEngine \(Creator\)/);
+  assert.match(text, /SKILLS:\n• TypeScript, Rust, Docker/);
+});
+
+test('profileForAI includes enabled repeatable entries and filters out disabled ones', async () => {
+  const { profileForAI } = await import('../../src/core/profile.js');
+  const profile = {
+    fullName: 'Jane Doe',
+    email: 'jane@example.com',
+    workExperiences: [
+      { id: 'w1', enabled: true, title: 'Engineer' },
+      { id: 'w2', enabled: false, title: 'Intern' },
+    ],
+    education: [
+      { id: 'e1', enabled: true, degree: 'BS' },
+    ],
+    projects: [
+      { id: 'p1', enabled: true, name: 'Proj1' },
+      { id: 'p2', enabled: false, name: 'Secret' },
+    ],
+    skills: ['JavaScript'],
+  };
+
+  const aiProfile = profileForAI(profile);
+  assert.equal(aiProfile.fullName, 'Jane Doe');
+  assert.equal(aiProfile.workExperiences.length, 1);
+  assert.equal(aiProfile.workExperiences[0].id, 'w1');
+  assert.equal(aiProfile.education.length, 1);
+  assert.equal(aiProfile.projects.length, 1);
+  assert.equal(aiProfile.projects[0].name, 'Proj1');
+  assert.deepEqual(aiProfile.skills, ['JavaScript']);
+});
+
+test('saveProfile preserves and persists repeatable entries', () => {
+  const profile = saveProfile({
+    fullName: 'Bob Smith',
+    workExperiences: [{ id: 'w1', title: 'Developer', enabled: true }],
+    education: [{ id: 'e1', degree: 'MS', enabled: true }],
+    projects: [{ id: 'p1', name: 'OpenSource', enabled: true }],
+    skills: ['Python', 'SQL'],
+  });
+
+  assert.equal(profile.fullName, 'Bob Smith');
+  assert.equal(profile.workExperiences.length, 1);
+  assert.equal(profile.workExperiences[0].title, 'Developer');
+  assert.equal(profile.education.length, 1);
+  assert.equal(profile.projects.length, 1);
+  assert.deepEqual(profile.skills, ['Python', 'SQL']);
+
+  const loaded = getProfile();
+  assert.equal(loaded.workExperiences[0].title, 'Developer');
+  assert.deepEqual(loaded.skills, ['Python', 'SQL']);
+});
+

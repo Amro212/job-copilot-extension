@@ -40,9 +40,119 @@ export const PROFILE_SECTIONS = [
 export const PROFILE_FIELDS = PROFILE_SECTIONS.flatMap(section => section.fields);
 export const STRUCTURED_PROFILE_DEFAULTS = Object.fromEntries(PROFILE_FIELDS.map(field => [field.name, '']));
 
+export function createWorkExperience(data = {}) {
+  return {
+    id: data.id || `work_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    enabled: data.enabled !== false,
+    title: data.title || '',
+    company: data.company || '',
+    location: data.location || '',
+    startDate: data.startDate || '',
+    endDate: data.endDate || '',
+    current: Boolean(data.current),
+    description: data.description || '',
+  };
+}
+
+export function createEducation(data = {}) {
+  return {
+    id: data.id || `edu_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    enabled: data.enabled !== false,
+    institution: data.institution || '',
+    degree: data.degree || '',
+    fieldOfStudy: data.fieldOfStudy || '',
+    startDate: data.startDate || '',
+    endDate: data.endDate || '',
+    current: Boolean(data.current),
+    gpa: data.gpa || '',
+    description: data.description || '',
+  };
+}
+
+export function createProject(data = {}) {
+  return {
+    id: data.id || `proj_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    enabled: data.enabled !== false,
+    name: data.name || '',
+    role: data.role || '',
+    url: data.url || '',
+    startDate: data.startDate || '',
+    endDate: data.endDate || '',
+    current: Boolean(data.current),
+    description: data.description || '',
+  };
+}
+
+function formatRangeDate(val) {
+  if (!val) return '';
+  const str = String(val).trim();
+  if (str.startsWith('--')) {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const idx = parseInt(str.slice(2), 10) - 1;
+    return monthNames[idx] || str;
+  }
+  const parts = str.split('-');
+  if (parts.length >= 2) {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const idx = parseInt(parts[1], 10) - 1;
+    const m = monthNames[idx] || parts[1];
+    return `${m} ${parts[0]}`;
+  }
+  return str;
+}
+
+export function formatStructuredBackground(profile) {
+  const lines = [];
+  const experiences = (profile.workExperiences || []).filter(e => e && e.enabled !== false);
+  if (experiences.length > 0) {
+    lines.push('WORK EXPERIENCE:');
+    for (const exp of experiences) {
+      const dates = [formatRangeDate(exp.startDate), exp.current ? 'Present' : formatRangeDate(exp.endDate)].filter(Boolean).join(' – ');
+      lines.push(`• ${exp.title || 'Role'} at ${exp.company || 'Company'}${exp.location ? ` (${exp.location})` : ''}${dates ? ` [${dates}]` : ''}`);
+      if (exp.description) lines.push(`  ${exp.description.replace(/\n+/g, '\n  ')}`);
+    }
+  }
+
+  const education = (profile.education || []).filter(e => e && e.enabled !== false);
+  if (education.length > 0) {
+    lines.push('\nEDUCATION:');
+    for (const edu of education) {
+      const dates = [formatRangeDate(edu.startDate), edu.current ? 'Present' : formatRangeDate(edu.endDate)].filter(Boolean).join(' – ');
+      lines.push(`• ${edu.degree || 'Degree'} in ${edu.fieldOfStudy || 'Field'} – ${edu.institution || 'Institution'}${dates ? ` [${dates}]` : ''}${edu.gpa ? ` (GPA: ${edu.gpa})` : ''}`);
+      if (edu.description) lines.push(`  ${edu.description.replace(/\n+/g, '\n  ')}`);
+    }
+  }
+
+  const projects = (profile.projects || []).filter(e => e && e.enabled !== false);
+  if (projects.length > 0) {
+    lines.push('\nPROJECTS:');
+    for (const proj of projects) {
+      const dates = [formatRangeDate(proj.startDate), proj.current ? 'Present' : formatRangeDate(proj.endDate)].filter(Boolean).join(' – ');
+      lines.push(`• ${proj.name || 'Project'}${proj.role ? ` (${proj.role})` : ''}${proj.url ? ` – ${proj.url}` : ''}${dates ? ` [${dates}]` : ''}`);
+      if (proj.description) lines.push(`  ${proj.description.replace(/\n+/g, '\n  ')}`);
+    }
+  }
+
+  const skills = (profile.skills || []).filter(Boolean);
+  if (skills.length > 0) {
+    lines.push(`\nSKILLS:\n• ${skills.join(', ')}`);
+  }
+
+  return lines.join('\n').trim();
+}
+
 export function profileForAI(profile) {
   const keys = ['fullName', 'email', 'phone', 'location', 'linkedin', 'github', 'portfolio', ...PROFILE_FIELDS.map(field => field.name)];
-  return Object.fromEntries(keys.map(key => [key, profile[key] || '']));
+  const known = Object.fromEntries(keys.map(key => [key, profile?.[key] || '']));
+  const { resumeContext, applicantNotes, _collapsed, workExperiences, education, projects, skills, ...extra } = profile || {};
+  return {
+    ...extra,
+    ...known,
+    workExperiences: (profile?.workExperiences || []).filter(e => e && e.enabled !== false),
+    education: (profile?.education || []).filter(e => e && e.enabled !== false),
+    projects: (profile?.projects || []).filter(e => e && e.enabled !== false),
+    skills: (profile?.skills || []).filter(Boolean),
+  };
 }
 
 const normalize = value => String(value || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim();

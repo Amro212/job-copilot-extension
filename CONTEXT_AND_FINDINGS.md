@@ -3,7 +3,79 @@
 Running log of changes, bugs, and platform findings for the dual-target
 (extension + userscript) Kareer.
 
-## Turn: 2026-09-24 — CI/CD trigger filtering & extension change detection
+## Turn: 2026-09-25 — Unambiguous Date Pickers & Header Button Restraint
+
+### Bugs/findings
+- **Target**: Options console profile repeatable cards (`src/targets/extension/options/index.js`, `src/targets/extension/shared/pages.css`).
+- **Symptoms & Root Cause**:
+  1. *Ambiguous date inputs*: `<input type="month">` rendered across browsers in dark mode as an empty dark text box with no placeholder, calendar icon, or formatting cues, leaving users completely unaware of what format to enter (e.g. `MM/YYYY`, `YYYY-MM`, or text month).
+  2. *Green button flooding*: Card header controls (`↑`, `↓`, `✕`) inherited global `button` styles (`background: var(--kr-signal)` / `#A3E635`) in stale builds and lacked `.secondary` classes, violating `DESIGN.md` rules against neon lime flooding.
+  3. *Orphaned grid cells*: The "Currently enrolled / working" checkbox sat in an isolated 7th grid item, throwing off the 2-column symmetry.
+- **Resolution**:
+  1. **Coordinated Month & Year Dropdowns**:
+     - Replaced raw text/month inputs with dedicated side-by-side `<select>` pickers: Month (named `January` through `December`) and Year (`1960` through `currentYear + 8`).
+     - Zero formatting ambiguity: Users pick month and year directly from dropdowns, persisted cleanly as `YYYY-MM` (or `YYYY`).
+     - Added partial date resilience: Supports month-first selection (`--MM`), preserving selected values if reordered or toggled.
+  2. **Inline Current Status Toggles**:
+     - Moved "Currently enrolled", "I currently work here", and "Ongoing project" toggles directly into the End Date header row (`.label-with-action`).
+     - Toggling automatically disables the End Date Month & Year selects and updates card summary to `Present` / `Ongoing`.
+     - Balanced grid layout across Work Experience, Education, and Projects with `.full-width` helpers for location and URL fields.
+  3. **Strict Button Specificity**:
+     - Added explicit `secondary` class to all icon buttons (`class="icon-btn secondary ..."`).
+     - Applied `!important` dark graphite styling (`--kr-bg-2`, `--kr-line-strong`, `--kr-text-2`) in `pages.css` so secondary buttons are never flooded with lime green.
+  4. **AI Pipeline Verification & Voice Editor Context**:
+     - Verified that all active structured entries (`workExperiences`, `education`, `projects`, `skills`) are passed in `applicantProfile` and serialized chronologically in `combinedResumeContext` for all AI requests.
+     - Updated narrative voice editor pass in `src/core/ai.js` to also receive `combinedResumeContext` instead of raw legacy text notes.
+- **Verification**:
+  - `npm test`: **218 passed, 0 failed**.
+  - `npm run build`: Compiled extension bundle `v0.4.43` with updated CSS and bundled JS.
+
+---
+
+## Turn: 2026-09-25 — Structured applicant profile & Simplify-parity background overhaul
+
+### Bugs/findings
+- **Target**: Applicant profile data model, options console, in-page panel, and AI grounding (`src/core/profile.js`, `src/core/constants.js`, `src/core/storage.js`, `src/core/ai.js`, `src/targets/extension/options/`, `src/core/ui.js`, `src/targets/extension/shared/pages.css`).
+- **Goal**: Harden the applicant profile from unstructured plain-text notes into rich, structured, multi-entry collections matching Simplify (Work Experience, Education, Projects, and Skills) while preserving existing data, brand signature (`DESIGN.md`), and `/impeccable` design principles.
+- **Key implementations**:
+  1. **Data Model & Schema**:
+     - Extended `DEFAULT_PROFILE` with `workExperiences: []`, `education: []`, `projects: []`, and `skills: []`.
+     - Added robust factory methods in `src/core/profile.js`: `createWorkExperience()`, `createEducation()`, `createProject()`.
+     - Guarded `getProfile()` and `saveProfile()` in `src/core/storage.js` so legacy profiles or partial payloads always resolve repeatable fields to arrays.
+  2. **Options Console (1180px Full-Width Editor)**:
+     - Implemented repeatable accordion card editors for Work Experience, Education, and Projects with:
+       - Header summary (e.g. "Senior Software Engineer at Stripe • Jan 2022 – Present"), collapsible state, and enabled toggle switch for fine-grained autofill inclusion.
+       - Reorder controls (Move Up / Move Down) and delete actions.
+       - Native `<input type="month">` Month/Year date pickers for start and end dates.
+       - "I currently work here" / "Currently enrolled" / "Ongoing project" toggles that dynamically disable end-date pickers.
+       - Inline field guides under every label providing clear, practical examples and guidelines.
+     - Implemented interactive chip/tag editor for Skills with Enter/comma keyboard shortcuts, duplicate prevention, and remove badges.
+     - Maintained backward compatibility for `resumeContext` and `applicantNotes` as supplementary notes.
+  3. **In-Page Panel Integration**:
+     - Added a Flight-deck styled background summary card in the 460px in-page panel displaying active counts of roles, degrees, projects, and skills with a direct deep-link ("Settings ↗") opening the full options console.
+     - Preserved repeatable collections when saving flat identity fields from the in-page panel.
+  4. **AI Context & Grounding**:
+     - Implemented `formatStructuredBackground()` to serialize active structured work experiences, education, projects, and skills into a clean, chronological format for AI autofill and narrative rewrite prompts.
+     - Updated `profileForAI()` to filter out disabled entries so candidate preferences are strictly honored.
+  5. **Design & Brand Fidelity**:
+     - Applied dark graphite palette (`--kr-bg-0`, `--kr-bg-1`, `--kr-bg-2`, `--kr-bg-3`), restrained signal lime (`--kr-signal`), and Geist font typography matching `DESIGN.md`.
+
+### Turn changes
+- `src/core/constants.js`: Extended `DEFAULT_PROFILE` with structured collections (`workExperiences`, `education`, `projects`, `skills`).
+- `src/core/profile.js`: Added entry factories, `formatStructuredBackground()`, and updated `profileForAI()`.
+- `src/core/storage.js`: Ensured repeatable collections always fallback to arrays in `getProfile()` and `saveProfile()`.
+- `src/core/ai.js`: Injected structured background into `generateAutofillAnswers()` and `rewriteNarrativeField()`.
+- `src/targets/extension/options/index.html`: Added Work Experience, Education, Projects, and Skills fieldsets with add buttons, chip list, and field guides.
+- `src/targets/extension/options/index.js`: Implemented full interactive CRUD, accordion toggles, reordering, date pickers, skill tag input, and state persistence.
+- `src/targets/extension/shared/pages.css`: Added styling for repeatable cards, headers, controls, skill chips, and field guides matching `DESIGN.md`.
+- `src/core/ui.js`: Added detailed background summary card and Options deep-link to the in-page panel's Profile tab; safeguarded repeatable collections on save.
+- `tests/unit/profile.test.js`: Added unit tests covering factories, defaults, background formatting, `profileForAI`, and storage persistence.
+- `CONTEXT_AND_FINDINGS.md`: Logged audit, architecture, and verification.
+
+### Verification/status
+- `npm test`: **218 passed, 0 failed** across all unit test suites.
+- `npm run build`: Extension and userscript built cleanly.
+
 
 ### Bugs/findings
 - **Target**: Release workflow triggering and versioning (`.github/workflows/deploy.yml`, `.github/workflows/ci.yml`).

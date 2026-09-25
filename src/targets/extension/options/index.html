@@ -66,16 +66,62 @@
           <legend>Identity and links</legend>
           <div class="grid" id="identity-fields"></div>
         </fieldset>
+
+        <fieldset class="repeatable-section" id="section-work">
+          <div class="section-header-row">
+            <div>
+              <legend>Work experience</legend>
+              <p class="hint">Add your professional work history. Used to populate ATS repeatable rows and answer career background questions.</p>
+            </div>
+            <button type="button" class="secondary add-btn" id="add-work-btn">+ Add experience</button>
+          </div>
+          <div id="work-experience-list" class="repeatable-list"></div>
+        </fieldset>
+
+        <fieldset class="repeatable-section" id="section-education">
+          <div class="section-header-row">
+            <div>
+              <legend>Education</legend>
+              <p class="hint">Add universities, colleges, degrees, or certifications.</p>
+            </div>
+            <button type="button" class="secondary add-btn" id="add-education-btn">+ Add education</button>
+          </div>
+          <div id="education-list" class="repeatable-list"></div>
+        </fieldset>
+
+        <fieldset class="repeatable-section" id="section-projects">
+          <div class="section-header-row">
+            <div>
+              <legend>Projects</legend>
+              <p class="hint">Add notable technical or academic projects, open-source work, or portfolio items.</p>
+            </div>
+            <button type="button" class="secondary add-btn" id="add-project-btn">+ Add project</button>
+          </div>
+          <div id="projects-list" class="repeatable-list"></div>
+        </fieldset>
+
+        <fieldset class="repeatable-section" id="section-skills">
+          <legend>Skills</legend>
+          <p class="hint">Add skills, frameworks, and tools. Type a skill and press Enter or comma, or click Add.</p>
+          <div id="skills-chip-list" class="skills-chips"></div>
+          <div class="skill-input-row">
+            <input id="skill-input" type="text" placeholder="e.g. TypeScript, React, PostgreSQL, AWS..." />
+            <button type="button" class="secondary" id="add-skill-btn">Add skill</button>
+          </div>
+        </fieldset>
+
         <div id="profile-sections" style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;"></div>
+
         <fieldset style="margin-top: 14px;">
-          <legend>Context</legend>
+          <legend>Additional context &amp; rules</legend>
+          <p class="hint">Supplementary text context. Structured profile fields above take precedence over notes.</p>
           <div class="group">
-            <label for="resumeContext">Resume highlights</label>
-            <textarea id="resumeContext" name="resumeContext"></textarea>
+            <label for="resumeContext">Resume highlights &amp; background summary</label>
+            <textarea id="resumeContext" name="resumeContext" placeholder="Optional freeform resume highlights, awards, or details not captured above..."></textarea>
           </div>
           <div class="group" style="margin-top: 10px;">
-            <label for="applicantNotes">Applicant notes and rules</label>
-            <textarea id="applicantNotes" name="applicantNotes"></textarea>
+            <label for="applicantNotes">Applicant notes &amp; custom rules for AI</label>
+            <textarea id="applicantNotes" name="applicantNotes" placeholder="Rules for written answers (e.g. 'Emphasize backend architecture and distributed systems', 'Do not disclose salary below $100k')..."></textarea>
           </div>
         </fieldset>
         <div class="actions" style="margin-top: 14px;">

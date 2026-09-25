@@ -1982,6 +1982,27 @@ function renderHomeTab() {
 
 function renderProfileTab() {
   const profile = getProfile();
+  const workCount = (profile.workExperiences || []).length;
+  const eduCount = (profile.education || []).length;
+  const projCount = (profile.projects || []).length;
+  const skillCount = (profile.skills || []).length;
+
+  const backgroundSummaryHtml = `
+    <div style="border: 1px solid var(--kr-line); border-radius: var(--kr-radius-md); padding: 12px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-weight: 600; font-size: 13px; color: var(--kr-text-1);">Detailed Profile Background</span>
+        <button type="button" class="kr-btn kr-btn-secondary" id="kr-open-full-profile-btn" style="font-size: 11px; padding: 4px 8px; line-height: 1;">Settings ↗</button>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+        <span class="kr-badge" style="font-size: 11px; font-family: var(--kr-font-mono);">${workCount} Experience${workCount === 1 ? '' : 's'}</span>
+        <span class="kr-badge" style="font-size: 11px; font-family: var(--kr-font-mono);">${eduCount} Education</span>
+        <span class="kr-badge" style="font-size: 11px; font-family: var(--kr-font-mono);">${projCount} Project${projCount === 1 ? '' : 's'}</span>
+        <span class="kr-badge" style="font-size: 11px; font-family: var(--kr-font-mono);">${skillCount} Skill${skillCount === 1 ? '' : 's'}</span>
+      </div>
+      <div style="font-size: 11px; color: var(--kr-text-3);">Manage all roles, degrees, projects, dates, and skills in the full Settings console.</div>
+    </div>
+  `;
+
   const sections = PROFILE_SECTIONS.map((section, index) => `
     <details class="kr-profile-section" ${index === 0 ? 'open' : ''} style="border: 1px solid var(--kr-line); border-radius: var(--kr-radius-md); padding: 12px; background: rgba(255,255,255,0.02);">
       <summary style="cursor: pointer; font-weight: 600; color: var(--kr-text-1); display: flex; align-items: center; justify-content: space-between;">
@@ -2007,6 +2028,7 @@ function renderProfileTab() {
 
   return `
     <form id="kr-profile-form" style="display: flex; flex-direction: column; gap: 12px;">
+      ${backgroundSummaryHtml}
       <div style="font-size: 12px; color: var(--kr-text-2);">Save common answers once. Explicit answers take priority over background notes.</div>
       <div class="kr-form-group">
         <label>Full Name</label>
@@ -2448,13 +2470,21 @@ function attachEventHandlers() {
   }
 
   // Profile Form
+  const openFullProfileBtn = shadowRootRef.querySelector('#kr-open-full-profile-btn');
+  if (openFullProfileBtn) {
+    openFullProfileBtn.onclick = () => {
+      platform.openOptions();
+    };
+  }
+
   const profileForm = shadowRootRef.querySelector('#kr-profile-form');
   if (profileForm) {
     profileForm.onsubmit = (e) => {
       e.preventDefault();
       const formData = new FormData(profileForm);
+      const current = getProfile();
       const newProfile = {
-        ...getProfile(),
+        ...current,
         ...Object.fromEntries(PROFILE_FIELDS.map(field => [field.name, String(formData.get(field.name) || '').trim()])),
         fullName: formData.get('fullName') || '',
         email: formData.get('email') || '',
@@ -2465,6 +2495,10 @@ function attachEventHandlers() {
         portfolio: formData.get('portfolio') || '',
         resumeContext: formData.get('resumeContext') || '',
         applicantNotes: formData.get('applicantNotes') || '',
+        workExperiences: current.workExperiences || [],
+        education: current.education || [],
+        projects: current.projects || [],
+        skills: current.skills || [],
       };
       saveProfile(newProfile);
       logger.info('Profile saved successfully.');

@@ -29,11 +29,25 @@ export function saveSettings(settings) {
 
 export function getProfile() {
   const stored = gmGet(STORAGE_KEYS.PROFILE, {});
-  return { ...DEFAULT_PROFILE, ...stored };
+  return {
+    ...DEFAULT_PROFILE,
+    ...stored,
+    workExperiences: Array.isArray(stored?.workExperiences) ? stored.workExperiences : [],
+    education: Array.isArray(stored?.education) ? stored.education : [],
+    projects: Array.isArray(stored?.projects) ? stored.projects : [],
+    skills: Array.isArray(stored?.skills) ? stored.skills : [],
+  };
 }
 
 export function saveProfile(profile) {
-  const cleanProfile = { ...DEFAULT_PROFILE, ...profile };
+  const cleanProfile = {
+    ...DEFAULT_PROFILE,
+    ...profile,
+    workExperiences: Array.isArray(profile?.workExperiences) ? profile.workExperiences : [],
+    education: Array.isArray(profile?.education) ? profile.education : [],
+    projects: Array.isArray(profile?.projects) ? profile.projects : [],
+    skills: Array.isArray(profile?.skills) ? profile.skills : [],
+  };
   gmSet(STORAGE_KEYS.PROFILE, cleanProfile);
   return getProfile();
 }

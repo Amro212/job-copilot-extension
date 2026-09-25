@@ -2,7 +2,7 @@ import { hasApiKey, getSettings, getProfile } from './storage.js';
 import { logger } from './debug.js';
 import { platform } from './platform.js';
 import { findExactOption } from './fields/combobox.js';
-import { profileForAI, fixedProfileAnswer } from './profile.js';
+import { profileForAI, fixedProfileAnswer, formatStructuredBackground } from './profile.js';
 
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 const AUTOFILL_TIMEOUT_MS = 120000;
@@ -430,9 +430,12 @@ export async function generateAutofillAnswers(normalizedFields, { allowSearch = 
   const structuredFields = normalizedFields.filter(field => !isNarrativeField(field));
   const narrativeFields = normalizedFields.filter(field => isNarrativeField(field));
 
+  const structuredBg = formatStructuredBackground(profile);
+  const combinedResumeContext = [structuredBg, profile.resumeContext].filter(Boolean).join('\n\n--- Additional Resume Notes ---\n');
+
   const baseUserContext = {
     applicantProfile: profileForAI(profile),
-    resumeContext: profile.resumeContext,
+    resumeContext: combinedResumeContext,
     applicantNotes: profile.applicantNotes,
     pageContext: {
       url: window.location.href,
@@ -502,7 +505,7 @@ export async function generateAutofillAnswers(normalizedFields, { allowSearch = 
             const editorUserContent = JSON.stringify({
               answersToEdit: answers,
               jobContext,
-              resumeContext: profile.resumeContext,
+              resumeContext: combinedResumeContext,
             });
             const editResult = await requestAiJson({
               model: narrativeModel,
@@ -605,6 +608,9 @@ Rules:
 4. Output ONLY the rewritten answer text with no surrounding quotes or commentary.
 5. Explicit structured profile answers take precedence over conflicting notes. Eligibility applies only to workCountry. Do not guess unknown eligibility or demographics, expose demographics in unrelated answers, or convert compensation units. Job discovery source is always LinkedIn.`;
 
+  const structuredBg = formatStructuredBackground(profile);
+  const combinedResumeContext = [structuredBg, profile.resumeContext].filter(Boolean).join('\n\n--- Additional Resume Notes ---\n');
+
   const userPrompt = `Question Label: ${fieldLabel}
 Current Answer:
 ${currentValue}
@@ -613,7 +619,7 @@ Explicit Applicant Profile:
 ${JSON.stringify(profileForAI(profile))}
 
 Candidate Resume Highlights:
-${profile.resumeContext}
+${combinedResumeContext}
 
 Applicant Notes / Rules:
 ${profile.applicantNotes}
