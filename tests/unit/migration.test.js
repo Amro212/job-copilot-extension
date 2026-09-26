@@ -106,3 +106,45 @@ test('collectPortableData reads from platform storage without secrets', () => {
   assert.equal(data[STORAGE_KEYS.SECRETS], undefined);
   assert.equal(JSON.stringify(data).includes('sk-secret'), false);
 });
+
+test('exportPayload and importPayload roundtrip complete profile including structured collections', () => {
+  const fullProfile = {
+    fullName: 'Jane Doe',
+    email: 'jane@example.com',
+    location: 'San Francisco, CA',
+    workExperiences: [
+      { id: 'w1', enabled: true, title: 'Lead Engineer', company: 'Stripe', startDate: '2022-03', endDate: '', current: true },
+    ],
+    education: [
+      { id: 'e1', enabled: true, institution: 'MIT', degree: 'BS', fieldOfStudy: 'CS', gpa: '3.9' },
+    ],
+    projects: [
+      { id: 'p1', enabled: true, name: 'Kareer', role: 'Creator', url: 'https://github.com' },
+    ],
+    skills: ['TypeScript', 'Rust', 'Docker'],
+    resumeContext: 'Detailed resume notes...',
+    applicantNotes: 'Target remote roles...',
+  };
+
+  const exported = exportPayload({
+    [STORAGE_KEYS.PROFILE]: fullProfile,
+    [STORAGE_KEYS.SETTINGS]: { model: 'google/gemini-2.0-flash' },
+  });
+
+  assert.equal(exported.kind, PAYLOAD_KIND);
+  assert.deepEqual(exported.data[STORAGE_KEYS.PROFILE], fullProfile);
+
+  const imported = importPayload(exported);
+  const profile = imported[STORAGE_KEYS.PROFILE];
+  assert.equal(profile.fullName, 'Jane Doe');
+  assert.equal(profile.workExperiences.length, 1);
+  assert.equal(profile.workExperiences[0].company, 'Stripe');
+  assert.equal(profile.education.length, 1);
+  assert.equal(profile.education[0].institution, 'MIT');
+  assert.equal(profile.projects.length, 1);
+  assert.equal(profile.projects[0].name, 'Kareer');
+  assert.deepEqual(profile.skills, ['TypeScript', 'Rust', 'Docker']);
+  assert.equal(profile.resumeContext, 'Detailed resume notes...');
+  assert.equal(profile.applicantNotes, 'Target remote roles...');
+});
+

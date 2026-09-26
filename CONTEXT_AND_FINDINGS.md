@@ -26,8 +26,11 @@ Running log of changes, bugs, and platform findings for the dual-target
   4. **AI Pipeline Verification & Voice Editor Context**:
      - Verified that all active structured entries (`workExperiences`, `education`, `projects`, `skills`) are passed in `applicantProfile` and serialized chronologically in `combinedResumeContext` for all AI requests.
      - Updated narrative voice editor pass in `src/core/ai.js` to also receive `combinedResumeContext` instead of raw legacy text notes.
+  5. **Export & Import Complete Profile Roundtrip**:
+     - Audited `exportPayload()` and `importPayload()` in `src/core/migration.js`. Verified that `STORAGE_KEYS.PROFILE` exports and imports the complete profile object including `workExperiences`, `education`, `projects`, `skills`, `resumeContext`, `applicantNotes`, and all flat fields.
+     - Added comprehensive unit test in `tests/unit/migration.test.js` validating complete profile export and import roundtrip fidelity.
 - **Verification**:
-  - `npm test`: **218 passed, 0 failed**.
+  - `npm test`: **219 passed, 0 failed**.
   - `npm run build`: Compiled extension bundle `v0.4.43` with updated CSS and bundled JS.
 
 ---

@@ -27,6 +27,7 @@ coverage/
 # Local documents, plans, scratch, and local mocks
 scratch/
 pages/*
+docs/*.json
 
 # Editor, AI workspace, and IDE metadata
 .cursor/
