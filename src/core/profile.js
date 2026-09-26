@@ -217,3 +217,65 @@ export function fixedProfileAnswer(field, profile, { allowSearch = true } = {}) 
   if (source && !match && field.type === 'combobox' && allowSearch) answer.searchQuery = 'LinkedIn';
   return answer;
 }
+
+export const MVP_PROFILE_FIELDS = [
+  { key: 'fullName', label: 'Full Name' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'location', label: 'Location' },
+];
+
+export function getMissingCoreProfileFields(profile = {}) {
+  return MVP_PROFILE_FIELDS
+    .filter(f => !String(profile[f.key] || '').trim())
+    .map(f => f.label);
+}
+
+export function calculateProfileStrength(profile = {}) {
+  let score = 0;
+  const missingCore = getMissingCoreProfileFields(profile);
+
+  // 1. Core Identity (40% total: 10% each for Name, Email, Phone, Location)
+  if (String(profile.fullName || '').trim()) score += 10;
+  if (String(profile.email || '').trim()) score += 10;
+  if (String(profile.phone || '').trim()) score += 10;
+  if (String(profile.location || '').trim()) score += 10;
+
+  // 2. Work History (20% total: >= 1 active role)
+  const activeWork = (profile.workExperiences || []).filter(w => w && w.enabled !== false && String(w.title || '').trim());
+  if (activeWork.length > 0) score += 20;
+
+  // 3. Education (15% total: >= 1 active degree/institution)
+  const activeEdu = (profile.education || []).filter(e => e && e.enabled !== false && (String(e.institution || '').trim() || String(e.degree || '').trim()));
+  if (activeEdu.length > 0) score += 15;
+
+  // 4. Skills (15% total: 1 skill = 5%, 2 skills = 10%, >= 3 skills = 15%)
+  const skillsCount = Array.isArray(profile.skills) ? profile.skills.filter(s => String(s || '').trim()).length : 0;
+  if (skillsCount >= 3) score += 15;
+  else if (skillsCount === 2) score += 10;
+  else if (skillsCount === 1) score += 5;
+
+  // 5. Projects & Links (10% total: >= 1 project = 5%, >= 1 link = 5%)
+  const activeProjects = (profile.projects || []).filter(p => p && p.enabled !== false && String(p.name || '').trim());
+  if (activeProjects.length > 0) score += 5;
+
+  const hasLink = Boolean(String(profile.linkedin || '').trim() || String(profile.github || '').trim() || String(profile.portfolio || '').trim());
+  if (hasLink) score += 5;
+
+  const percentage = Math.min(100, Math.round(score));
+  const isMvpComplete = missingCore.length === 0;
+
+  let tierLabel = 'Incomplete';
+  if (percentage >= 85) tierLabel = 'Flight-Deck Ready';
+  else if (percentage >= 60) tierLabel = 'Strong';
+  else if (isMvpComplete) tierLabel = 'Basic MVP Ready';
+
+  return {
+    score: percentage,
+    percentage,
+    isMvpComplete,
+    missingCore,
+    tierLabel,
+  };
+}
+

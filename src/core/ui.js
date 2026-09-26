@@ -1,6 +1,6 @@
 import { TOKENS, VISUAL_NAME, installPanelFonts } from './theme.js';
 import { APP_VERSION, APP_NAME, POPULAR_MODELS, UI_IDS, FILL_STATUS } from './constants.js';
-import { PROFILE_SECTIONS, PROFILE_FIELDS } from './profile.js';
+import { PROFILE_SECTIONS, PROFILE_FIELDS, calculateProfileStrength } from './profile.js';
 import {
   getSettings,
   saveSettings,
@@ -839,6 +839,122 @@ input:checked + .kr-slider:before {
   line-height: 1.4;
 }
 
+/* MVP Alert Banner */
+.kr-mvp-alert {
+  background: rgba(242, 184, 75, 0.08);
+  border: 1px solid rgba(242, 184, 75, 0.3);
+  border-radius: var(--kr-radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kr-mvp-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kr-mvp-alert-icon {
+  color: var(--kr-warning);
+  display: inline-flex;
+  align-items: center;
+}
+
+.kr-mvp-alert-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--kr-warning);
+}
+
+.kr-mvp-alert-desc {
+  font-size: 12px;
+  color: var(--kr-text-2);
+  line-height: 1.4;
+}
+
+.kr-mvp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kr-mvp-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  background: rgba(242, 184, 75, 0.12);
+  border: 1px solid rgba(242, 184, 75, 0.25);
+  border-radius: var(--kr-radius-xs);
+  color: var(--kr-warning);
+}
+
+.kr-mvp-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* Strength Chip in Form Fields Header */
+.kr-strength-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  background: var(--kr-bg-1);
+  border: 1px solid var(--kr-line);
+  border-radius: var(--kr-radius-xs);
+}
+
+.kr-strength-chip-bar {
+  width: 28px;
+  height: 4px;
+  background: var(--kr-bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.kr-strength-chip-fill {
+  height: 100%;
+  display: block;
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+.kr-strength-chip.high .kr-strength-chip-fill { background: var(--kr-signal); }
+.kr-strength-chip.med .kr-strength-chip-fill { background: #38bdf8; }
+.kr-strength-chip.low .kr-strength-chip-fill { background: var(--kr-warning); }
+
+.kr-strength-chip-val {
+  font-family: var(--kr-font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--kr-text-2);
+}
+
+/* Strength Track & Fill (shared in cards) */
+.kr-strength-track {
+  height: 5px;
+  background: var(--kr-bg-1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.kr-strength-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kr-strength-fill.high { background: var(--kr-signal); }
+.kr-strength-fill.med { background: #38bdf8; }
+.kr-strength-fill.low { background: var(--kr-warning); }
+
 /* Progress Bars */
 .kr-progress-bar-container {
   width: 100%;
@@ -1327,6 +1443,21 @@ async function executeAutofillFlow() {
     return;
   }
 
+  const profile = getProfile();
+  const strength = calculateProfileStrength(profile);
+  if (!strength.isMvpComplete) {
+    panelVisible = true;
+    currentTab = 'profile';
+    updatePanelDOM();
+    const firstMissing = strength.missingCore[0];
+    const keyMap = { 'Full Name': 'fullName', 'Email': 'email', 'Phone': 'phone', 'Location': 'location' };
+    const fieldId = keyMap[firstMissing] ? `kr-profile-${keyMap[firstMissing]}` : null;
+    if (fieldId) {
+      setTimeout(() => shadowRootRef?.querySelector(`#${fieldId}`)?.focus(), 50);
+    }
+    return;
+  }
+
   isAutofilling = true;
   autofillProgress = { current: 0, total: 0, statusText: 'Scanning page fields...' };
   updatePanelDOM();
@@ -1625,6 +1756,8 @@ function renderHud() {
   const wfStatus = session?.status || '';
   const wfIsRunning = wfStatus === 'running' || wfStatus === 'submitting';
   const wfIsWaiting = ['captcha', 'boundary'].includes(wfStatus);
+  const profile = getProfile();
+  const strength = calculateProfileStrength(profile);
 
   if (isPebble) {
     const pebbleDotClass = isAutofilling || wfIsRunning ? 'running' : status.dotClass;
@@ -1667,6 +1800,13 @@ function renderHud() {
       <button class="kr-hud-cta" id="kr-hud-autofill-btn" style="background: rgba(242, 184, 75, 0.15); color: #F2B84B; border: 1px solid rgba(242, 184, 75, 0.4);" title="Action required on page">
         ${ICONS.shield}
         <span>Action Required</span>
+      </button>
+    `;
+  } else if (!strength.isMvpComplete) {
+    ctaContent = `
+      <button class="kr-hud-cta" id="kr-hud-autofill-btn" style="background: rgba(242, 184, 75, 0.12); color: var(--kr-warning); border: 1px solid rgba(242, 184, 75, 0.35);" title="Profile incomplete (${escapeHtml(strength.missingCore.join(', '))} required). Click to complete profile.">
+        ${ICONS.alert}
+        <span>Setup Profile</span>
       </button>
     `;
   } else {
@@ -1919,6 +2059,32 @@ function renderHomeTab() {
     }
   }
 
+  const profile = getProfile();
+  const strength = calculateProfileStrength(profile);
+
+  const mvpAlertHtml = !strength.isMvpComplete ? `
+    <div class="kr-mvp-alert">
+      <div class="kr-mvp-alert-header">
+        <span class="kr-mvp-alert-icon">${ICONS.alert}</span>
+        <span class="kr-mvp-alert-title">Minimum Profile Required</span>
+      </div>
+      <div class="kr-mvp-alert-desc">
+        Autofill is locked until required core fields are saved (${escapeHtml(strength.missingCore.join(', '))} required).
+      </div>
+      <div class="kr-mvp-tags">
+        ${strength.missingCore.map(field => `<span class="kr-mvp-tag">${escapeHtml(field)}</span>`).join('')}
+      </div>
+      <div class="kr-mvp-actions">
+        <button type="button" class="kr-btn kr-btn-secondary" id="kr-complete-profile-btn" style="font-size: 11px; padding: 4px 8px;">
+          ${ICONS.user} Complete Profile
+        </button>
+        <button type="button" class="kr-btn kr-btn-secondary" id="kr-mvp-settings-link" style="font-size: 11px; padding: 4px 8px;">
+          Settings ↗
+        </button>
+      </div>
+    </div>
+  ` : '';
+
   const adapter = detectAdapter();
   return `
     ${safetyBannerHtml}
@@ -1926,16 +2092,25 @@ function renderHomeTab() {
 
     <div class="kr-card">
       <div class="kr-row">
-        <span class="kr-card-title">Form Fields</span>
-        <span class="kr-badge kr-badge-blue" style="text-transform: uppercase;">${fieldCount + remoteFieldCount} detected</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="kr-card-title">Form Fields</span>
+          <span class="kr-badge kr-badge-blue" style="text-transform: uppercase;">${fieldCount + remoteFieldCount} detected</span>
+        </div>
+        ${strength.isMvpComplete ? `
+        <div class="kr-strength-chip ${strength.percentage >= 80 ? 'high' : strength.percentage >= 50 ? 'med' : 'low'}" title="Profile Strength: ${strength.percentage}% (${strength.tierLabel})">
+          <span class="kr-strength-chip-bar"><span class="kr-strength-chip-fill" style="width: ${strength.percentage}%;"></span></span>
+          <span class="kr-strength-chip-val">${strength.percentage}%</span>
+        </div>
+        ` : ''}
       </div>
       ${remoteFieldCount ? `
       <div style="font-size: 11px; color: var(--kr-text-2);">
         ${fieldCount} here, ${remoteFieldCount} in ${remoteFrameCount} embedded frame${remoteFrameCount === 1 ? '' : 's'}.
       </div>
       ` : ''}
+      ${mvpAlertHtml}
       <div class="kr-row" style="margin-top: 4px; gap: 8px;">
-        <button class="kr-btn kr-btn-large ${session ? 'kr-btn-secondary' : ''}" id="kr-autofill-btn" style="flex: 1;" ${isAutofilling ? 'disabled' : ''}>
+        <button class="kr-btn kr-btn-large ${session ? 'kr-btn-secondary' : ''}" id="kr-autofill-btn" style="flex: 1;" ${isAutofilling || !strength.isMvpComplete ? 'disabled' : ''} ${!strength.isMvpComplete ? `title="Complete required profile fields (${escapeHtml(strength.missingCore.join(', '))}) to enable autofill"` : ''}>
           ${isAutofilling ? `${ICONS.play} Filling Fields...` : `${ICONS.play} Autofill This Page`}
         </button>
         <button class="kr-btn kr-btn-secondary ${isAutofilling ? 'kr-btn-pause-active' : ''}" id="kr-pause-autofill-btn" style="padding: 9px 14px; font-size: 12px;" ${!isAutofilling ? 'disabled' : ''} title="Pause / Stop autofill">
@@ -1982,10 +2157,32 @@ function renderHomeTab() {
 
 function renderProfileTab() {
   const profile = getProfile();
+  const strength = calculateProfileStrength(profile);
   const workCount = (profile.workExperiences || []).length;
   const eduCount = (profile.education || []).length;
   const projCount = (profile.projects || []).length;
   const skillCount = (profile.skills || []).length;
+
+  const strengthCardHtml = `
+    <div class="kr-card" style="margin-bottom: 2px; gap: 8px;">
+      <div class="kr-row">
+        <span class="kr-card-title">Profile Strength</span>
+        <span class="kr-badge ${strength.percentage >= 80 ? 'kr-badge-green' : strength.percentage >= 50 ? 'kr-badge-blue' : 'kr-badge-amber'}">${strength.tierLabel} (${strength.percentage}%)</span>
+      </div>
+      <div class="kr-strength-track">
+        <div class="kr-strength-fill ${strength.percentage >= 80 ? 'high' : strength.percentage >= 50 ? 'med' : 'low'}" style="width: ${strength.percentage}%;"></div>
+      </div>
+      ${!strength.isMvpComplete ? `
+        <div style="font-size: 11px; color: var(--kr-warning);">
+          Missing core identity: ${escapeHtml(strength.missingCore.join(', '))}. Fill them below to enable autofill.
+        </div>
+      ` : `
+        <div style="font-size: 11px; color: var(--kr-text-3);">
+          Core identity verified. Add more background in Settings for optimal application answers.
+        </div>
+      `}
+    </div>
+  `;
 
   const backgroundSummaryHtml = `
     <div style="border: 1px solid var(--kr-line); border-radius: var(--kr-radius-md); padding: 12px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 8px;">
@@ -2028,42 +2225,43 @@ function renderProfileTab() {
 
   return `
     <form id="kr-profile-form" style="display: flex; flex-direction: column; gap: 12px;">
+      ${strengthCardHtml}
       ${backgroundSummaryHtml}
       <div style="font-size: 12px; color: var(--kr-text-2);">Save common answers once. Explicit answers take priority over background notes.</div>
       <div class="kr-form-group">
-        <label>Full Name</label>
-        <input class="kr-input" type="text" name="fullName" value="${escapeHtml(profile.fullName)}" placeholder="e.g. Jane Doe" />
+        <label for="kr-profile-fullName">Full Name</label>
+        <input class="kr-input" id="kr-profile-fullName" type="text" name="fullName" value="${escapeHtml(profile.fullName)}" placeholder="e.g. Jane Doe" />
       </div>
 
       <div class="kr-row" style="gap: 10px;">
         <div class="kr-form-group" style="flex: 1;">
-          <label>Email</label>
-          <input class="kr-input" type="email" name="email" value="${escapeHtml(profile.email)}" placeholder="jane@example.com" />
+          <label for="kr-profile-email">Email</label>
+          <input class="kr-input" id="kr-profile-email" type="email" name="email" value="${escapeHtml(profile.email)}" placeholder="jane@example.com" />
         </div>
         <div class="kr-form-group" style="flex: 1;">
-          <label>Phone</label>
-          <input class="kr-input" type="tel" name="phone" value="${escapeHtml(profile.phone)}" placeholder="+1 555 123 4567" />
+          <label for="kr-profile-phone">Phone</label>
+          <input class="kr-input" id="kr-profile-phone" type="tel" name="phone" value="${escapeHtml(profile.phone)}" placeholder="+1 555 123 4567" />
         </div>
       </div>
 
       <div class="kr-form-group">
-        <label>Location</label>
-        <input class="kr-input" type="text" name="location" value="${escapeHtml(profile.location)}" placeholder="e.g. San Francisco, CA" />
+        <label for="kr-profile-location">Location</label>
+        <input class="kr-input" id="kr-profile-location" type="text" name="location" value="${escapeHtml(profile.location)}" placeholder="e.g. San Francisco, CA" />
       </div>
 
       <div class="kr-form-group">
-        <label>LinkedIn URL</label>
-        <input class="kr-input" type="url" name="linkedin" value="${escapeHtml(profile.linkedin)}" placeholder="https://linkedin.com/in/..." />
+        <label for="kr-profile-linkedin">LinkedIn URL</label>
+        <input class="kr-input" id="kr-profile-linkedin" type="url" name="linkedin" value="${escapeHtml(profile.linkedin)}" placeholder="https://linkedin.com/in/..." />
       </div>
 
       <div class="kr-row" style="gap: 10px;">
         <div class="kr-form-group" style="flex: 1;">
-          <label>GitHub URL</label>
-          <input class="kr-input" type="url" name="github" value="${escapeHtml(profile.github)}" placeholder="https://github.com/..." />
+          <label for="kr-profile-github">GitHub URL</label>
+          <input class="kr-input" id="kr-profile-github" type="url" name="github" value="${escapeHtml(profile.github)}" placeholder="https://github.com/..." />
         </div>
         <div class="kr-form-group" style="flex: 1;">
-          <label>Portfolio URL</label>
-          <input class="kr-input" type="url" name="portfolio" value="${escapeHtml(profile.portfolio)}" placeholder="https://..." />
+          <label for="kr-profile-portfolio">Portfolio URL</label>
+          <input class="kr-input" id="kr-profile-portfolio" type="url" name="portfolio" value="${escapeHtml(profile.portfolio)}" placeholder="https://..." />
         </div>
       </div>
 
@@ -2464,6 +2662,29 @@ function attachEventHandlers() {
     };
   }
 
+  const completeProfileBtn = shadowRootRef.querySelector('#kr-complete-profile-btn');
+  if (completeProfileBtn) {
+    completeProfileBtn.onclick = () => {
+      currentTab = 'profile';
+      updatePanelDOM();
+      const profile = getProfile();
+      const strength = calculateProfileStrength(profile);
+      const firstMissing = strength.missingCore[0];
+      const keyMap = { 'Full Name': 'fullName', 'Email': 'email', 'Phone': 'phone', 'Location': 'location' };
+      const fieldId = keyMap[firstMissing] ? `kr-profile-${keyMap[firstMissing]}` : null;
+      if (fieldId) {
+        setTimeout(() => shadowRootRef?.querySelector(`#${fieldId}`)?.focus(), 50);
+      }
+    };
+  }
+
+  const mvpSettingsLink = shadowRootRef.querySelector('#kr-mvp-settings-link');
+  if (mvpSettingsLink) {
+    mvpSettingsLink.onclick = () => {
+      platform.openOptions();
+    };
+  }
+
   // Profile Form
   const openFullProfileBtn = shadowRootRef.querySelector('#kr-open-full-profile-btn');
   if (openFullProfileBtn) {
@@ -2497,6 +2718,7 @@ function attachEventHandlers() {
       };
       saveProfile(newProfile);
       logger.info('Profile saved successfully.');
+      updatePanelDOM();
 
       const feedback = shadowRootRef.querySelector('#kr-profile-feedback');
       if (feedback) {

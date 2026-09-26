@@ -1,7 +1,7 @@
 import { api, sendMessage } from '../shared/browser.js';
 import { MSG } from '../shared/protocol.js';
 import { APP_VERSION, POPULAR_MODELS, DEFAULT_SETTINGS, DEFAULT_PROFILE, STORAGE_KEYS } from '../../../core/constants.js';
-import { PROFILE_SECTIONS, createWorkExperience, createEducation, createProject } from '../../../core/profile.js';
+import { PROFILE_SECTIONS, createWorkExperience, createEducation, createProject, calculateProfileStrength } from '../../../core/profile.js';
 import { exportPayload, importPayload } from '../../../core/migration.js';
 
 let currentWork = [];
@@ -135,6 +135,41 @@ async function readStore() {
   return snapshot;
 }
 
+function getLiveProfileForStrength() {
+  return {
+    fullName: $('pf-fullName')?.value || '',
+    email: $('pf-email')?.value || '',
+    phone: $('pf-phone')?.value || '',
+    location: $('pf-location')?.value || '',
+    linkedin: $('pf-linkedin')?.value || '',
+    github: $('pf-github')?.value || '',
+    portfolio: $('pf-portfolio')?.value || '',
+    workExperiences: currentWork,
+    education: currentEducation,
+    projects: currentProjects,
+    skills: currentSkills,
+  };
+}
+
+function updateProfileStrength() {
+  const profile = getLiveProfileForStrength();
+  const strength = calculateProfileStrength(profile);
+  const fill = $('sidebar-strength-fill');
+  const val = $('sidebar-strength-value');
+  const tier = $('sidebar-strength-tier');
+
+  if (fill) {
+    fill.style.width = `${strength.percentage}%`;
+    fill.className = 'strength-fill ' + (strength.percentage >= 80 ? 'high' : strength.percentage >= 50 ? 'med' : 'low');
+  }
+  if (val) {
+    val.textContent = `${strength.percentage}%`;
+  }
+  if (tier) {
+    tier.textContent = strength.tierLabel;
+  }
+}
+
 function updateSubnavBadges() {
   const setBadge = (id, count) => {
     const el = $(id);
@@ -147,6 +182,7 @@ function updateSubnavBadges() {
   setBadge('subnav-edu-count', currentEducation.length);
   setBadge('subnav-proj-count', currentProjects.length);
   setBadge('subnav-skills-count', currentSkills.length);
+  updateProfileStrength();
 }
 
 function renderSkillsChips() {
@@ -1021,7 +1057,10 @@ async function init() {
 
     await sendMessage({ type: MSG.STORAGE_SET, key: STORAGE_KEYS.PROFILE, value: next });
     flash($('profile-feedback'), 'Profile saved.');
+    updateProfileStrength();
   };
+
+  $('profile-form').addEventListener('input', updateProfileStrength);
 
   $('export-data').onclick = async () => {
     const current = await readStore();

@@ -72,6 +72,49 @@ input::file-selector-button { font: inherit; padding: 4px 10px; margin-right: 12
 .nav-chevron-btn svg { transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
 .nav-group.is-collapsed .nav-chevron-btn svg { transform: rotate(-90deg); }
 
+/* Sidebar strength meter */
+.nav-strength-meter {
+  padding: 4px 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.strength-track {
+  height: 4px;
+  background: var(--kr-bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.strength-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: var(--kr-signal);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+}
+.strength-fill.low { background: var(--kr-warning); }
+.strength-fill.med { background: #38bdf8; }
+.strength-fill.high { background: var(--kr-signal); }
+
+.strength-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--kr-text-3);
+}
+.strength-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.strength-value {
+  font-family: var(--kr-font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  color: var(--kr-text-1);
+}
+
 .nav-subsections {
   margin-left: 16px;
   margin-top: 2px;

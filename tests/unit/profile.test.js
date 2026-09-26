@@ -286,3 +286,63 @@ test('saveProfile preserves and persists repeatable entries', () => {
   assert.deepEqual(loaded.skills, ['Python', 'SQL']);
 });
 
+test('calculateProfileStrength and getMissingCoreProfileFields correctly evaluate MVP and strength tiers', async () => {
+  const { calculateProfileStrength, getMissingCoreProfileFields } = await import('../../src/core/profile.js');
+
+  // Empty profile
+  const empty = {};
+  assert.deepEqual(getMissingCoreProfileFields(empty), ['Full Name', 'Email', 'Phone', 'Location']);
+  const emptyStrength = calculateProfileStrength(empty);
+  assert.equal(emptyStrength.percentage, 0);
+  assert.equal(emptyStrength.isMvpComplete, false);
+  assert.deepEqual(emptyStrength.missingCore, ['Full Name', 'Email', 'Phone', 'Location']);
+  assert.equal(emptyStrength.tierLabel, 'Incomplete');
+
+  // Partial MVP (name + email only)
+  const partial = { fullName: 'Alex Rivera', email: 'alex@example.com' };
+  assert.deepEqual(getMissingCoreProfileFields(partial), ['Phone', 'Location']);
+  const partialStrength = calculateProfileStrength(partial);
+  assert.equal(partialStrength.percentage, 20);
+  assert.equal(partialStrength.isMvpComplete, false);
+
+  // Exact MVP complete
+  const mvp = {
+    fullName: 'Alex Rivera',
+    email: 'alex@example.com',
+    phone: '555-123-4567',
+    location: 'Austin, TX',
+  };
+  assert.deepEqual(getMissingCoreProfileFields(mvp), []);
+  const mvpStrength = calculateProfileStrength(mvp);
+  assert.equal(mvpStrength.percentage, 40);
+  assert.equal(mvpStrength.isMvpComplete, true);
+  assert.equal(mvpStrength.tierLabel, 'Basic MVP Ready');
+
+  // MVP + Work + Education + 2 Skills
+  const mid = {
+    ...mvp,
+    workExperiences: [{ id: 'w1', title: 'Software Engineer', enabled: true }],
+    education: [{ id: 'e1', degree: 'BS Computer Science', enabled: true }],
+    skills: ['JavaScript', 'Python'],
+  };
+  const midStrength = calculateProfileStrength(mid);
+  // 40 (core) + 20 (work) + 15 (edu) + 10 (2 skills) = 85
+  assert.equal(midStrength.percentage, 85);
+  assert.equal(midStrength.isMvpComplete, true);
+  assert.equal(midStrength.tierLabel, 'Flight-Deck Ready');
+
+  // Complete profile with projects and links
+  const full = {
+    ...mid,
+    skills: ['JavaScript', 'Python', 'Go'],
+    projects: [{ id: 'p1', name: 'Kareer Copilot', enabled: true }],
+    linkedin: 'https://linkedin.com/in/alexrivera',
+  };
+  const fullStrength = calculateProfileStrength(full);
+  // 40 + 20 + 15 + 15 (3 skills) + 5 (project) + 5 (link) = 100
+  assert.equal(fullStrength.percentage, 100);
+  assert.equal(fullStrength.isMvpComplete, true);
+  assert.equal(fullStrength.tierLabel, 'Flight-Deck Ready');
+});
+
+

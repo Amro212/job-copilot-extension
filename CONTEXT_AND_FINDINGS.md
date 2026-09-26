@@ -3,6 +3,39 @@
 Running log of changes, bugs, and platform findings for the dual-target
 (extension + userscript) Kareer.
 
+## Turn: 2026-09-26 — Minimum Viable Profile (MVP) Gating & Profile Strength Indicator
+
+### Bugs/findings
+- **Target**: Profile completeness gating and strength visualization (`src/core/profile.js`, `src/core/ui.js`, `src/targets/extension/options/index.html`, `src/targets/extension/options/index.js`, `src/targets/extension/shared/pages.css`, `tests/unit/profile.test.js`).
+- **Symptoms & User Need**:
+  - Without minimum core identity data (`fullName`, `email`, `phone`, `location`), launching autofill leads to degraded, incomplete, or rejected applications.
+  - Users had no visual feedback indicating whether their profile was sufficiently configured to generate high-quality applications.
+- **Resolution**:
+  1. **MVP Definition & Strength Calculation** (`src/core/profile.js`):
+     - Defined `MVP_PROFILE_FIELDS` (`fullName`, `email`, `phone`, `location`).
+     - Added `getMissingCoreProfileFields(profile)` to return unpopulated core labels.
+     - Added `calculateProfileStrength(profile)` calculating a 5-tier weighted score (100% total: 40% Core Identity, 20% Work History, 15% Education, 15% Skills, 10% Projects & Links) and assigning status tiers (`Incomplete`, `Basic MVP Ready`, `Strong`, `Flight-Deck Ready`).
+  2. **Options Sidebar Strength Meter** (`options/index.html`, `pages.css`, `options/index.js`):
+     - Added `.nav-strength-meter` under Profile navigation with progress track, percentage, and tier label.
+     - Wired real-time updates on form `'input'` and repeatable list changes.
+  3. **In-Page Panel & HUD Gating** (`src/core/ui.js`):
+     - When MVP is incomplete:
+       - Displays amber alert banner (`.kr-mvp-alert`) above action buttons with missing tags and `[Complete Profile]` action.
+       - Disables `#kr-autofill-btn` and sets warning CTA on `#kr-hud-autofill-btn`.
+       - Clicking `Complete Profile` or HUD warning button switches to the Profile tab and auto-focuses the first missing field input.
+     - When MVP is complete:
+       - Displays compact readiness chip (`.kr-strength-chip`) in Form Fields header.
+       - Autofill CTA is active.
+     - In Profile tab: displays Profile Strength readiness card with dynamic tier badge, progress bar, and status guidance.
+  4. **Design Quality (/impeccable)**:
+     - Authored SVG icons throughout (no unicode emojis).
+     - Clean 1px borders, high contrast ratios, and monospace numerals for data.
+  5. **Verification**:
+     - Unit tests: **220 passed, 0 failed** (`tests/unit/profile.test.js`).
+     - Build: clean build at **v0.4.48** (Chrome extension, Firefox XPI, Userscript).
+
+---
+
 ## Turn: 2026-09-26 — Surgical Removal of Redundant Resume Highlights Field
 
 ### Bugs/findings
