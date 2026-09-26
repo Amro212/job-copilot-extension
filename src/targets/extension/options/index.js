@@ -135,6 +135,20 @@ async function readStore() {
   return snapshot;
 }
 
+function updateSubnavBadges() {
+  const setBadge = (id, count) => {
+    const el = $(id);
+    if (el) {
+      el.textContent = count > 0 ? String(count) : '';
+      el.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+  };
+  setBadge('subnav-work-count', currentWork.length);
+  setBadge('subnav-edu-count', currentEducation.length);
+  setBadge('subnav-proj-count', currentProjects.length);
+  setBadge('subnav-skills-count', currentSkills.length);
+}
+
 function renderSkillsChips() {
   const container = $('skills-chip-list');
   if (!container) return;
@@ -144,6 +158,7 @@ function renderSkillsChips() {
     hint.className = 'skills-empty-hint';
     hint.textContent = 'No skills added yet. Type a skill name below and press Enter or comma.';
     container.append(hint);
+    updateSubnavBadges();
     return;
   }
 
@@ -158,6 +173,7 @@ function renderSkillsChips() {
     });
     container.append(chip);
   });
+  updateSubnavBadges();
 }
 
 function addSkillFromInput() {
@@ -185,10 +201,12 @@ function renderWorkExperiencesList() {
     p.style.margin = '8px 0';
     p.textContent = 'No work experience added yet. Click "+ Add experience" to add your first role.';
     container.append(p);
+    updateSubnavBadges();
     return;
   }
 
   currentWork.forEach((item, index) => {
+    if (item._collapsed === undefined) item._collapsed = true;
     const card = document.createElement('div');
     card.className = `repeatable-card ${item._collapsed ? 'is-collapsed' : ''} ${item.enabled === false ? 'is-disabled' : ''}`;
 
@@ -274,10 +292,20 @@ function renderWorkExperiencesList() {
     `;
 
     const header = card.querySelector('.card-header');
-    header.addEventListener('click', (e) => {
-      if (e.target.closest('.card-controls')) return;
+    const toggleCollapse = () => {
       item._collapsed = !item._collapsed;
       card.classList.toggle('is-collapsed', item._collapsed);
+    };
+    header.addEventListener('click', (e) => {
+      if (e.target.closest('.card-controls')) return;
+      toggleCollapse();
+    });
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (e.target.closest('.card-controls')) return;
+        e.preventDefault();
+        toggleCollapse();
+      }
     });
 
     const enabledToggle = card.querySelector('.work-enabled-toggle');
@@ -367,6 +395,7 @@ function renderWorkExperiencesList() {
 
     container.append(card);
   });
+  updateSubnavBadges();
 }
 
 function renderEducationList() {
@@ -379,10 +408,12 @@ function renderEducationList() {
     p.style.margin = '8px 0';
     p.textContent = 'No education entries added yet. Click "+ Add education" to add your school or degree.';
     container.append(p);
+    updateSubnavBadges();
     return;
   }
 
   currentEducation.forEach((item, index) => {
+    if (item._collapsed === undefined) item._collapsed = true;
     const card = document.createElement('div');
     card.className = `repeatable-card ${item._collapsed ? 'is-collapsed' : ''} ${item.enabled === false ? 'is-disabled' : ''}`;
 
@@ -473,10 +504,20 @@ function renderEducationList() {
     `;
 
     const header = card.querySelector('.card-header');
-    header.addEventListener('click', (e) => {
-      if (e.target.closest('.card-controls')) return;
+    const toggleCollapse = () => {
       item._collapsed = !item._collapsed;
       card.classList.toggle('is-collapsed', item._collapsed);
+    };
+    header.addEventListener('click', (e) => {
+      if (e.target.closest('.card-controls')) return;
+      toggleCollapse();
+    });
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (e.target.closest('.card-controls')) return;
+        e.preventDefault();
+        toggleCollapse();
+      }
     });
 
     const enabledToggle = card.querySelector('.edu-enabled-toggle');
@@ -566,6 +607,7 @@ function renderEducationList() {
 
     container.append(card);
   });
+  updateSubnavBadges();
 }
 
 function renderProjectsList() {
@@ -578,10 +620,12 @@ function renderProjectsList() {
     p.style.margin = '8px 0';
     p.textContent = 'No projects added yet. Click "+ Add project" to highlight a personal, academic, or open-source project.';
     container.append(p);
+    updateSubnavBadges();
     return;
   }
 
   currentProjects.forEach((item, index) => {
+    if (item._collapsed === undefined) item._collapsed = true;
     const card = document.createElement('div');
     card.className = `repeatable-card ${item._collapsed ? 'is-collapsed' : ''} ${item.enabled === false ? 'is-disabled' : ''}`;
 
@@ -667,10 +711,20 @@ function renderProjectsList() {
     `;
 
     const header = card.querySelector('.card-header');
-    header.addEventListener('click', (e) => {
-      if (e.target.closest('.card-controls')) return;
+    const toggleCollapse = () => {
       item._collapsed = !item._collapsed;
       card.classList.toggle('is-collapsed', item._collapsed);
+    };
+    header.addEventListener('click', (e) => {
+      if (e.target.closest('.card-controls')) return;
+      toggleCollapse();
+    });
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (e.target.closest('.card-controls')) return;
+        e.preventDefault();
+        toggleCollapse();
+      }
     });
 
     const enabledToggle = card.querySelector('.proj-enabled-toggle');
@@ -759,6 +813,7 @@ function renderProjectsList() {
 
     container.append(card);
   });
+  updateSubnavBadges();
 }
 
 function renderProfile(profile) {
@@ -774,6 +829,7 @@ function renderProfile(profile) {
   renderEducationList();
   renderProjectsList();
   renderSkillsChips();
+  updateSubnavBadges();
 
   const sections = $('profile-sections');
   sections.replaceChildren(...PROFILE_SECTIONS.map((section) => {
@@ -794,7 +850,6 @@ function renderProfile(profile) {
     return fieldset;
   }));
 
-  $('resumeContext').value = profile.resumeContext || '';
   $('applicantNotes').value = profile.applicantNotes || '';
 }
 
@@ -1000,7 +1055,175 @@ async function init() {
       event.target.value = '';
     }
   };
+
+  setupNavigation();
+  updateSubnavBadges();
+  handleInitialHash();
 }
+
+function setupNavigation() {
+  const toggleBtn = $('profile-subnav-toggle');
+  const navGroup = $('profile-nav-group');
+  const profileParentLink = $('profile-nav-link');
+
+  if (toggleBtn && navGroup) {
+    toggleBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navGroup.classList.toggle('is-collapsed');
+    };
+  }
+
+  if (profileParentLink && navGroup) {
+    profileParentLink.addEventListener('click', (e) => {
+      navGroup.classList.remove('is-collapsed');
+      const target = $('profile');
+      if (target) {
+        e.preventDefault();
+        history.pushState(null, '', '#profile');
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        updateActiveNav('#profile');
+      }
+    });
+  }
+
+  // Smooth scroll and pulse on subsection click
+  const subnavLinks = document.querySelectorAll('.subnav-item');
+  subnavLinks.forEach((link) => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const targetId = href.slice(1);
+        const target = document.getElementById(targetId);
+        if (target) {
+          e.preventDefault();
+          history.pushState(null, '', href);
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          target.classList.remove('highlight-pulse');
+          void target.offsetWidth;
+          target.classList.add('highlight-pulse');
+          setTimeout(() => target.classList.remove('highlight-pulse'), 1600);
+          updateActiveNav(href);
+        }
+      }
+    });
+  });
+
+  // Top level links smooth scroll
+  const topLinks = document.querySelectorAll('.settings-nav > nav > a');
+  topLinks.forEach((link) => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          history.pushState(null, '', href);
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          updateActiveNav(href);
+        }
+      }
+    });
+  });
+
+  // Scroll spy
+  window.addEventListener('scroll', throttle(onWindowScroll, 50), { passive: true });
+}
+
+function updateActiveNav(activeHash) {
+  document.querySelectorAll('.settings-nav a').forEach((a) => {
+    const href = a.getAttribute('href');
+    a.classList.toggle('active', href === activeHash);
+  });
+}
+
+function onWindowScroll() {
+  const sections = [
+    { id: 'connection', el: $('connection') },
+    { id: 'models', el: $('models') },
+    { id: 'section-identity', el: $('section-identity') },
+    { id: 'section-work', el: $('section-work') },
+    { id: 'section-education', el: $('section-education') },
+    { id: 'section-projects', el: $('section-projects') },
+    { id: 'section-skills', el: $('section-skills') },
+    { id: 'section-preferences', el: $('section-preferences') },
+    { id: 'section-rules', el: $('section-rules') },
+    { id: 'resume', el: $('resume') },
+    { id: 'advanced', el: $('advanced') },
+  ];
+
+  const scrollY = window.scrollY;
+  const threshold = scrollY + 140;
+
+  let currentId = null;
+  for (const s of sections) {
+    if (s.el) {
+      if (s.el.offsetTop <= threshold) {
+        currentId = s.id;
+      }
+    }
+  }
+
+  if (!currentId && sections[0].el) {
+    currentId = sections[0].id;
+  }
+
+  const profileSubIds = [
+    'section-identity',
+    'section-work',
+    'section-education',
+    'section-projects',
+    'section-skills',
+    'section-preferences',
+    'section-rules',
+  ];
+  const isProfileSub = profileSubIds.includes(currentId);
+
+  document.querySelectorAll('.settings-nav a').forEach((a) => {
+    const href = a.getAttribute('href');
+    if (href === '#' + currentId) {
+      a.classList.add('active');
+    } else if (href === '#profile' && isProfileSub) {
+      a.classList.add('active');
+    } else {
+      a.classList.remove('active');
+    }
+  });
+}
+
+function throttle(fn, wait) {
+  let inThrottle = false;
+  return function (...args) {
+    if (!inThrottle) {
+      fn.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => { inThrottle = false; }, wait);
+    }
+  };
+}
+
+function handleInitialHash() {
+  const hash = window.location.hash;
+  if (!hash) {
+    updateActiveNav('#connection');
+    return;
+  }
+  const target = document.querySelector(hash);
+  if (target) {
+    const group = $('profile-nav-group');
+    if (group) group.classList.remove('is-collapsed');
+
+    setTimeout(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.classList.remove('highlight-pulse');
+      void target.offsetWidth;
+      target.classList.add('highlight-pulse');
+      setTimeout(() => target.classList.remove('highlight-pulse'), 1600);
+      updateActiveNav(hash);
+    }, 150);
+  }
+}
+window.addEventListener('hashchange', handleInitialHash);
 
 api.runtime.onMessage.addListener((message) => {
   if (message?.type === MSG.STORAGE_CHANGED && message.secretChanged) {

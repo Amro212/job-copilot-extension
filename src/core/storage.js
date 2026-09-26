@@ -102,7 +102,7 @@ export function getSanitizedState() {
     profileSummary: {
       hasFullName: Boolean(profile.fullName),
       hasEmail: Boolean(profile.email),
-      hasResumeContext: Boolean(profile.resumeContext),
+      hasResumeContext: Boolean(profile.resumeContext || profile.workExperiences?.length || profile.education?.length || profile.projects?.length || profile.skills?.length),
     },
     url: window.location.href,
     host: window.location.hostname,

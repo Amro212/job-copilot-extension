@@ -64,7 +64,7 @@ test.describe('extension shell', () => {
     await page.locator('#pf-fullName').fill('Test Applicant');
     await page.locator('#pf-workCountry').fill('Canada');
     await page.locator('#pf-workAuthorization').selectOption('Yes');
-    await page.locator('#resumeContext').fill('Ships production software.');
+    await page.locator('#applicantNotes').fill('Ships production software.');
     await page.locator('#profile-form button[type=submit]').click();
     await expect(page.locator('#profile-feedback')).toHaveText('Profile saved.');
 
@@ -75,7 +75,7 @@ test.describe('extension shell', () => {
     expect(profile.fullName).toBe('Test Applicant');
     expect(profile.workCountry).toBe('Canada');
     expect(profile.workAuthorization).toBe('Yes');
-    expect(profile.resumeContext).toBe('Ships production software.');
+    expect(profile.applicantNotes).toBe('Ships production software.');
   });
 
   test('profile edits made in the options page reach an already-open page', async ({ kr }) => {

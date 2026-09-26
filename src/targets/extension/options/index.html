@@ -11,9 +11,47 @@
     <aside class="settings-nav">
       <div class="brand"><span data-product-name>{{VISUAL_NAME}}</span> <span class="version" id="version"></span></div>
       <nav aria-label="Settings sections">
-        <a href="#connection">API connection</a><a href="#models">Model</a>
-        <a href="#profile">Profile &amp; preferences</a><a href="#resume">Resume</a>
-        <a href="#advanced">Backup &amp; migration</a>
+        <a href="#connection" class="nav-item">API connection</a>
+        <a href="#models" class="nav-item">Model</a>
+
+        <div class="nav-group" id="profile-nav-group">
+          <div class="nav-group-header">
+            <a href="#profile" class="nav-item nav-item-parent" id="profile-nav-link">Profile &amp; preferences</a>
+            <button type="button" class="nav-chevron-btn" id="profile-subnav-toggle" aria-label="Toggle profile subsections" title="Toggle subsections">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"/></svg>
+            </button>
+          </div>
+          <div class="nav-subsections" id="profile-subsections">
+            <a href="#section-identity" class="subnav-item" data-section="section-identity">
+              <span class="subnav-label">Identity &amp; links</span>
+            </a>
+            <a href="#section-work" class="subnav-item" data-section="section-work">
+              <span class="subnav-label">Work experience</span>
+              <span class="subnav-badge" id="subnav-work-count"></span>
+            </a>
+            <a href="#section-education" class="subnav-item" data-section="section-education">
+              <span class="subnav-label">Education</span>
+              <span class="subnav-badge" id="subnav-edu-count"></span>
+            </a>
+            <a href="#section-projects" class="subnav-item" data-section="section-projects">
+              <span class="subnav-label">Projects</span>
+              <span class="subnav-badge" id="subnav-proj-count"></span>
+            </a>
+            <a href="#section-skills" class="subnav-item" data-section="section-skills">
+              <span class="subnav-label">Skills</span>
+              <span class="subnav-badge" id="subnav-skills-count"></span>
+            </a>
+            <a href="#section-preferences" class="subnav-item" data-section="section-preferences">
+              <span class="subnav-label">Job preferences</span>
+            </a>
+            <a href="#section-rules" class="subnav-item" data-section="section-rules">
+              <span class="subnav-label">Rules &amp; notes</span>
+            </a>
+          </div>
+        </div>
+
+        <a href="#resume" class="nav-item">Resume</a>
+        <a href="#advanced" class="nav-item">Backup &amp; migration</a>
       </nav>
       <p class="note">Stored in this browser.<br />Your API key stays in the extension.</p>
     </aside>
@@ -62,7 +100,7 @@
         <p class="hint">Explicit answers here take priority over anything inferred from your resume context.</p>
       </div>
       <form id="profile-form">
-        <fieldset>
+        <fieldset id="section-identity">
           <legend>Identity and links</legend>
           <div class="grid" id="identity-fields"></div>
         </fieldset>
@@ -110,18 +148,16 @@
           </div>
         </fieldset>
 
-        <div id="profile-sections" style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;"></div>
+        <div id="section-preferences">
+          <div id="profile-sections" style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;"></div>
+        </div>
 
-        <fieldset style="margin-top: 14px;">
+        <fieldset id="section-rules" style="margin-top: 14px;">
           <legend>Additional context &amp; rules</legend>
-          <p class="hint">Supplementary text context. Structured profile fields above take precedence over notes.</p>
+          <p class="hint">Custom guidance, steering instructions, and rules for AI written answers.</p>
           <div class="group">
-            <label for="resumeContext">Resume highlights &amp; background summary</label>
-            <textarea id="resumeContext" name="resumeContext" placeholder="Optional freeform resume highlights, awards, or details not captured above..."></textarea>
-          </div>
-          <div class="group" style="margin-top: 10px;">
             <label for="applicantNotes">Applicant notes &amp; custom rules for AI</label>
-            <textarea id="applicantNotes" name="applicantNotes" placeholder="Rules for written answers (e.g. 'Emphasize backend architecture and distributed systems', 'Do not disclose salary below $100k')..."></textarea>
+            <textarea id="applicantNotes" name="applicantNotes" placeholder="Rules for written answers (e.g. 'Emphasize backend architecture and distributed systems', 'Do not disclose salary below $100k', awards, or specific certifications)..."></textarea>
           </div>
         </fieldset>
         <div class="actions" style="margin-top: 14px;">

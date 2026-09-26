@@ -3,6 +3,78 @@
 Running log of changes, bugs, and platform findings for the dual-target
 (extension + userscript) Kareer.
 
+## Turn: 2026-09-26 — Surgical Removal of Redundant Resume Highlights Field
+
+### Bugs/findings
+- **Target**: Profile configuration & AI context generation (`src/targets/extension/options/index.html`, `src/targets/extension/options/index.js`, `src/core/ui.js`, `src/core/ai.js`, `src/core/storage.js`, `tests/e2e/shell.spec.js`).
+- **Symptoms & Root Cause**:
+  - Having a freeform "Resume highlights & background summary" (`resumeContext`) textarea alongside structured repeatable sections (Work Experience, Education, Projects, Skills) created cognitive overhead, confusing dual source-of-truth conflicts, and burned redundant prompt tokens in `combinedResumeContext`.
+- **Resolution**:
+  1. **UI Clean-up**:
+     - Removed `resumeContext` textarea and label from the Settings page (`options/index.html`) and from the in-page side panel (`src/core/ui.js`).
+     - Clarified that `applicantNotes` is the single source for steering rules, custom constraints, and miscellaneous highlights.
+  2. **AI Prompt Optimization & Backward Compatibility**:
+     - In `src/core/ai.js`, updated `combinedResumeContext` to use formatted structured background (`structuredBg`) as the primary context, falling back to legacy `profile.resumeContext` only when no structured records exist.
+     - Preserved `resumeContext` in storage defaults and panel form handling so legacy profiles remain undamaged.
+  3. **Test Suite Alignment**:
+     - Updated `tests/e2e/shell.spec.js` to target `#applicantNotes`.
+- **Verification**:
+  - `npm test`: **219 passed, 0 failed**.
+  - `npm run build`: Incremented to `0.4.47` across userscript, Chrome extension, and Firefox XPI.
+
+---
+
+## Turn: 2026-09-25 — Settings Page Sidebar Subsections & Jump Navigation
+
+### Bugs/findings
+- **Target**: Settings / options page left sidebar navigation (`src/targets/extension/options/index.html`, `src/targets/extension/options/index.js`, `src/targets/extension/shared/pages.css`).
+- **Symptoms & Root Cause**:
+  - The settings page sidebar only had top-level anchor links (`API connection`, `Model`, `Profile & preferences`, `Resume`, `Backup & migration`).
+  - Users had to scroll endlessly through the long profile form to find Work Experience, Education, Projects, Skills, Preferences, or Rules.
+- **Resolution**:
+  1. **Reverted Unwanted Core UI / Widget Changes**:
+     - Fully restored `src/core/ui.js`, `src/core/platform.js`, `src/targets/extension/content/host.js`, and `src/targets/extension/background/index.js` to pristine condition.
+  2. **Profile Subsections Sidebar Navigation**:
+     - In `src/targets/extension/options/index.html`, added a structured `.nav-group` under `Profile & preferences` with dedicated subnav jump links for:
+       - `Identity & links` (`#section-identity`)
+       - `Work experience` (`#section-work`) with live count badge
+       - `Education` (`#section-education`) with live count badge
+       - `Projects` (`#section-projects`) with live count badge
+       - `Skills` (`#section-skills`) with live count badge
+       - `Job preferences` (`#section-preferences`)
+       - `Rules & notes` (`#section-rules`)
+     - Added a collapsible chevron toggle button (`#profile-subnav-toggle`) allowing users to expand or collapse subsections.
+  3. **Visual Polish & Tree-Guide Styling**:
+     - In `pages.css`, implemented clean developer-tool tree-guide styling with a subtle vertical guide line (`border-left: 1px solid var(--kr-line)`), restrained spacing, and active states (`color: var(--kr-signal); background: rgba(163, 230, 53, 0.1)`).
+     - Styled live item count badges in dark graphite with lime active tints, conforming strictly to `DESIGN.md`.
+     - Set `scroll-margin-top: 32px` on target fieldsets for clean viewport alignment.
+  4. **Dynamic Badges, Scroll Spy & Smooth Jumps**:
+     - In `options/index.js`, implemented `updateSubnavBadges()` to dynamically reflect current counts for work, education, projects, and skills as items are added, removed, or imported.
+     - Implemented `setupNavigation()` with smooth scrolling, pulse animation (`.highlight-pulse`), and a throttled scroll spy (`onWindowScroll`) that automatically highlights the active subsection in the sidebar as the user scrolls.
+- **Verification**:
+  - `npm test`: **219 passed, 0 failed**.
+  - `npm run build`: Incremented to `0.4.46` and built userscript, Chrome extension, and Firefox XPI.
+
+---
+
+## Turn: 2026-09-25 — Collapsed-by-Default Repeatable Section Cards
+
+### Bugs/findings
+- **Target**: Options console repeatable cards for Work Experience, Education, and Projects (`src/targets/extension/options/index.js`, `src/core/profile.js`).
+- **Symptoms & Root Cause**:
+  - Repeatable profile entries were all rendered fully expanded on load, creating a massive, noisy scroll surface when users have several roles or projects.
+  - While `.repeatable-card.is-collapsed` styles existed in `pages.css`, `createWorkExperience()`, `createEducation()`, and `createProject()` were instantiating fresh objects that stripped the `_collapsed: true` flag. Furthermore, card rendering lacked a fallback defaulting `_collapsed` to `true` when unset.
+- **Resolution**:
+  1. Updated `createWorkExperience`, `createEducation`, and `createProject` in `src/core/profile.js` to preserve `_collapsed` state.
+  2. In `src/targets/extension/options/index.js`, ensured all repeatable lists (`renderWorkExperiencesList`, `renderEducationList`, `renderProjectsList`) explicitly default `item._collapsed` to `true` on initial render.
+  3. Preserved `_collapsed: false` for newly appended items so clicking "+ Add experience / education / project" opens that specific new card for immediate editing.
+  4. Added keyboard support (`Enter` and `Space`) to toggle collapse/expansion directly from the focused card header.
+- **Verification**:
+  - `npm run build`: Built version `0.4.44` across userscript, Chrome extension, and Firefox XPI.
+  - `npm test`: **219 passed, 0 failed**.
+
+---
+
 ## Turn: 2026-09-25 — Unambiguous Date Pickers & Header Button Restraint
 
 ### Bugs/findings

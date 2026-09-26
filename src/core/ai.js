@@ -431,7 +431,7 @@ export async function generateAutofillAnswers(normalizedFields, { allowSearch = 
   const narrativeFields = normalizedFields.filter(field => isNarrativeField(field));
 
   const structuredBg = formatStructuredBackground(profile);
-  const combinedResumeContext = [structuredBg, profile.resumeContext].filter(Boolean).join('\n\n--- Additional Resume Notes ---\n');
+  const combinedResumeContext = structuredBg || profile.resumeContext || '';
 
   const baseUserContext = {
     applicantProfile: profileForAI(profile),
@@ -609,7 +609,7 @@ Rules:
 5. Explicit structured profile answers take precedence over conflicting notes. Eligibility applies only to workCountry. Do not guess unknown eligibility or demographics, expose demographics in unrelated answers, or convert compensation units. Job discovery source is always LinkedIn.`;
 
   const structuredBg = formatStructuredBackground(profile);
-  const combinedResumeContext = [structuredBg, profile.resumeContext].filter(Boolean).join('\n\n--- Additional Resume Notes ---\n');
+  const combinedResumeContext = structuredBg || profile.resumeContext || '';
 
   const userPrompt = `Question Label: ${fieldLabel}
 Current Answer:

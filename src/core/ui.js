@@ -2074,13 +2074,8 @@ function renderProfileTab() {
       </div>
 
       <div class="kr-form-group">
-        <label for="kr-profile-resumeContext">Resume / Background Summary</label>
-        <textarea id="kr-profile-resumeContext" class="kr-textarea" name="resumeContext" rows="4" placeholder="Paste your core resume highlights, skills, and background summary...">${escapeHtml(profile.resumeContext)}</textarea>
-      </div>
-
-      <div class="kr-form-group">
         <label for="kr-profile-applicantNotes">Applicant Notes / Custom Rules</label>
-        <textarea id="kr-profile-applicantNotes" class="kr-textarea" name="applicantNotes" rows="2" placeholder="Additional preferences, exceptions, and guidance for written answers...">${escapeHtml(profile.applicantNotes)}</textarea>
+        <textarea id="kr-profile-applicantNotes" class="kr-textarea" name="applicantNotes" rows="3" placeholder="Additional preferences, exceptions, and guidance for written answers...">${escapeHtml(profile.applicantNotes)}</textarea>
       </div>
 
       <div class="kr-row" style="margin-top: 4px;">
@@ -2493,7 +2488,7 @@ function attachEventHandlers() {
         linkedin: formData.get('linkedin') || '',
         github: formData.get('github') || '',
         portfolio: formData.get('portfolio') || '',
-        resumeContext: formData.get('resumeContext') || '',
+        resumeContext: formData.get('resumeContext') !== null ? String(formData.get('resumeContext') || '') : (current.resumeContext || ''),
         applicantNotes: formData.get('applicantNotes') || '',
         workExperiences: current.workExperiences || [],
         education: current.education || [],

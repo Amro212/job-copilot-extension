@@ -41,7 +41,7 @@ export const PROFILE_FIELDS = PROFILE_SECTIONS.flatMap(section => section.fields
 export const STRUCTURED_PROFILE_DEFAULTS = Object.fromEntries(PROFILE_FIELDS.map(field => [field.name, '']));
 
 export function createWorkExperience(data = {}) {
-  return {
+  const result = {
     id: data.id || `work_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     enabled: data.enabled !== false,
     title: data.title || '',
@@ -52,10 +52,12 @@ export function createWorkExperience(data = {}) {
     current: Boolean(data.current),
     description: data.description || '',
   };
+  if (data._collapsed !== undefined) result._collapsed = Boolean(data._collapsed);
+  return result;
 }
 
 export function createEducation(data = {}) {
-  return {
+  const result = {
     id: data.id || `edu_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     enabled: data.enabled !== false,
     institution: data.institution || '',
@@ -67,10 +69,12 @@ export function createEducation(data = {}) {
     gpa: data.gpa || '',
     description: data.description || '',
   };
+  if (data._collapsed !== undefined) result._collapsed = Boolean(data._collapsed);
+  return result;
 }
 
 export function createProject(data = {}) {
-  return {
+  const result = {
     id: data.id || `proj_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     enabled: data.enabled !== false,
     name: data.name || '',
@@ -81,6 +85,8 @@ export function createProject(data = {}) {
     current: Boolean(data.current),
     description: data.description || '',
   };
+  if (data._collapsed !== undefined) result._collapsed = Boolean(data._collapsed);
+  return result;
 }
 
 function formatRangeDate(val) {
