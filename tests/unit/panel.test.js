@@ -26,6 +26,31 @@ test('field report uses current detected fields as its single source of truth', 
   assert.equal(report.untouched.length, 2);
 });
 
+test('field report correctly summarizes cross-frame fields identified by fieldId', () => {
+  const fields = [
+    { fieldId: 'jcf1::first_name', label: 'First Name' },
+    { fieldId: 'jcf1::last_name', label: 'Last Name' },
+    { fieldId: 'jcf1::email', label: 'Email' },
+    { fieldId: 'jcf1::phone', label: 'Phone' },
+  ];
+  const results = new Map([
+    ['jcf1::first_name', { status: 'verified', value: 'Amro', remote: true }],
+    ['jcf1::last_name', { status: 'inferred', value: 'AbedMoosa', inferred: true, remote: true }],
+    ['jcf1::email', { status: 'failed', error: 'Value rejected', remote: true }],
+  ]);
+
+  const report = summarizeFieldResults(fields, results);
+
+  assert.equal(report.total, 4);
+  assert.equal(report.filled, 2);
+  assert.equal(report.verified.length, 1);
+  assert.equal(report.inferred.length, 1);
+  assert.equal(report.failed.length, 1);
+  assert.equal(report.untouched.length, 1);
+  assert.equal(report.verified[0].field.fieldId, 'jcf1::first_name');
+  assert.equal(report.untouched[0].field.fieldId, 'jcf1::phone');
+});
+
 test('workflow shows verified completion count and retained structural diagnostic', async () => {
   const bundle = await build({ entryPoints: ['src/targets/userscript/entry.js'], bundle: true, format: 'iife', write: false });
   const dom = new JSDOM('<body></body>', { url: 'https://example.com/apply', runScripts: 'dangerously' });

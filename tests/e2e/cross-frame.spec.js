@@ -29,6 +29,10 @@ test.describe('cross-origin embedded application', () => {
     // The badge counts embedded fields, and the breakdown names where they live.
     await expect(page.locator('#kr-main-panel')).toContainText('0 here, 10 in 1 embedded frame', { timeout: 20000 });
     await expect(page.locator('#kr-main-panel .kr-badge-blue').first()).toHaveText('10 detected');
+
+    // Field verification & review immediately discovers and lists embedded fields before autofill
+    await expect(page.locator('#kr-main-panel')).toContainText('10 UNTOUCHED', { timeout: 20000 });
+    await expect(page.locator('#kr-main-panel')).not.toContainText('No form fields detected on this page.');
   });
 
   test('fills the embedded form end to end from the host page panel', async ({ kr }) => {
@@ -41,6 +45,8 @@ test.describe('cross-origin embedded application', () => {
 
     await page.locator('#kr-autofill-btn').click();
     await expect(page.locator('#kr-main-panel')).toContainText('Autofill complete. Review field statuses below.', { timeout: 60000 });
+    await expect(page.locator('#kr-main-panel')).not.toContainText('No form fields detected on this page.');
+    await expect(page.locator('#kr-main-panel')).toContainText('VERIFIED');
 
     const frame = embedFrame(page);
     await expect(frame.locator('#name')).not.toHaveValue('');

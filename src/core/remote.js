@@ -150,3 +150,33 @@ export async function applyRemoteResumeUploads({ overwriteExisting = false } = {
   }
   return results;
 }
+
+export async function locateRemoteField(remoteId) {
+  const parsed = parseRemoteFieldId(remoteId);
+  if (!parsed) return false;
+  const result = await platform.frames.command(parsed.frameId, { action: 'locate', fieldId: parsed.fieldId });
+  return Boolean(result && !result.error);
+}
+
+/** Lightweight field discovery across embedded frames without option harvesting. */
+export async function inspectRemoteFields() {
+  const frames = await listRemoteFrames();
+  if (!frames.length) return [];
+
+  const collected = [];
+  for (const frame of frames) {
+    const result = await platform.frames.command(frame.frameId, { action: 'inspect' });
+    if (ok(result) && result.fields?.length) {
+      collected.push(...result.fields.map((field) => ({
+        ...field,
+        id: remoteFieldId(frame.frameId, field.fieldId),
+        fieldId: remoteFieldId(frame.frameId, field.fieldId),
+        frameId: frame.frameId,
+        frameUrl: frame.url,
+      })));
+    }
+  }
+  return collected;
+}
+
+

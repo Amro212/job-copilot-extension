@@ -30,7 +30,7 @@ import {
   initInlineRewriteBadge,
 } from './fields/highlight.js';
 import { startFormObserver, pauseFormObserver, resumeFormObserver, stopFormObserver } from './observer.js';
-import { collectRemoteFields, applyRemoteAnswers, searchRemoteOptions, listRemoteFrames, captureRemoteFixtures, isRemoteFieldId, applyRemoteResumeUploads } from './remote.js';
+import { collectRemoteFields, applyRemoteAnswers, searchRemoteOptions, listRemoteFrames, captureRemoteFixtures, isRemoteFieldId, applyRemoteResumeUploads, locateRemoteField, inspectRemoteFields } from './remote.js';
 import { captureFixture, fixtureFileName } from './capture.js';
 import { createApplicationEngine } from './application.js';
 import { classifyPage } from './pageClassifier.js';
@@ -70,9 +70,35 @@ let isAiTesting = false;
 let isAutofilling = false;
 let autofillProgress = { current: 0, total: 0, statusText: '' };
 let detectedFieldsCache = [];
+let remoteFieldsCache = [];
 let remoteFieldCount = 0;
 let remoteFrameCount = 0;
 let fieldResultsCache = new Map(); // fieldId -> { status, value, error, inferred }
+
+export function getAllDetectedFields() {
+  const map = new Map();
+  for (const f of detectedFieldsCache) {
+    const id = f.id || f.fieldId;
+    if (id) map.set(id, { ...f, id, fieldId: id });
+  }
+  for (const f of remoteFieldsCache) {
+    const id = f.id || f.fieldId;
+    if (id && !map.has(id)) map.set(id, { ...f, id, fieldId: id });
+  }
+  for (const [id, res] of fieldResultsCache) {
+    if (!map.has(id) && (isRemoteFieldId(id) || res?.remote)) {
+      map.set(id, {
+        id,
+        fieldId: id,
+        label: res?.label || id,
+        type: 'text',
+        currentValue: res?.value || '',
+        remote: true,
+      });
+    }
+  }
+  return Array.from(map.values());
+}
 
 const ICONS = {
   brandMark: `<svg width="14" height="14" viewBox="0 0 100 100" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M41.1 12.3L29.7 12.2L28.8 12.5L9.8 31L9.2 32.1L9 36.8V81.8L9.3 83.6L10.1 85.2L11.4 86.6L13 87.5L14.2 87.8H40.6L41.2 87.6L41.8 86.9L41.9 13.2ZM36 16.1V28.5L35.9 31.7H14.7L14.5 31.5L30.6 16ZM68.6 31.8L42.6 58L69.5 87.4H90.2L64.9 57.8L91 31.8Z"/></svg>`,
@@ -1361,12 +1387,26 @@ function refreshDetectedFields() {
  * a frame announces, because an embed-only page produces almost no mutations in
  * this document to react to.
  */
-export function refreshRemoteFieldCount() {
+export function refreshRemoteFieldCount({ force = false } = {}) {
   if (!platform.capabilities.crossFrame) return;
   listRemoteFrames()
-    .then((frames) => {
+    .then(async (frames) => {
       const total = frames.reduce((sum, frame) => sum + frame.fieldCount, 0);
-      if (total === remoteFieldCount && frames.length === remoteFrameCount) return;
+      const countsChanged = total !== remoteFieldCount || frames.length !== remoteFrameCount;
+      const needsInspection = force || countsChanged || (total > 0 && !remoteFieldsCache.length);
+
+      if (needsInspection) {
+        if (total === 0) {
+          remoteFieldsCache = [];
+        } else {
+          const inspected = await inspectRemoteFields().catch(() => []);
+          if (inspected.length) {
+            remoteFieldsCache = inspected;
+          }
+        }
+      }
+
+      if (!force && !countsChanged && (!total || remoteFieldsCache.length)) return;
       remoteFieldCount = total;
       remoteFrameCount = frames.length;
       updatePanelDOM();
@@ -1512,11 +1552,14 @@ async function executeAutofillFlow() {
     const remoteGroups = await collectRemoteFields({ overwriteExisting: overwrite });
     if (token !== autofillGeneration) return;
     const remoteFields = remoteGroups.flatMap((group) => group.fields);
+    if (remoteFields.length) {
+      remoteFieldsCache = remoteFields.map((f) => ({ ...f, id: f.fieldId, fieldId: f.fieldId }));
+    }
 
     const aiTargetFields = targetFields.filter((f) => f.type !== 'file');
 
     if (aiTargetFields.length === 0 && remoteFields.length === 0 && fileFields.length === 0 && remoteUploads.length === 0) {
-      autofillProgress.statusText = detectedFieldsCache.length === 0
+      autofillProgress.statusText = (detectedFieldsCache.length === 0 && remoteFieldCount === 0)
         ? 'No form fields detected on this page.'
         : 'All fields are already filled. Enable "Overwrite Existing Values" in Settings to overwrite.';
       logger.info(autofillProgress.statusText);
@@ -1679,7 +1722,7 @@ async function executeAutofillFlow() {
     }
 
     refreshDetectedFields();
-    const report = summarizeFieldResults(detectedFieldsCache, fieldResultsCache);
+    const report = summarizeFieldResults(getAllDetectedFields(), fieldResultsCache);
     autofillProgress.current = report.total;
     autofillProgress.total = report.total;
     autofillProgress.statusText = 'Autofill complete. Review field statuses below.';
@@ -1847,7 +1890,8 @@ export function summarizeFieldResults(fields, results) {
   const untouchedFields = [];
 
   for (const f of fields) {
-    const res = results.get(f.id);
+    const id = f.id || f.fieldId;
+    const res = results.get(id);
     if (res?.status === FILL_STATUS.VERIFIED) {
       verifiedFields.push({ field: f, result: res });
     } else if (res?.status === FILL_STATUS.INFERRED || res?.inferred) {
@@ -1876,20 +1920,22 @@ function renderFieldReviewSection() {
     failed: failedFields,
     untouched: untouchedFields,
     total,
-  } = summarizeFieldResults(detectedFieldsCache, fieldResultsCache);
+  } = summarizeFieldResults(getAllDetectedFields(), fieldResultsCache);
 
   const renderItem = (item, badgeClass, badgeLabel) => {
+    const fieldId = item.field.id || item.field.fieldId;
+    const label = item.field.label || item.result?.label || fieldId;
     const val = item.result?.value ?? item.field.currentValue ?? '';
     const displayVal = val !== '' ? String(val) : 'Empty';
     return `
       <div class="kr-review-item">
         <div class="kr-review-info">
-          <div class="kr-review-label">${escapeHtml(item.field.label || item.field.id)}</div>
+          <div class="kr-review-label">${escapeHtml(label)}</div>
           <div class="kr-review-value" title="${escapeHtml(displayVal)}">${escapeHtml(displayVal)}</div>
         </div>
         <div class="kr-review-meta">
           <span class="kr-badge ${badgeClass}">${badgeLabel}</span>
-          <button type="button" class="kr-btn kr-btn-secondary kr-btn-small kr-locate-field-btn" data-field-id="${escapeHtml(item.field.id)}" title="Scroll to and highlight field">
+          <button type="button" class="kr-btn kr-btn-secondary kr-btn-small kr-locate-field-btn" data-field-id="${escapeHtml(fieldId)}" title="Scroll to and highlight field">
             ${ICONS.locate}
           </button>
         </div>
@@ -2627,7 +2673,18 @@ function attachEventHandlers() {
   locateBtns.forEach((btn) => {
     btn.onclick = () => {
       const fieldId = btn.getAttribute('data-field-id');
-      const target = detectedFieldsCache.find((f) => f.id === fieldId);
+      if (isRemoteFieldId(fieldId)) {
+        locateRemoteField(fieldId);
+        const iframes = Array.from(document.querySelectorAll('iframe'));
+        const fieldMeta = remoteFieldsCache.find((f) => (f.id || f.fieldId) === fieldId);
+        const targetIframe = (fieldMeta?.frameUrl && iframes.find((el) => el.src && el.src.includes(fieldMeta.frameUrl)))
+          || iframes.find((el) => {
+            try { return el.offsetHeight > 0; } catch { return false; }
+          });
+        if (targetIframe) targetIframe.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      const target = detectedFieldsCache.find((f) => (f.id || f.fieldId) === fieldId);
       if (target?.element) {
         scrollToField(target.element);
         highlightActiveField(target.element);
@@ -2640,7 +2697,10 @@ function attachEventHandlers() {
   if (rescanBtn) {
     rescanBtn.onclick = () => {
       refreshDetectedFields();
-      logger.info(`Rescanned form: ${detectedFieldsCache.length} fields detected.`);
+      if (platform.capabilities.crossFrame) {
+        refreshRemoteFieldCount({ force: true });
+      }
+      logger.info(`Rescanned form: ${getAllDetectedFields().length} fields detected.`);
       updatePanelDOM();
     };
   }

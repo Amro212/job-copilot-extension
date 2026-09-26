@@ -3,6 +3,55 @@
 Running log of changes, bugs, and platform findings for the dual-target
 (extension + userscript) Kareer.
 
+## Turn: 2026-09-26 — Immediate Pre-Autofill Embedded Form Field Discovery
+
+### Bugs/findings
+- **Target**: Embedded cross-frame field discovery on initial load & rescan (`src/core/agent.js`, `src/core/remote.js`, `src/core/ui.js`, `tests/unit/remote.test.js`, `tests/e2e/cross-frame.spec.js`).
+- **Platform/ATS**: Embedded iframe applications (e.g., Greenhouse embed on Stripe).
+- **Symptoms & User Need**:
+  - In normal (non-embedded) applications, form fields appear in "Field Verification & Review" immediately upon load/rescan as UNTOUCHED, allowing navigation and field inspection before autofill is run.
+  - In embedded applications, fields were only discovered when autofill was initiated, leaving the review section empty (`0 FIELDS`, `"No form fields detected on this page."`) prior to autofill.
+- **Resolution**:
+  1. Added lightweight `inspect` action in `src/core/agent.js` that scans fields in the frame document without option harvesting or dropdown side effects, deduplicates field IDs, and returns normalized field metadata.
+  2. Added `inspectRemoteFields()` in `src/core/remote.js` to query registered remote frames for their fields, assigning namespaced remote IDs and storing frame URL metadata.
+  3. In `src/core/ui.js`, updated `refreshRemoteFieldCount()` to inspect remote frames whenever frame counts change or when remote fields are unpopulated, immediately populating `remoteFieldsCache` on page load and frame announce.
+  4. Updated rescan button (`#kr-rescan-btn`) to force-refresh remote field inspection.
+  5. Updated `.kr-locate-field-btn` handler to use `fieldMeta.frameUrl` to accurately select and scroll the target iframe into view before dispatching `locate`.
+- **Verification**:
+  - `npm test`: **223 passed, 0 failed** (`node --test tests/unit/*.test.js`).
+  - `npm run test:e2e`: **6 passed, 0 failed** (`tests/e2e/cross-frame.spec.js`), including new assertion proving embedded fields are discovered and listed as `UNTOUCHED` before autofill.
+  - `npm run build`: built cleanly at **v0.4.50** (Chrome extension, Firefox XPI, Userscript).
+
+---
+
+## Turn: 2026-09-26 — Fix Cross-Frame (Embedded) Form Tracking, Review, & Jump Navigation
+
+### Bugs/findings
+- **Target**: Embedded cross-frame form tracking, verification review, and jump navigation (`src/core/ui.js`, `src/core/remote.js`, `src/core/agent.js`, `tests/unit/panel.test.js`, `tests/unit/remote.test.js`, `tests/e2e/cross-frame.spec.js`).
+- **Platform/ATS**: Embedded iframe applications (e.g., Greenhouse embed on Stripe).
+- **Symptoms**:
+  - Embedded iframe forms were recognized and autofilled by the frame agent, but the Field Verification & Review section reported `0 FIELDS` and `"No form fields detected on this page."`
+  - Completion logs reported: `Autofill finished: 0 filled, 0 failed and 0 untouched out of 0 current fields.`
+  - The jump buttons (`.kr-locate-field-btn`) did not locate or scroll to fields inside the iframe.
+- **Root-Cause Analysis**:
+  1. `startAutofillFlow()` collected `remoteFields` as a local transient variable and did not retain them in state. On completion, `refreshDetectedFields()` ran on the top host document (which has 0 fields), leaving `detectedFieldsCache` empty.
+  2. `renderFieldReviewSection()` evaluated only `detectedFieldsCache` rather than an aggregated set of local and remote fields.
+  3. `summarizeFieldResults()` and `renderItem()` only read `field.id`, failing to fall back to `field.fieldId` (`jcf<frameId>::<fieldId>`) used by cross-frame normalized fields.
+  4. `.kr-locate-field-btn` only looked for DOM elements in `detectedFieldsCache`, which do not exist in the top frame document; and `agent.js` lacked a `'locate'` handler to highlight and scroll fields inside subframes.
+- **Resolution**:
+  1. Maintained `remoteFieldsCache` in `src/core/ui.js` and added `getAllDetectedFields()` which merges local fields, remote fields, and any remote results stored in `fieldResultsCache`.
+  2. Updated `startAutofillFlow()` to cache `remoteFields`, pass `getAllDetectedFields()` to `summarizeFieldResults()`, and correctly log completion statistics.
+  3. Updated `renderFieldReviewSection()` to evaluate `getAllDetectedFields()` and display fallback labels from results.
+  4. Updated `summarizeFieldResults()` and `renderItem()` to handle `f.id || f.fieldId`.
+  5. Added `'locate'` action to `src/core/agent.js` and `locateRemoteField()` to `src/core/remote.js`. Updated `.kr-locate-field-btn` click handler to dispatch cross-frame location and scroll the parent iframe into view.
+  6. Added unit tests in `tests/unit/remote.test.js` and `tests/unit/panel.test.js`, and added E2E assertions in `tests/e2e/cross-frame.spec.js`.
+- **Verification**:
+  - `npm test`: **222 passed, 0 failed** (`node --test tests/unit/*.test.js`).
+  - `npm run test:e2e`: **6 passed, 0 failed** (`tests/e2e/cross-frame.spec.js`).
+  - `npm run build`: built cleanly at **v0.4.49** (Chrome extension, Firefox XPI, Userscript).
+
+---
+
 ## Turn: 2026-09-26 — Minimum Viable Profile (MVP) Gating & Profile Strength Indicator
 
 ### Bugs/findings

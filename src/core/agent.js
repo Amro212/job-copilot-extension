@@ -146,11 +146,40 @@ export function createFieldAgent() {
     };
   }
 
+  async function locate({ fieldId } = {}) {
+    const field = cache.get(fieldId) || scanFormFields(document).find((f) => f.id === fieldId);
+    if (!field) return { error: 'Field not found in frame' };
+    field.element = resolveLive(field);
+    if (field.element) {
+      scrollToField(field.element);
+      highlightActiveField(field.element);
+      return { ok: true };
+    }
+    return { error: 'Field element not found' };
+  }
+
+  async function inspect() {
+    const scanned = scanFormFields(document);
+    deduplicateFields(scanned);
+    cache = new Map(scanned.map((field) => [field.id, field]));
+    return {
+      fields: scanned.map((field) => ({
+        fieldId: field.id,
+        label: field.label,
+        type: field.type,
+        required: Boolean(field.required),
+        currentValue: field.currentValue || '',
+      })),
+    };
+  }
+
   async function handle(command) {
     switch (command?.action) {
       case 'scan': return scan(command);
+      case 'inspect': return inspect();
       case 'searchOptions': return searchOptions(command);
       case 'fill': return fill(command);
+      case 'locate': return locate(command);
       case 'uploadResume': return uploadResume(command);
       case 'validation': return validation();
       // An embedded frame captures its own document; the parent cannot read it.

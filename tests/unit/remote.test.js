@@ -12,6 +12,8 @@ import {
   searchRemoteOptions,
   applyRemoteAnswers,
   collectRemoteValidation,
+  locateRemoteField,
+  inspectRemoteFields,
 } from '../../src/core/remote.js';
 
 /** Installs a host that pretends to be the extension, recording every command. */
@@ -179,3 +181,43 @@ test('validation errors from embedded frames are aggregated for repair', async (
   const errors = await collectRemoteValidation();
   assert.deepEqual(errors, [{ fieldId: 'field-1', message: 'Required' }]);
 });
+
+test('locateRemoteField dispatches locate action to owning frame with local id', async () => {
+  const sent = stubFrames({
+    frames: [{ frameId: 5, isTop: false, fieldCount: 2, url: 'https://embed.example.com/form' }],
+    respond: (frameId, command) => ({ ok: command.fieldId === 'field-1' }),
+  });
+
+  const success = await locateRemoteField('jcf5::field-1');
+  assert.equal(success, true);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].frameId, 5);
+  assert.deepEqual(sent[0].command, { action: 'locate', fieldId: 'field-1' });
+
+  const invalid = await locateRemoteField('not-a-remote-field');
+  assert.equal(invalid, false);
+});
+
+test('inspectRemoteFields gathers remote fields without option harvesting', async () => {
+  const sent = stubFrames({
+    frames: [{ frameId: 5, isTop: false, fieldCount: 2, url: 'https://embed.example.com/form' }],
+    respond: (frameId, command) => ({
+      fields: [
+        { fieldId: 'first_name', label: 'First Name', type: 'text', required: true, currentValue: '' },
+        { fieldId: 'last_name', label: 'Last Name', type: 'text', required: true, currentValue: '' },
+      ],
+    }),
+  });
+
+  const fields = await inspectRemoteFields();
+  assert.equal(fields.length, 2);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].frameId, 5);
+  assert.deepEqual(sent[0].command, { action: 'inspect' });
+  assert.equal(fields[0].id, 'jcf5::first_name');
+  assert.equal(fields[0].fieldId, 'jcf5::first_name');
+  assert.equal(fields[0].label, 'First Name');
+  assert.equal(fields[0].frameId, 5);
+  assert.equal(fields[0].frameUrl, 'https://embed.example.com/form');
+});
+
